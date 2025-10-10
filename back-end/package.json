@@ -1,0 +1,30 @@
+{
+  "name": "untitled",
+  "version": "0.0.1",
+  "description": "",
+  "homepage": "https://github.com/kw-ic-web/25-team-in-site#readme",
+  "bugs": {
+    "url": "https://github.com/kw-ic-web/25-team-in-site/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kw-ic-web/25-team-in-site.git"
+  },
+  "license": "ISC",
+  "author": "Team.In-site",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "pm2 start src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pm2": "^6.0.13"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}
