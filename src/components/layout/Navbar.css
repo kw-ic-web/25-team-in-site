@@ -1,0 +1,93 @@
+/* 상단 바 컨테이너 */
+.topnav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #fff;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.03);
+  }
+  
+  /* 좌우 여백 + 가운데 정렬 */
+  .topnav__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 16px 0; /* 아래 살짝 공간: 탭 언더라인 공간 확보 */
+    display: grid;
+    grid-template-columns: 120px 1fr 120px; /* 좌/가운데/우 */
+    align-items: end;
+  }
+  
+  /* 좌측 브랜드(파란 화살표 느낌) */
+  .topnav__brand .brand__mark {
+    display: inline-block;
+    color: #6f6cfb; /* 보라/파랑 */
+    font-weight: 700;
+    font-size: 22px;
+  }
+  
+  /* 중앙 탭 바 */
+  .topnav__tabs {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  
+  /* 탭 기본 스타일 */
+  .topnav__tab {
+    position: relative;
+    display: inline-block;
+    padding: 12px 0 14px;     /* 아래 패딩으로 언더라인 공간 */
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: #a3a3a3;           /* 비활성: 연한 회색 */
+    text-decoration: none;
+    transition: color .15s ease;
+  }
+  
+  /* 언더라인 베이스(비활성일 땐 투명) */
+  .topnav__tab::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 3px;
+    background: transparent;
+    border-radius: 2px 2px 0 0;
+    transition: background .18s ease, transform .18s ease;
+    transform: scaleX(0.8);
+    transform-origin: center;
+  }
+  
+  /* hover 시 텍스트만 살짝 진하게 */
+  .topnav__tab:hover {
+    color: #6f6cfb;
+  }
+  
+  /* 활성 탭 */
+  .topnav__tab.is-active {
+    color: #6f6cfb; /* 스샷처럼 보라색 계열 */
+  }
+  
+  /* 활성 언더라인 */
+  .topnav__tab.is-active::after {
+    background: #6f6cfb;
+    transform: scaleX(1);
+  }
+  
+  /* 우측 아바타(동그란 자리) */
+  .topnav__right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 8px; /* 탭 baseline 맞추기 */
+  }
+  
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #9aa7ff 0%, #6f6cfb 100%);
+    box-shadow: 0 3px 8px rgba(111,108,251,0.25);
+  }
+  
