@@ -12,9 +12,9 @@
   .topnav__inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 10px 16px 0; /* 아래 살짝 공간: 탭 언더라인 공간 확보 */
+    padding: 10px 16px 0; 
     display: grid;
-    grid-template-columns: 120px 1fr 120px; /* 좌/가운데/우 */
+    grid-template-columns: 120px 1fr 120px; 
     align-items: end;
   }
   
@@ -38,7 +38,7 @@
   .topnav__tab {
     position: relative;
     display: inline-block;
-    padding: 12px 0 14px;     /* 아래 패딩으로 언더라인 공간 */
+    padding: 12px 0 14px;    
     font-weight: 600;
     letter-spacing: .3px;
     color: #a3a3a3;           /* 비활성: 연한 회색 */
