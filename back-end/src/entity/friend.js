@@ -20,5 +20,6 @@ const friendSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+friendSchema.index({ user_id: 1, friend_id: 1 }, { unique: true });
 
 export default mongoose.model("friend", friendSchema);
