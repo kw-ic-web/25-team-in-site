@@ -10,7 +10,7 @@ const problemSchema = new mongoose.Schema(
     problem_sub_category: { type: String },
     problem_success_rate: { type: Number },
     problem_body: { type: String },
-    problem_attachment_urls: { type: String },
+    problem_attachment_urls: { type: [String], default: [] },
   },
   { timestamps: true },
 );
