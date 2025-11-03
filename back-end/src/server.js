@@ -1,10 +1,12 @@
 import http from "http";
 import app from "./app.js";
 import config from "./config/env.js";
+import connectDB from "./config/db.js";
 
 const port = config.port;
 app.set("port", port);
 
+connectDB();
 const server = http.createServer(app);
 
 server.on("error", (error) => {
