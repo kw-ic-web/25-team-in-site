@@ -7,4 +7,5 @@ dotenv.config({ path: envFile });
 export default {
   env: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT) || 3000,
+  databaseUrl: process.env.MONGO_URI,
 };
