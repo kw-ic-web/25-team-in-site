@@ -22,4 +22,6 @@ const solvedSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+solvedSchema.index({ user_id: 1, problem_id: 1 });
+
 export default mongoose.model("solved", solvedSchema);
