@@ -22,4 +22,12 @@ const friendSchema = new mongoose.Schema(
 );
 friendSchema.index({ user_id: 1, friend_id: 1 }, { unique: true });
 
+friendSchema.pre("save", function (next) {
+  if (this.user_id.equals(this.friend_id)) {
+    next(new Error("User cannot friend themselves"));
+  } else {
+    next();
+  }
+});
+
 export default mongoose.model("friend", friendSchema);
