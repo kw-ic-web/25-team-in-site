@@ -7,7 +7,12 @@ const port = config.port;
 app.set("port", port);
 
 (async () => {
-  await connectDB();
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error("Failed to connect to database:", error);
+    process.exit(1);
+  }
   const server = http.createServer(app);
 
   server.on("error", (error) => {
