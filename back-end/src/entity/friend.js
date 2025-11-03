@@ -2,8 +2,16 @@ import mongoose from "mongoose";
 
 const friendSchema = new mongoose.Schema(
   {
-    friend_id: { type: String, required: true },
-    user_id: { type: String, required: true, ref: "User" },
+    friend_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
     state: {
       type: String,
       enum: ["pending", "accepted", "blocked"],
