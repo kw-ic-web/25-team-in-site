@@ -30,4 +30,4 @@ friendSchema.pre("save", function (next) {
   }
 });
 
-export default mongoose.model("friend", friendSchema);
+export const Friend = mongoose.model("friend", friendSchema);
