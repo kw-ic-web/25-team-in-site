@@ -22,6 +22,7 @@ export const AuthService = {
         throw new ConflictError("아이디/이메일이 이미 존재합니다.");
       throw err;
     }
+    //TODO: JWT 발급 및 리디렉션
   },
 
   async isIdAvailable(id) {
