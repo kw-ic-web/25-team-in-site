@@ -11,4 +11,4 @@ const badgeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("badge", badgeSchema);
+export const Badge = mongoose.model("badge", badgeSchema);
