@@ -24,4 +24,4 @@ const solvedSchema = new mongoose.Schema(
 
 solvedSchema.index({ user_id: 1, problem_id: 1 });
 
-export default mongoose.model("solved", solvedSchema);
+export const Solved = mongoose.model("solved", solvedSchema);

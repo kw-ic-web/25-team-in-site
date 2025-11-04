@@ -18,4 +18,6 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("user", userSchema);
+//TODO: PW 해싱
+
+export const User = mongoose.model("user", userSchema);
