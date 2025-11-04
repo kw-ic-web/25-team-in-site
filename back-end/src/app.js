@@ -2,6 +2,7 @@ import express from "express";
 import routes from "./routes/index.js";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import serviceInjector from "./middlewares/serviceInjector.js";
 
 const app = express();
 
@@ -16,5 +17,6 @@ app.use("/api", routes);
 
 app.use(notFound);
 app.use(errorHandler);
+app.use(serviceInjector);
 
 export default app;
