@@ -6,6 +6,6 @@ export const UserRepository = {
     return user;
   },
   async findOne(filter) {
-    return User.findOne(filter).exec();
+    return User.findOne(filter).select("-user_pw").exec();
   },
 };
