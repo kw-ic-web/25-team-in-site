@@ -2,7 +2,7 @@ import { ConflictError } from "../errors/conflict.js";
 import { UserRepository } from "../repository/userRepository.js";
 
 export const AuthService = {
-  async register(id, pw, email) {
+  async register(id, password, email) {
     const [byId, byEmail] = await Promise.all([
       UserRepo.findOne({ id }),
       UserRepo.findOne({ email }),
