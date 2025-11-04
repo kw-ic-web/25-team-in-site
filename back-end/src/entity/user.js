@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema(
   {
@@ -18,6 +19,21 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-//TODO: PW 해싱
+userSchema.pre("save", async function (next) {
+  // 비밀번호가 변경되지 않았다면 skip
+  if (!this.isModified("user_pw")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10); // saltRounds=10 → 충분히 안전함
+    this.user_pw = await bcrypt.hash(this.user_pw, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+userSchema.methods.comparePassword = async function (plainPassword) {
+  return bcrypt.compare(plainPassword, this.user_pw);
+};
 
 export const User = mongoose.model("user", userSchema);
