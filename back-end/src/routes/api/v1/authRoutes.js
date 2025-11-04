@@ -3,6 +3,7 @@ import { AuthController } from "../../../controllers/authController.js";
 
 const router = Router();
 
+//TODO: RateLimit
 router.post("/register", AuthController.register);
 router.post("/login", AuthController.login);
 
