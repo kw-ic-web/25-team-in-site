@@ -1,5 +1,6 @@
 import express from "express";
 import routes from "./routes/index.js";
+import cookieParser from "cookie-parser";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import serviceInjector from "./middlewares/serviceInjector.js";
@@ -8,6 +9,7 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
