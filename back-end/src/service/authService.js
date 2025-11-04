@@ -7,9 +7,10 @@ import { UnauthorizedError } from "../errors/unauthorized.js";
 
 export const AuthService = {
   async register(id, password, email) {
+    const normEmail = email.trim().toLowerCase();
     const [byId, byEmail] = await Promise.all([
       UserRepository.findOne({ user_id: id }),
-      UserRepository.findOne({ user_email: email }),
+      UserRepository.findOne({ user_email: normEmail }),
     ]);
     if (byId) throw new ConflictError("이미 등록된 아이디입니다.");
     if (byEmail) throw new ConflictError("이미 등록된 이메일입니다.");
@@ -17,7 +18,7 @@ export const AuthService = {
     try {
       const user = await UserRepository.create({
         user_id: id,
-        user_email: email,
+        user_email: normEmail,
         user_pw: password,
       });
       return user;
@@ -49,7 +50,8 @@ export const AuthService = {
   },
 
   async isEmailAvailable(email) {
-    const exist = await UserRepository.findOne({ user_email: email });
+    const normEmail = email.trim().toLowerCase();
+    const exist = await UserRepository.findOne({ user_email: normEmail });
     if (exist) return false;
     return true;
   },
