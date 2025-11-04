@@ -7,7 +7,16 @@ import { UnauthorizedError } from "../errors/unauthorized.js";
 
 export const AuthService = {
   async register(id, password, email) {
+    if (!id || !password || !email) {
+      throw new BadRequestError("아이디, 비밀번호, 이메일을 입력하세요.");
+    }
     const normEmail = email.trim().toLowerCase();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normEmail)) {
+      throw new BadRequestError("올바른 이메일 형식이 아닙니다.");
+    }
+
     const [byId, byEmail] = await Promise.all([
       UserRepository.findOne({ user_id: id }),
       UserRepository.findOne({ user_email: normEmail }),
