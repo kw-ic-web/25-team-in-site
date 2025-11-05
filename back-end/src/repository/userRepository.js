@@ -5,7 +5,11 @@ export const UserRepository = {
     const user = await User.create({ user_id, user_pw, user_email });
     return user;
   },
-  async findOne(filter) {
-    return User.findOne(filter).select("-user_pw").exec();
+  async findOne(filter, { includePassword = false } = {}) {
+    const query = User.findOne(filter);
+    if (!includePassword) {
+      query.select("-user_pw");
+    }
+    return query.exec();
   },
 };

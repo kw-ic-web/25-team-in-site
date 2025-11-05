@@ -30,7 +30,9 @@ export const AuthService = {
         user_email: normEmail,
         user_pw: password,
       });
-      return user;
+      const safeUser = user.toObject();
+      delete safeUser.user_pw;
+      return safeUser;
     } catch (err) {
       if (err?.code === 11000)
         throw new ConflictError("아이디/이메일이 이미 존재합니다.");
@@ -41,7 +43,10 @@ export const AuthService = {
     if (!email || !password)
       throw new BadRequestError("이메일/비밀번호를 입력하세요.");
     const normEmail = email.trim().toLowerCase();
-    const user = await UserRepository.findOne({ user_email: normEmail });
+    const user = await UserRepository.findOne(
+      { user_email: normEmail },
+      { includePassword: true },
+    );
     if (!user)
       throw new UnauthorizedError("이메일 또는 비밀번호가 올바르지 않습니다.");
     const ok = await user.comparePassword(password);
