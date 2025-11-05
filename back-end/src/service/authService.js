@@ -6,7 +6,7 @@ import { BadRequestError } from "../errors/badRequest.js";
 import { UnauthorizedError } from "../errors/unauthorized.js";
 
 export const AuthService = {
-  async register(id, password, email) {
+  async register(id, email, password) {
     if (!id || !password || !email) {
       throw new BadRequestError("아이디, 비밀번호, 이메일을 입력하세요.");
     }
