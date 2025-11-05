@@ -7,21 +7,24 @@ import LoginPage from "../../pages/Login/LoginPage";
 import MyPage from "../../pages/MyPage/MyPage";
 import WrongPage from "../../pages/Wrong/WrongPage";
 import SolvePage from "../../pages/Solve/SolvePage";
+import RegisterPage from "../../pages/Register/RegisterPage";
 
 export const router = createBrowserRouter([
-  // 로그인 전 영역
   {
     element: <PublicLayout />,
-    children: [{ path: "/login", element: <LoginPage /> }],
+    children: [
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+    ],
   },
-  // 로그인 후 보호 영역
   {
-    element: <RequireAuth />,             // 가드
+    element: <RequireAuth />,
     children: [
       {
-        element: <AppLayout />,           // 상단 탭 있는 레이아웃
+        element: <AppLayout />,
         children: [
-          { path: "/", element: <HomePage /> },
+          { index: true, element: <Navigate to="/home" replace /> },
+          { path: "/home", element: <HomePage /> },
           { path: "/mypage", element: <MyPage /> },
           { path: "/wrong", element: <WrongPage /> },
           { path: "/solve", element: <SolvePage /> },
@@ -29,6 +32,5 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // 기본 루트 접근 시: 미로그인 → /login, 로그인 → /
-  { path: "*", element: <Navigate to={"login"}  /> },
+  { path: "*", element: <Navigate to="/login" replace /> },
 ]);

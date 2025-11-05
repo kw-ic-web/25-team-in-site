@@ -23,7 +23,7 @@ export default function Navbar() {
         </div>
 
         <nav className="topnav__tabs">
-          {Tab("/", "HOME")}
+          {Tab("/home", "HOME")}
           {Tab("/mypage", "MY PAGE")}
           {Tab("/wrong", "COMMUNITY" /* or WRONG */)}
         </nav>
