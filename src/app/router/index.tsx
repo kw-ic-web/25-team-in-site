@@ -10,6 +10,7 @@ import SolvePage from "../../pages/Solve/SolvePage";
 import RegisterPage from "../../pages/Register/RegisterPage";
 
 export const router = createBrowserRouter([
+  { path: "/", element: <Navigate to="/login" replace /> },
   {
     element: <PublicLayout />,
     children: [
@@ -23,7 +24,6 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <Navigate to="/home" replace /> },
           { path: "/home", element: <HomePage /> },
           { path: "/mypage", element: <MyPage /> },
           { path: "/wrong", element: <WrongPage /> },
