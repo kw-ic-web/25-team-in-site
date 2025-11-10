@@ -19,6 +19,6 @@ export const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    throw next(ERROR.INVALID_TOKEN());
+    next(ERROR.INVALID_TOKEN());
   }
 };
