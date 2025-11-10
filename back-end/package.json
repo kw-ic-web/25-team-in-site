@@ -21,10 +21,13 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
-    "pm2": "^6.0.13"
+    "pm2": "^6.0.13",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
