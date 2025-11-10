@@ -22,7 +22,7 @@ export const AuthService = {
         user_pw: password,
       });
 
-      const token = this._generateToken(user_id);
+      const token = await this._generateToken(user_id);
       return AuthResponseDto.parse({
         user_id,
         email,
