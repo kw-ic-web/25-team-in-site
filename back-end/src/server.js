@@ -1,7 +1,7 @@
 import http from "http";
 import app from "./app.js";
-import config from "./config/env.js";
-import connectDB from "./config/db.js";
+import config from "./config/env.config.js";
+import connectDB from "./config/db.config.js";
 
 const port = config.port;
 app.set("port", port);

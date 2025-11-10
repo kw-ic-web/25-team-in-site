@@ -1,10 +1,10 @@
 import express from "express";
-import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
-import notFound from "./middlewares/notFound.js";
-import errorHandler from "./middlewares/errorHandler.js";
-import serviceInjector from "./middlewares/serviceInjector.js";
-import { authMiddleware } from "./middlewares/auth.js";
+import routes from "./routes/index.route.js";
+import notFound from "./middlewares/notFound.middleware.js";
+import errorHandler from "./middlewares/errorHandler.middleware.js";
+import serviceInjector from "./middlewares/serviceInjector.middleware.js";
+import { authMiddleware } from "./middlewares/auth.middleware.js";
 
 const app = express();
 

@@ -1,6 +1,6 @@
-import { BadRequestError } from "../src/errors/badRequest.js";
-import { ConflictError } from "../src/errors/conflict.js";
-import { UnauthorizedError } from "../src/errors/unauthorized.js";
+import { BadRequestError } from "../src/errors/badRequest.error.js";
+import { ConflictError } from "../src/errors/conflict.error.js";
+import { UnauthorizedError } from "../src/errors/unauthorized.error.js";
 
 export const ERROR = {
   INVALID_REGISTER_REQUEST: () =>
