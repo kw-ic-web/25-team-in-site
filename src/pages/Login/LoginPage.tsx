@@ -5,6 +5,18 @@ import "./LoginPage.css";
 
 const naverLogo = new URL("../../assets/logos/naver.png", import.meta.url).href;
 const kakaoLogo = new URL("../../assets/logos/kakao.png", import.meta.url).href;
+const loginTopIllustration = new URL(
+  "../../assets/login/login1.png",
+  import.meta.url,
+).href;
+const loginStackIllustration = new URL(
+  "../../assets/login/login2.png",
+  import.meta.url,
+).href;
+const loginBracketsIllustration = new URL(
+  "../../assets/login/login3.png",
+  import.meta.url,
+).href;
 
 type LocationState = {
   from?: { pathname?: string };
@@ -49,19 +61,21 @@ export default function LoginPage() {
       <div
         className="login-page__decor login-page__decor--stack"
         aria-hidden="true"
-      />
+      >
+        <img src={loginStackIllustration} alt="" />
+      </div>
       <div
         className="login-page__decor login-page__decor--bubble"
         aria-hidden="true"
       >
-        <span className="login-page__bubble-dot" />
-        <span className="login-page__bubble-dot" />
-        <span className="login-page__bubble-dot" />
+        <img src={loginTopIllustration} alt="" />
       </div>
       <div
         className="login-page__decor login-page__decor--brackets"
         aria-hidden="true"
-      />
+      >
+        <img src={loginBracketsIllustration} alt="" />
+      </div>
       <section className="login-card" aria-labelledby="login-title">
         <header className="login-card__header">
           <h1 id="login-title">코딩도우미</h1>
