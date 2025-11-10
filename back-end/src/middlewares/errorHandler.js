@@ -7,7 +7,7 @@ export default (err, req, res, next) => {
   let message = err.message || "Internal Server Error";
 
   if (err instanceof ZodError) {
-    const issue = err.issues[0];
+    const issue = err.issues[0]; //TODO: 여러개의 validation 에러 볼 수 있도록(UX)
     const code = issue.message;
     const errorInfo = ERROR[code]();
 
