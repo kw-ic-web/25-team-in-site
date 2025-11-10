@@ -9,7 +9,7 @@ export default (err, req, res, next) => {
   if (err instanceof ZodError) {
     const issue = err.issues[0];
     const code = issue.message;
-    const errorInfo = ERROR[code];
+    const errorInfo = ERROR[code]();
 
     if (errorInfo) {
       status = errorInfo.status;

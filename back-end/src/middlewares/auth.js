@@ -12,13 +12,13 @@ export const authMiddleware = (req, res, next) => {
   }
 
   const token = req.cookies?.token;
-  if (!token) return next(ERROR.INVALID_TOKEN);
+  if (!token) return next(ERROR.INVALID_TOKEN());
 
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
     req.user = decoded;
     next();
   } catch (err) {
-    throw next(ERROR.INVALID_TOKEN);
+    throw next(ERROR.INVALID_TOKEN());
   }
 };

@@ -12,8 +12,8 @@ export const AuthService = {
       UserRepository.findOne({ user_id: user_id }),
       UserRepository.findOne({ user_email: email }),
     ]);
-    if (byId) throw ERROR.CONFLICT_ID;
-    if (byEmail) throw ERROR.CONFLICT_EMAIL;
+    if (byId) throw ERROR.CONFLICT_ID();
+    if (byEmail) throw ERROR.CONFLICT_EMAIL();
 
     try {
       await UserRepository.create({
@@ -29,7 +29,7 @@ export const AuthService = {
         token,
       });
     } catch (err) {
-      if (err?.code === 11000) throw ERROR.CONFLICT_RACE;
+      if (err?.code === 11000) throw ERROR.CONFLICT_RACE();
       throw err;
     }
   },
@@ -40,9 +40,9 @@ export const AuthService = {
       { user_email: email },
       { includePassword: true },
     );
-    if (!user) throw ERROR.INVALID_LOGIN_INFO;
+    if (!user) throw ERROR.INVALID_LOGIN_INFO();
     const ok = await user.comparePassword(password);
-    if (!ok) throw ERROR.INVALID_LOGIN_INFO;
+    if (!ok) throw ERROR.INVALID_LOGIN_INFO();
     const token = await this._generateToken(user.user_id);
     return AuthResponseDto.parse({
       user_id: user.user_id,
