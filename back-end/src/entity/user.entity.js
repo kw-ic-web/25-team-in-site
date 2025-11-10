@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema(
     },
     user_xp: { type: Number, default: 0 },
     user_level: { type: Number, default: 1 },
+    prefer_language: { type: String },
+    purpose: { type: String },
+    metalevel: { type: Number }, //서버 내부 레벨 <- 초기값은 유저 선택 레벨
   },
   { timestamps: true },
 );
@@ -33,4 +36,4 @@ userSchema.methods.comparePassword = async function (plainPassword) {
   return bcrypt.compare(plainPassword, this.user_pw);
 };
 
-export const User = mongoose.model("user", userSchema);
+export const User = mongoose.model("User", userSchema);
