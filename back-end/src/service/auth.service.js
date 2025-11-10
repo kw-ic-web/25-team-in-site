@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
-import { ERROR } from "../../mapper/error.mapper.js";
+import { ERROR } from "../mapper/error.mapper.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { AuthResponseDto } from "../dto/auth/auth.response.dto.js";
 

@@ -1,4 +1,4 @@
-import { ERROR } from "../../mapper/error.mapper.js";
+import { ERROR } from "../mapper/error.mapper.js";
 import { ZodError } from "zod";
 
 export default (err, req, res, next) => {
