@@ -6,7 +6,7 @@ import { AuthResponseDto } from "../dto/auth/auth.response.dto.js";
 
 export const AuthService = {
   async register(dto) {
-    const { user_id, email, password } = dto;
+    const { user_id, email, password, language, level, purpose } = dto;
 
     const [byId, byEmail] = await Promise.all([
       UserRepository.findOne({ user_id: user_id }),
@@ -17,9 +17,12 @@ export const AuthService = {
 
     try {
       await UserRepository.create({
-        user_id: user_id,
+        user_id,
         user_email: email,
         user_pw: password,
+        prefer_language: language,
+        purpose,
+        metalevel: level,
       });
 
       const token = await this._generateToken(user_id);

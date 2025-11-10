@@ -10,4 +10,11 @@ export const RegisterRequestDto = z.object({
     .string()
     .min(8, "INVALID_REGISTER_REQUEST")
     .max(128, "INVALID_REGISTER_REQUEST"),
+  language: z.enum(["py", "js", "cpp", "other"], "INVALID_LANGUAGE"),
+  level: z
+    .number()
+    .int()
+    .min(1, "INVALID_LEVEL_RANGE")
+    .max(4, "INVALID_LEVEL_RANGE"),
+  purpose: z.enum(["prob", "proj", "learn"], "INVALID_PURPOSE"), //TODO: ENUM 커스텀 에러
 });
