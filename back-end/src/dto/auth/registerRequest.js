@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 export const RegisterRequestDto = z.object({
-  user_id: z.string().min(3, "INVALID_REGISTER_REQUEST"),
+  user_id: z
+    .string()
+    .min(3, "INVALID_REGISTER_REQUEST")
+    .max(50, "INVALID_REGISTER_REQUEST"),
   email: z.email("INVALID_EMAIL_FORMAT").trim().toLowerCase(),
   password: z
     .string()
