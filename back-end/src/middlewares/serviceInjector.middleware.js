@@ -1,4 +1,4 @@
-import { AuthService } from "../service/authService.js";
+import { AuthService } from "../service/auth.service.js";
 
 export default (req, res, next) => {
   req.services = {

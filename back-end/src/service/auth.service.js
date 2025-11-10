@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import config from "../config/env.js";
-import { ERROR } from "../../mapper/errorMapper.js";
-import { UserRepository } from "../repository/userRepository.js";
-import { AuthResponseDto } from "../dto/auth/AuthResponse.js";
+import config from "../config/env.config.js";
+import { ERROR } from "../../mapper/error.mapper.js";
+import { UserRepository } from "../repository/user.repository.js";
+import { AuthResponseDto } from "../dto/auth/auth.response.dto.js";
 
 export const AuthService = {
   async register(dto) {

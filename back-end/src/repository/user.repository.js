@@ -1,4 +1,4 @@
-import { User } from "../entity/user.js";
+import { User } from "../entity/user.entity.js";
 
 export const UserRepository = {
   async create({ user_id, user_pw, user_email }) {

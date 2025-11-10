@@ -1,5 +1,5 @@
-import { RegisterRequestDto } from "../dto/auth/registerRequest.js";
-import { LoginRequestDto } from "../dto/auth/loginRequest.js";
+import { RegisterRequestDto } from "../dto/auth/register.request.dto.js";
+import { LoginRequestDto } from "../dto/auth/login.request.dto.js";
 
 export const AuthController = {
   async register(req, res, next) {
