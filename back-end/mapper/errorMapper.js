@@ -14,4 +14,5 @@ export const ERROR = {
   INVALID_LOGIN_INFO: new UnauthorizedError(
     "이메일 또는 비밀번호가 올바르지 않습니다.",
   ),
+  INVALID_TOKEN: new UnauthorizedError("인증 정보가 올바르지 않습니다."),
 };
