@@ -1,58 +1,58 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.js";
-import { ConflictError } from "../errors/conflict.js";
+import { ERROR } from "../../mapper/errorMapper.js";
 import { UserRepository } from "../repository/userRepository.js";
-import { BadRequestError } from "../errors/badRequest.js";
-import { UnauthorizedError } from "../errors/unauthorized.js";
+import { AuthResponseDto } from "../dto/auth/AuthResponse.js";
 
 export const AuthService = {
-  async register(id, email, password) {
-    if (!id || !password || !email) {
-      throw new BadRequestError("아이디, 비밀번호, 이메일을 입력하세요.");
-    }
-    const normEmail = email.trim().toLowerCase();
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(normEmail)) {
-      throw new BadRequestError("올바른 이메일 형식이 아닙니다.");
-    }
+  async register(dto) {
+    const { user_id, email, password } = dto;
 
     const [byId, byEmail] = await Promise.all([
-      UserRepository.findOne({ user_id: id }),
-      UserRepository.findOne({ user_email: normEmail }),
+      UserRepository.findOne({ user_id: user_id }),
+      UserRepository.findOne({ user_email: email }),
     ]);
-    if (byId) throw new ConflictError("이미 등록된 아이디입니다.");
-    if (byEmail) throw new ConflictError("이미 등록된 이메일입니다.");
+    if (byId) throw ERROR.CONFLICT_ID;
+    if (byEmail) throw ERROR.CONFLICT_EMAIL;
 
     try {
-      const user = await UserRepository.create({
-        user_id: id,
-        user_email: normEmail,
+      await UserRepository.create({
+        user_id: user_id,
+        user_email: email,
         user_pw: password,
       });
-      const safeUser = user.toObject();
-      delete safeUser.user_pw;
-      return safeUser;
+
+      const token = this._generateToken(user_id);
+      return AuthResponseDto.parse({
+        user_id,
+        email,
+        token,
+      });
     } catch (err) {
-      if (err?.code === 11000)
-        throw new ConflictError("아이디/이메일이 이미 존재합니다.");
+      if (err?.code === 11000) throw ERROR.CONFLICT_RACE;
       throw err;
     }
   },
-  async login(email, password) {
-    if (!email || !password)
-      throw new BadRequestError("이메일/비밀번호를 입력하세요.");
-    const normEmail = email.trim().toLowerCase();
+
+  async login(dto) {
+    const { email, password } = dto;
     const user = await UserRepository.findOne(
-      { user_email: normEmail },
+      { user_email: email },
       { includePassword: true },
     );
-    if (!user)
-      throw new UnauthorizedError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    if (!user) throw ERROR.INVALID_LOGIN_INFO;
     const ok = await user.comparePassword(password);
-    if (!ok)
-      throw new UnauthorizedError("이메일 또는 비밀번호가 올바르지 않습니다.");
-    return jwt.sign({ user_id: user.user_id }, config.jwtSecret, {
+    if (!ok) throw ERROR.INVALID_LOGIN_INFO;
+    const token = await this._generateToken(user.user_id);
+    return AuthResponseDto.parse({
+      user_id: user.user_id,
+      email,
+      token,
+    });
+  },
+
+  async _generateToken(user_id) {
+    return jwt.sign({ user_id }, config.jwtSecret, {
       noTimestamp: true,
     });
   },

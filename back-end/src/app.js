@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(serviceInjector);
+//TODO: Zod 에러 핸들링 미들웨어 추가. ENUM 사용하여 커스텀 에러 반환
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });

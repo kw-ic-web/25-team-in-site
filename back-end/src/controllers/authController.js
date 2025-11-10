@@ -1,9 +1,23 @@
+import { RegisterRequestDto } from "../dto/auth/registerRequest.js";
+import { LoginRequestDto } from "../dto/auth/loginRequest.js";
+
 export const AuthController = {
   async register(req, res, next) {
     try {
-      const { id, email, password } = req.body;
-      const user = await req.services.auth.register(id, email, password);
-      res.status(201).json(user);
+      const dto = RegisterRequestDto.parse(req.body);
+      const responseDto = await req.services.auth.register(dto);
+      res
+        .cookie("token", responseDto.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        })
+        .status(201)
+        .json({
+          user_id: responseDto.user_id,
+          email: responseDto.email,
+        });
     } catch (e) {
       next(e);
     }
@@ -11,17 +25,20 @@ export const AuthController = {
 
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
-      const jwt = await req.services.auth.login(email, password);
+      const dto = LoginRequestDto.parse(req.body);
+      const responseDto = await req.services.auth.login(dto);
       res
-        .cookie("token", jwt, {
+        .cookie("token", responseDto.token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
           maxAge: 30 * 24 * 60 * 60 * 1000,
         })
         .status(200)
-        .json({});
+        .json({
+          user_id: responseDto.user_id,
+          email: responseDto.email,
+        });
     } catch (e) {
       next(e);
     }
