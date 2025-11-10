@@ -8,12 +8,12 @@ export const AuthService = {
   async register(dto) {
     const { user_id, email, password, language, level, purpose } = dto;
 
-    const [byId, byEmail] = await Promise.all([
-      UserRepository.findOne({ user_id: user_id }),
-      UserRepository.findOne({ user_email: email }),
+    const [idAvailable, emailAvailavble] = await Promise.all([
+      this.isIdAvailable(user_id),
+      this.isEmailAvailable(email),
     ]);
-    if (byId) throw ERROR.CONFLICT_ID();
-    if (byEmail) throw ERROR.CONFLICT_EMAIL();
+    if (!idAvailable) throw ERROR.CONFLICT_ID();
+    if (!emailAvailavble) throw ERROR.CONFLICT_EMAIL();
 
     try {
       await UserRepository.create({
