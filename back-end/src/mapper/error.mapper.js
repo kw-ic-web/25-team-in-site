@@ -7,7 +7,8 @@ export const ERROR = {
     new BadRequestError("아이디, 비밀번호, 이메일을 입력하세요."),
   INVALID_EMAIL_FORMAT: () =>
     new BadRequestError("올바른 이메일 형식이 아닙니다."),
-  INVALID_LANGUAGE: () => new BadRequestError("선호하는 프로그래밍 언어 오류"),
+  INVALID_LANGUAGE: () =>
+    new BadRequestError("선호하는 프로그래밍 언어가 올바르지 않습니다."),
   INVALID_PURPOSE: () => new BadRequestError("가입 목적이 올바르지 않습니다."),
   INVALID_LEVEL_RANGE: () =>
     new BadRequestError("숙련도는 1~4 사이의 정수여야 합니다."),
