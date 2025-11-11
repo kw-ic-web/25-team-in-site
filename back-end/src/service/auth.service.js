@@ -1,25 +1,28 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
-import { ERROR } from "../../mapper/error.mapper.js";
+import { ERROR } from "../mapper/error.mapper.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { AuthResponseDto } from "../dto/auth/auth.response.dto.js";
 
 export const AuthService = {
   async register(dto) {
-    const { user_id, email, password } = dto;
+    const { user_id, email, password, language, level, purpose } = dto;
 
-    const [byId, byEmail] = await Promise.all([
-      UserRepository.findOne({ user_id: user_id }),
-      UserRepository.findOne({ user_email: email }),
+    const [idAvailable, emailAvailavble] = await Promise.all([
+      this.isIdAvailable(user_id),
+      this.isEmailAvailable(email),
     ]);
-    if (byId) throw ERROR.CONFLICT_ID();
-    if (byEmail) throw ERROR.CONFLICT_EMAIL();
+    if (!idAvailable) throw ERROR.CONFLICT_ID();
+    if (!emailAvailavble) throw ERROR.CONFLICT_EMAIL();
 
     try {
       await UserRepository.create({
-        user_id: user_id,
+        user_id,
         user_email: email,
         user_pw: password,
+        prefer_language: language,
+        purpose,
+        metalevel: level,
       });
 
       const token = await this._generateToken(user_id);

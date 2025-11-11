@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
-import { ERROR } from "../../mapper/error.mapper.js";
+import { ERROR } from "../mapper/error.mapper.js";
 
 const _publicPaths = ["/api/v1/auth/login", "/api/v1/auth/register"];
 const _normalize = (s = "") => s.replace(/\/+$/, "");
