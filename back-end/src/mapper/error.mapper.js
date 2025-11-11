@@ -1,5 +1,6 @@
 import { BadRequestError } from "../errors/badRequest.error.js";
 import { ConflictError } from "../errors/conflict.error.js";
+import { InternalServerError } from "../errors/internalServerError.error.js";
 import { UnauthorizedError } from "../errors/unauthorized.error.js";
 
 export const ERROR = {
@@ -20,4 +21,7 @@ export const ERROR = {
   INVALID_LOGIN_INFO: () =>
     new UnauthorizedError("이메일 또는 비밀번호가 올바르지 않습니다."),
   INVALID_TOKEN: () => new UnauthorizedError("인증 정보가 올바르지 않습니다."),
+  INVALID_PROB_ID: () => new BadRequestError("문제 ID가 올바르지 않습니다."),
+  FAIL_TO_GET_PROB_DETAIL: () =>
+    new InternalServerError("문제 세부사항을 찾을 수 없습니다."),
 };

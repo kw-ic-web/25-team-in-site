@@ -1,5 +1,7 @@
 import { Problem } from "../entity/problem.entity.js";
 
-export const findProblemById = async (id) => {
-  return await Problem.findOne({ problemId: id });
+export const ProblemRepository = {
+  async findProblemById(id) {
+    return await Problem.findOne({ problemId: id });
+  },
 };
