@@ -16,15 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select env file
+      - name: Select env file and target path
         id: envfile
         run: |
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "encrypted=back-end/production.env.encrypted" >> "$GITHUB_OUTPUT"
             echo "output=back-end/production.env" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.BE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF_NAME}" == "back-end" ]]; then
             echo "encrypted=back-end/development.env.encrypted" >> "$GITHUB_OUTPUT"
             echo "output=back-end/development.env" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.BE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
             exit 1
@@ -32,7 +34,7 @@ jobs:
 
       - name: Decrypt backend env file
         run: |
-          bash back-end/crypt-env.sh decrypt "${{ secrets.BACKEND_ENV_PASSWORD }}" "${{ steps.envfile.outputs.encrypted }}" "${{ steps.envfile.outputs.output }}"
+          bash back-end/crypt-env.sh decrypt "${{ secrets.BE_BACKEND_ENV_PASSWORD }}" "${{ steps.envfile.outputs.encrypted }}" "${{ steps.envfile.outputs.output }}"
 
       - name: Install backend dependencies
         working-directory: back-end
@@ -44,21 +46,21 @@ jobs:
       - name: Upload bundle to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.BE_EC2_HOST }}
+          username: ${{ secrets.BE_EC2_USERNAME }}
+          key: ${{ secrets.BE_EC2_SSH_KEY }}
           source: backend.tar.gz
-          target: ${{ secrets.EC2_TARGET_DIR }}
+          target: ${{ steps.envfile.outputs.target }}
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.BE_EC2_HOST }}
+          username: ${{ secrets.BE_EC2_USERNAME }}
+          key: ${{ secrets.BE_EC2_SSH_KEY }}
           script: |
             set -euo pipefail
-            cd "${{ secrets.EC2_TARGET_DIR }}"
+            cd "${{ steps.envfile.outputs.target }}"
             rm -rf back-end
             tar -xzf backend.tar.gz
             rm backend.tar.gz
