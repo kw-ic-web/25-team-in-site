@@ -4,8 +4,8 @@ set -euo pipefail
 
 # Usage: ./crypt-env.sh <encrypt|decrypt> <password> [input] [output]
 # Defaults:
-#   encrypt: in=.env, out=env.encrypted
-#   decrypt: in=env.encrypted, out=.env
+#   encrypt: in=development.env, out=development.env.encrypted
+#   decrypt: in=development.env.encrypted, out=development.env
 
 MODE=${1:-}
 PASS=${2:-}
@@ -25,12 +25,12 @@ fi
 
 case "$MODE" in
   encrypt)
-    INFILE=${INFILE:-.env}
-    OUTFILE=${OUTFILE:-env.encrypted}
+    INFILE=${INFILE:-development.env}
+    OUTFILE=${OUTFILE:-development.env.encrypted}
     ;;
   decrypt)
-    INFILE=${INFILE:-env.encrypted}
-    OUTFILE=${OUTFILE:-.env}
+    INFILE=${INFILE:-development.env.encrypted}
+    OUTFILE=${OUTFILE:-development.env}
     ;;
   *)
     echo "오류: 첫 번째 인자는 encrypt 또는 decrypt 여야 합니다." >&2
