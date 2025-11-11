@@ -2,7 +2,12 @@ import jwt from "jsonwebtoken";
 import config from "../config/env.config.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
-const _publicPaths = ["/api/v1/auth/login", "/api/v1/auth/register"];
+const _publicPaths = [
+  "/api/v1/auth/login",
+  "/api/v1/auth/register",
+  "/api-docs",
+  "/api-docs.json",
+];
 const _normalize = (s = "") => s.replace(/\/+$/, "");
 
 export const authMiddleware = (req, res, next) => {
