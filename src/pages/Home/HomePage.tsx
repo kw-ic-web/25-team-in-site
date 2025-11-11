@@ -168,13 +168,18 @@ export default function HomePage() {
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
 
   // --------------------- 렌더 ---------------------
+  const XP_REWARD = 50;
+  const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
+  const recommendedProblem = problems[0];
+  const expectedSolveTime = "30분";
+
   return (
     <div className="home">
       {/* 좌측 필터 */}
       <aside className="home__sidebar">
         <section className="home-card home-card--emph">
           <header className="home-card__header">
-            <h3>출석 랭킹</h3>
+            <h3>출석 현황</h3>
           </header>
           <div className="attendance">
             <span className="attendance__label">현재 연속 출석</span>
@@ -227,144 +232,137 @@ export default function HomePage() {
       <section className="home__content">
         <header className="home__content-header">
           <div className="stat" aria-live="polite">
-            전체 문제 <strong>{filtered.length}</strong>
+            <div className="stat__heading">
+              <h2>전체 문제</h2>
+              <span>{filtered.length}</span>
+            </div>
+            <div className="searchbar">
+              <input
+                type="search"
+                placeholder="문제 검색"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="문제 검색"
+              />
+            </div>
           </div>
 
           {/* 검색 & 칩/토글 영역 */}
-          <div className="searchbar">
-            <input
-              type="search"
-              placeholder="문제 검색"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="문제 검색"
-            />
-
-            <div className="controls">
-              <div className="controls_left">
-              {/* 문제 유형 드롭다운 */}
-              <div className="chip dropdown" ref={typeRef}>
-                <button
-                  type="button"
-                  className="dropdown__trigger"
-                  aria-haspopup="menu"
-                  aria-expanded={typeOpen}
-                  onClick={() => {
-                    setTypeOpen((v) => !v);
-                    setKindOpen(false);
-                  }}
-                >
-                  문제 유형 {selectedType ? `: ${selectedType}` : ""}
-                  <span className="caret">▾</span>
-                </button>
-                {typeOpen && (
-                  <div role="menu" className="dropdown__menu">
-                    <button className="dropdown__item dropdown__item--clear" onClick={clearType}>
-                      전체 해제
-                    </button>
-                    {TYPES.map((t) => (
-                      <button
-                        key={t}
-                        role="menuitem"
-                        className={`dropdown__item ${
-                          selectedType === t ? "is-selected" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedType(t);
-                          setTypeOpen(false);
-                        }}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 유형별 분류 드롭다운 */}
-              <div className="chip dropdown" ref={kindRef}>
-                <button
-                  type="button"
-                  className="dropdown__trigger"
-                  aria-haspopup="menu"
-                  aria-expanded={kindOpen}
-                  onClick={() => {
-                    setKindOpen((v) => !v);
-                    setTypeOpen(false);
-                  }}
-                >
-                  유형별 분류 {selectedKind ? `: ${selectedKind}` : ""}
-                  <span className="caret">▾</span>
-                </button>
-                {kindOpen && (
-                  <div role="menu" className="dropdown__menu">
-                    <button className="dropdown__item dropdown__item--clear" onClick={clearKind}>
-                      전체 해제
-                    </button>
-                    {KINDS.map((k) => (
-                      <button
-                        key={k}
-                        role="menuitem"
-                        className={`dropdown__item ${
-                          selectedKind === k ? "is-selected" : ""
-                        }`}
-                        onClick={() => {
-                          setSelectedKind(k);
-                          setKindOpen(false);
-                        }}
-                      >
-                        {k}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 해결 문제만 보기 */}
-              <label className="chip chip--checkbox">
-                <input
-                  type="checkbox"
-                  checked={solvedOnly}
-                  onChange={(e) => setSolvedOnly(e.target.checked)}
-                />
-                <span>해결 문제만 보기</span>
-              </label>
-              </div>
-
-              {/* 정렬 */}
-              <div className="controls_right">
-              <select
-                className="chip chip--select controls__sort"
-                aria-label="정렬"
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as any)}
+          <div className="filters-bar">
+            <div className="chip dropdown" ref={typeRef}>
+              <button
+                type="button"
+                className="dropdown__trigger"
+                aria-haspopup="menu"
+                aria-expanded={typeOpen}
+                onClick={() => {
+                  setTypeOpen((v) => !v);
+                  setKindOpen(false);
+                }}
               >
-                <option value="latest">최신순</option>
-                <option value="acc">정답률 높은 순</option>
-                <option value="diff">난이도 낮은 순</option>
-              </select>
+                    문제 유형 {selectedType ? `: ${selectedType}` : ""}
+                    <img src={dropdownIcon} alt="" aria-hidden="true" className="dropdown__icon" />
+              </button>
+              {typeOpen && (
+                <div role="menu" className="dropdown__menu">
+                  <button className="dropdown__item dropdown__item--clear" onClick={clearType}>
+                    전체 해제
+                  </button>
+                  {TYPES.map((t) => (
+                    <button
+                      key={t}
+                      role="menuitem"
+                      className={`dropdown__item ${selectedType === t ? "is-selected" : ""}`}
+                      onClick={() => {
+                        setSelectedType(t);
+                        setTypeOpen(false);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <div className="chip dropdown" ref={kindRef}>
+              <button
+                type="button"
+                className="dropdown__trigger"
+                aria-haspopup="menu"
+                aria-expanded={kindOpen}
+                onClick={() => {
+                  setKindOpen((v) => !v);
+                  setTypeOpen(false);
+                }}
+              >
+                    유형별 분류 {selectedKind ? `: ${selectedKind}` : ""}
+                    <img src={dropdownIcon} alt="" aria-hidden="true" className="dropdown__icon" />
+              </button>
+              {kindOpen && (
+                <div role="menu" className="dropdown__menu">
+                  <button className="dropdown__item dropdown__item--clear" onClick={clearKind}>
+                    전체 해제
+                  </button>
+                  {KINDS.map((k) => (
+                    <button
+                      key={k}
+                      role="menuitem"
+                      className={`dropdown__item ${selectedKind === k ? "is-selected" : ""}`}
+                      onClick={() => {
+                        setSelectedKind(k);
+                        setKindOpen(false);
+                      }}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <label className="chip chip--checkbox">
+              <input
+                type="checkbox"
+                checked={solvedOnly}
+                onChange={(e) => setSolvedOnly(e.target.checked)}
+              />
+              <span>해결 문제만 보기</span>
+            </label>
+
+            <select
+              className="chip chip--select filters-bar__sort"
+              aria-label="정렬"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as any)}
+            >
+              <option value="latest">최신순</option>
+              <option value="acc">정답률 높은 순</option>
+              <option value="diff">난이도 낮은 순</option>
+            </select>
           </div>
         </header>
 
         <ul className="problem-list">
           {current.map((p) => (
             <li key={p.id} className="problem-item">
-              <div className="problem-item__main">
+              <div className="problem-item__left">
                 <h4 className="problem-item__title">{p.title}</h4>
+                <div className="problem-item__labels">
+                  <span className="pill pill--level">레벨 {p.difficulty}</span>
+                </div>
                 <div className="problem-item__meta">
                   {p.tags.map((t) => (
-                    <span key={t} className="tag">
-                      {t}
-                    </span>
+                    <span key={t}>#{t}</span>
                   ))}
-                  <span className="difficulty">레벨 {p.difficulty}</span>
-                  <span className="difficulty">{p.language}</span>
+                  <span>#{p.kind}</span>
+                  <span>#{p.language}</span>
                 </div>
               </div>
               <div className="problem-item__right">
-                <span className="correctness">정답률 {p.correctness}%</span>
+                <span className="correctness">
+                  정답률 <strong>{p.correctness}%</strong>
+                </span>
                 <button type="button" className="btn-primary">
                   풀어보기
                 </button>
@@ -413,19 +411,36 @@ export default function HomePage() {
       {/* 우측 추천/랭킹 */}
       <aside className="home__aside">
         <section className="recommend">
-          <header className="recommend__header">오늘의 추천 문제</header>
-          <div className="recommend__body">
-            <div className="recommend__row">
-              <span className="label">이번 달의 목표</span>
-              <span className="pill pill--goal">연속 7일</span>
+          <div className="recommend__top">
+            <div>
+              <p className="recommend__eyebrow">오늘의 추천 문제</p>
+              <h4 className="recommend__title">
+                {recommendedProblem?.title ?? "추천 문제를 준비 중이에요"}
+              </h4>
             </div>
-            <div className="recommend__row">
-              <span className="label">예상 시간</span>
-              <span className="pill">5-10분</span>
+          </div>
+          <div className="recommend__details">
+            <span className="recommend__level">
+              레벨 {recommendedProblem?.difficulty ?? "-"}
+            </span>
+            <div className="recommend__tags-row">
+              <div className="recommend__info">
+                <p className="recommend__time">예상 시간: {expectedSolveTime}</p>
+                <div className="recommend__tags" aria-label="추천 문제 유형">
+                  {recommendedProblem ? (
+                    <>
+                      <span>#{recommendedProblem.type}</span>
+                      <span>#{recommendedProblem.kind}</span>
+                    </>
+                  ) : (
+                    <span>#유형 준비 중</span>
+                  )}
+                </div>
+              </div>
+              <button type="button" className="recommend__cta">
+                도전
+              </button>
             </div>
-            <button type="button" className="btn-cta">
-              도전!
-            </button>
           </div>
         </section>
 
@@ -437,10 +452,13 @@ export default function HomePage() {
             {Array.from({ length: 10 }, (_, i) => ({
               rank: i + 1,
               name: "아이디아이디",
-              score: 1234,
+              score: 1234 - i * 7,
             })).map((r) => (
               <li key={r.rank} className="ranking__item">
                 <span className={`rank rank--${r.rank <= 3 ? r.rank : "n"}`}>{r.rank}</span>
+                <span className="avatar avatar--sm" aria-hidden="true">
+                  {r.name.slice(0, 1)}
+                </span>
                 <span className="name">{r.name}</span>
                 <span className="score">{r.score.toLocaleString()}</span>
               </li>
