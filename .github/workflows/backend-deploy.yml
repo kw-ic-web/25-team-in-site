@@ -1,0 +1,69 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, back-end]
+    paths:
+      - "back-end/**"
+      - ".github/workflows/backend-deploy.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository_owner != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select env file and target path
+        id: envfile
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "encrypted=back-end/production.env.encrypted" >> "$GITHUB_OUTPUT"
+            echo "output=back-end/production.env" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.BE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF_NAME}" == "back-end" ]]; then
+            echo "encrypted=back-end/development.env.encrypted" >> "$GITHUB_OUTPUT"
+            echo "output=back-end/development.env" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.BE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+
+      - name: Decrypt backend env file
+        run: |
+          bash back-end/crypt-env.sh decrypt "${{ secrets.BE_BACKEND_ENV_PASSWORD }}" "${{ steps.envfile.outputs.encrypted }}" "${{ steps.envfile.outputs.output }}"
+
+      - name: Install backend dependencies
+        working-directory: back-end
+        run: npm ci
+
+      - name: Create deployment bundle
+        run: tar -czf backend.tar.gz back-end
+
+      - name: Upload bundle to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.BE_EC2_HOST }}
+          username: ${{ secrets.BE_EC2_USERNAME }}
+          key: ${{ secrets.BE_EC2_SSH_KEY }}
+          source: backend.tar.gz
+          target: ${{ steps.envfile.outputs.target }}
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.BE_EC2_HOST }}
+          username: ${{ secrets.BE_EC2_USERNAME }}
+          key: ${{ secrets.BE_EC2_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd "${{ steps.envfile.outputs.target }}"
+            rm -rf back-end
+            tar -xzf backend.tar.gz
+            rm backend.tar.gz
+            cd back-end
+            npm ci --omit=dev
+            pm2 restart in-site || pm2 start src/server.js --name in-site
