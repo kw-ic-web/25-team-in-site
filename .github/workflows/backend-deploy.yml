@@ -23,10 +23,12 @@ jobs:
             echo "encrypted=back-end/production.env.encrypted" >> "$GITHUB_OUTPUT"
             echo "output=back-end/production.env" >> "$GITHUB_OUTPUT"
             echo "target=${{ secrets.BE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=in-site" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF_NAME}" == "back-end" ]]; then
             echo "encrypted=back-end/development.env.encrypted" >> "$GITHUB_OUTPUT"
             echo "output=back-end/development.env" >> "$GITHUB_OUTPUT"
             echo "target=${{ secrets.BE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
             exit 1
@@ -66,4 +68,4 @@ jobs:
             rm backend.tar.gz
             cd back-end
             npm ci --omit=dev
-            pm2 restart in-site || pm2 start src/server.js --name in-site
+            pm2 restart "${{ steps.envfile.outputs.pm2_name }}" || pm2 start src/server.js --name "${{ steps.envfile.outputs.pm2_name }}"
