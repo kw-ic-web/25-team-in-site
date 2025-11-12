@@ -27,6 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "pm2": "^6.0.13",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {
