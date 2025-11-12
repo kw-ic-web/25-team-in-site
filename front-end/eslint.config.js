@@ -28,5 +28,19 @@ export default defineConfig([
         tsconfigRootDir: __dirname,
       },
     },
+    rules: {
+      //  기본 no-unused-vars 규칙 끄기 (중복 방지)
+      "no-unused-vars": "off",
+      //  TypeScript 전용 규칙에서 '_' 무시 설정
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      "react-refresh/only-export-components": "off",
+    },
   },
 ]);
