@@ -1,0 +1,384 @@
+/* =================================================================
+   WrongPage.css (전체 레이아웃)
+================================================================= */
+.wrong-page-container {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px;
+  background-color: #f8f9fa; /* 페이지 배경색 */
+  min-height: calc(100vh - 80px); /* 80px은 Navbar 높이(예시) */
+}
+
+/* =================================================================
+   1. 좌측 통계 사이드바 (StatsSidebar)
+================================================================= */
+.stats-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+/* 공용 사이드바 카드 (난이도) */
+.sidebar-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* 난이도 필터 */
+.level-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.level-label {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.level-label .custom-checkbox {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+}
+.level-label .level-text {
+  color: #333;
+}
+
+/* --- (★수정된 통계 카드★) --- */
+
+/* JSX 구조가 .stats-cards-container와 .stat-card (개별 카드)로
+  변경되었으므로, CSS도 이에 맞게 수정합니다.
+  .stat-item-in-card 스타일은 더 이상 사용되지 않습니다.
+*/
+
+/* 개별 통계 카드들을 묶는 컨테이너 */
+.stats-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 카드 사이의 간격 */
+}
+
+/* 개별 통계 카드 (예: "총 학습 문제" 카드) */
+.stat-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  
+  /* 내부 요소 (라벨, 값, 구분선) 정렬 */
+  display: flex;
+  flex-direction: column; /* 세로로 쌓음 */
+  align-items: center;   /* 가운데 정렬 */
+  text-align: center;
+}
+
+/* 통계 라벨 (예: "총 학습 문제") */
+.stat-label {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 8px; /* 라벨과 값 사이 간격 */
+}
+
+/* 통계 값 (예: "34") */
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* ★요청하신 새 색상 이름★ */
+.stat-main {
+  color: #6a6aff; /* JSX에서 .stat-main을 사용 */
+}
+
+/* ★구분선★ 
+   (참고: JSX 코드를 기준으로 카드 *내부*에 스타일이 적용됩니다) */
+.stat-divider {
+  border: 0;
+  height: 1px;
+  background-color: #f0f0f0; /* 라인 색상 */
+  width: 100%; /* 카드 내부 100% */
+  margin-top: 20px; /* 값과 구분선 사이 간격 */
+}
+
+
+/* =================================================================
+   2. 메인 콘텐츠 (Main Content)
+================================================================= */
+.main-content {
+  flex-grow: 1;
+  max-width: 800px;
+}
+
+.main-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+/* 필터 (검색, 드롭다운) */
+.main-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-bar {
+  position: relative;
+  flex-grow: 1;
+  margin-right: 16px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 14px 10px 40px; /* 아이콘 자리 확보 */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.search-bar .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+}
+
+.filter-selects {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-selects select {
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+/* 문제 목록 */
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.problem-card {
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.problem-card-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+}
+
+.tags-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.level-tag {
+  background-color: #e6f7ff;
+  color: #096dd9;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.tag {
+  font-size: 13px;
+  color: #777;
+}
+
+.problem-card-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.accuracy {
+  font-size: 14px;
+  color: #555;
+}
+.points {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.primary-button {
+  padding: 10px 16px;
+  background-color: #6a6aff; /* 통계 색상과 통일 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.primary-button:hover {
+  background-color: #5050d4;
+}
+
+/* 도우미 어시스턴트 */
+.solution-assistant {
+  border-top: 1px solid #f0f0f0;
+}
+
+.assistant-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6a6aff;
+}
+
+.assistant-content {
+  padding: 0 24px 20px 24px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.6;
+}
+.assistant-content h4 {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.assistant-content ul {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+
+/* 페이지네이션 */
+.pagination-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+.pagination-nav button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+}
+.pagination-nav button.active {
+  background-color: #6a6aff;
+  color: white;
+  border-color: #6a6aff;
+}
+.pagination-nav button:hover:not(.active) {
+  background-color: #f9f9f9;
+}
+
+/* =================================================================
+   3. 우측 추천 사이드바 (RecommendationSidebar)
+================================================================= */
+.recommendation-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+/* 유사 문제 추천 */
+.similar-problem-card {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background-color: #fafcff;
+}
+.similar-problem-card:last-child {
+  margin-bottom: 0;
+}
+.similar-problem-card h4 {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.similar-problem-card p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+.similar-tag {
+  font-size: 12px;
+  color: #777;
+  background-color: #f0f0f0;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.similar-problem-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+.level-tag-blue {
+  font-size: 12px;
+  font-weight: 500;
+  color: #096dd9;
+}
+.time-text {
+  font-size: 12px;
+  color: #888;
+}
+.challenge-button {
+  padding: 6px 12px;
+  font-size: 13px;
+  background: none;
+  border: 1px solid #6a6aff;
+  color: #6a6aff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.challenge-button:hover {
+  background-color: #f4f4ff;
+}
+
+/* 최근 풀이 */
+.recent-solves ul {
+  list-style: none;
+  padding: 0;
+}
+.recent-solves li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #f0f0f0;
+}
+.recent-solves li:last-child {
+  border-bottom: none;
+}
+.level-tag-green {
+  font-size: 12px;
+  font-weight: 500;
+  color: #237804;
+}
