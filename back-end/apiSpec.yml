@@ -8,6 +8,7 @@ servers:
 
 tags:
   - name: Auth
+  - name: User
 
 paths:
   /health:
@@ -85,6 +86,35 @@ paths:
         '500':
           description: '서버 내부 오류'
 
+  /user/check-id/{user_id}:
+    get:
+      tags: [User]
+      summary: 아이디 중복 여부 확인
+      description: '가입 전에 특정 아이디가 사용 가능한지 확인합니다.'
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 50
+            pattern: '^[a-zA-Z0-9_-]+$'
+          description: '중복 여부를 확인할 아이디'
+      responses:
+        '200':
+          description: '아이디 사용 가능 여부'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserCheckIdResponse' }
+        '400':
+          description: '아이디가 요구 조건을 만족하지 않음'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: '서버 내부 오류'
+
 components:
   schemas:
     # ==== AUTH ====
@@ -96,7 +126,8 @@ components:
           type: string
           minLength: 3
           maxLength: 50
-          description: '3~50자의 고유 아이디'
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: '3~50자의 영문/숫자/언더스코어/하이픈(앞뒤 공백은 자동 제거)'
         email:
           type: string
           format: email
@@ -154,3 +185,12 @@ components:
         stack:
           type: string
           description: '개발 환경에서만 노출되는 stack trace'
+
+    # ==== USER ====
+    UserCheckIdResponse:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+          description: 'true이면 아직 사용되지 않은 아이디'

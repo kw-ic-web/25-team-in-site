@@ -1,0 +1,15 @@
+meta {
+  name: check-id
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:3000/api/v1/user/check-id/:user_id
+  body: none
+  auth: none
+}
+
+params:path {
+  user_id: dummy
+}
