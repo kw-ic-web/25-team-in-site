@@ -72,10 +72,7 @@ export default function RegisterPage() {
       setSubmitError(result.message);
       return;
     }
-    navigate("/login", {
-      replace: true,
-      state: { justRegistered: true, registeredId: form.id.trim() },
-    });
+    navigate("/start", { replace: true });
   };
 
   const idCheckDone =

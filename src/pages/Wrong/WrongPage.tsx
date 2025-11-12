@@ -94,10 +94,10 @@ const ProblemCard = ({ problem }: { problem: Problem }) => {
 const StatsSidebar = () => {
   const levels: string[] = ["레벨 1", "레벨 2", "레벨 3", "레벨 4", "레벨 5"];
   const stats: Stat[] = [
-    { label: "총 학습 문제", value: 34, color: "stat-blue" },
-    { label: "오답 문제", value: 10, color: "stat-blue" },
-    { label: "재도전 문제", value: 7, color: "stat-blue" },
-    { label: "재도전 성공률", value: "82%", color: "stat-blue" },
+    { label: "총 학습 문제", value: 34, color: "stat-main" },
+    { label: "오답 문제", value: 10, color: "stat-main" },
+    { label: "재도전 문제", value: 7, color: "stat-main" },
+    { label: "재도전 성공률", value: "82%", color: "stat-main" },
   ];
 
   return (
@@ -123,6 +123,9 @@ const StatsSidebar = () => {
           <div key={index} className="stat-card">
             <div className="stat-label">{stat.label}</div>
             <div className={`stat-value ${stat.color}`}>{stat.value}</div>
+            {index < stats.length - 1 && (
+            <hr className="stat-divider" /> 
+            )}
           </div>
         ))}
       </div>
