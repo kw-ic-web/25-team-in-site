@@ -1,21 +1,22 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../app/providers/AuthContext";
+import axios from "axios";
+import { authAPI } from "../../api/auth"; // axios 기반 API
 import "./LoginPage.css";
 
 const naverLogo = new URL("../../assets/logos/naver.png", import.meta.url).href;
 const kakaoLogo = new URL("../../assets/logos/kakao.png", import.meta.url).href;
 const loginTopIllustration = new URL(
   "../../assets/login/login1.png",
-  import.meta.url,
+  import.meta.url
 ).href;
 const loginStackIllustration = new URL(
   "../../assets/login/login2.png",
-  import.meta.url,
+  import.meta.url
 ).href;
 const loginBracketsIllustration = new URL(
   "../../assets/login/login3.png",
-  import.meta.url,
+  import.meta.url
 ).href;
 
 type LocationState = {
@@ -25,19 +26,20 @@ type LocationState = {
 };
 
 export default function LoginPage() {
-  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from =
-    (location.state as LocationState | undefined)?.from?.pathname ?? null;
+    (location.state as LocationState | undefined)?.from?.pathname ?? "/home";
+
   const [credentials, setCredentials] = useState({
-    id: "",
+    email: "",
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
 
+  /** 입력값 변경 */
   const onChange =
-    (key: "id" | "password") => (event: ChangeEvent<HTMLInputElement>) => {
+    (key: "email" | "password") => (event: ChangeEvent<HTMLInputElement>) => {
       setCredentials((prev) => ({
         ...prev,
         [key]: event.target.value,
@@ -45,19 +47,46 @@ export default function LoginPage() {
       setError(null);
     };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  /** 로그인 요청 */
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const result = login(credentials.id, credentials.password);
-    if (!result.success) {
-      setError(result.message);
+
+    if (!credentials.email.trim() || !credentials.password.trim()) {
+      setError("ID와 비밀번호를 모두 입력해 주세요.");
       return;
     }
-    const destination = from ?? "/home";
-    navigate(destination, { replace: true });
+
+    try {
+      const res = await authAPI.login({
+        email: credentials.email.trim(),
+        password: credentials.password,
+      });
+
+      // 로그인 성공 시
+      if (res.status === 200 || res.status === 201) {
+        const token = res.data.data?.token;
+        if (token) {
+          localStorage.setItem("accessToken", token);
+        }
+
+        alert("로그인 성공!");
+        navigate(from, { replace: true });
+      }
+    } catch (error: unknown) {
+      // 타입 안전한 axios 에러 처리
+      if (axios.isAxiosError(error)) {
+        const msg =
+          error.response?.data?.message || "로그인 중 오류가 발생했습니다.";
+        setError(msg);
+      } else {
+        setError("알 수 없는 오류가 발생했습니다.");
+      }
+    }
   };
 
   return (
     <div className="login-page">
+      {/* 장식 요소들 그대로 */}
       <div
         className="login-page__decor login-page__decor--stack"
         aria-hidden="true"
@@ -76,6 +105,8 @@ export default function LoginPage() {
       >
         <img src={loginBracketsIllustration} alt="" />
       </div>
+
+      {/* 로그인 카드 */}
       <section className="login-card" aria-labelledby="login-title">
         <header className="login-card__header">
           <h1 id="login-title">코딩도우미</h1>
@@ -100,16 +131,17 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* 실제 로그인 form */}
         <form className="login-form" onSubmit={onSubmit}>
           <label className="login-field">
             <span className="sr-only">ID</span>
             <input
               type="text"
               name="id"
-              placeholder="ID를 입력해 주세요"
+              placeholder="이메일을 입력해주세요"
               required
-              value={credentials.id}
-              onChange={onChange("id")}
+              value={credentials.email}
+              onChange={onChange("email")}
             />
           </label>
           <label className="login-field">
@@ -123,12 +155,19 @@ export default function LoginPage() {
               onChange={onChange("password")}
             />
           </label>
-          {error ? <p className="login-error" role="alert">{error}</p> : null}
+
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
+
           <button type="submit" className="login-submit">
             로그인
           </button>
         </form>
 
+        {/* SNS 로그인 섹션 (그대로 유지) */}
         <div className="login-divider">
           <span>또는</span>
         </div>

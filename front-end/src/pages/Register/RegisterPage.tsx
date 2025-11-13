@@ -5,19 +5,22 @@ import {
   type FormEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../app/providers/AuthContext";
+import axios from "axios";
+import { authAPI } from "../../api/auth";
 import "./RegisterPage.css";
 
 type IdCheckStatus = "idle" | "available" | "duplicate" | "empty";
 
 export default function RegisterPage() {
-  const { register, isIdAvailable } = useAuth();
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
     id: "",
+    email: "",
     password: "",
     confirm: "",
   });
+
   const [idCheckStatus, setIdCheckStatus] = useState<IdCheckStatus>("idle");
   const [idCheckMessage, setIdCheckMessage] = useState<string>("");
   const [checkedId, setCheckedId] = useState<string | null>(null);
@@ -27,12 +30,14 @@ export default function RegisterPage() {
     confirm: false,
   });
 
+  /** 입력값 변경 핸들러 */
   const onChange =
-    (key: "id" | "password" | "confirm") =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (key: keyof typeof form) => (event: ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setForm((prev) => ({ ...prev, [key]: value }));
       setSubmitError(null);
+
+      // ID 바꾸면 중복확인 상태 초기화
       if (key === "id") {
         setIdCheckStatus("idle");
         setIdCheckMessage("");
@@ -40,13 +45,15 @@ export default function RegisterPage() {
       }
     };
 
+  /** 비밀번호 blur 시 피드백 활성화 */
   const onPasswordBlur =
     (field: "password" | "confirm") =>
     (_event: FocusEvent<HTMLInputElement>) => {
       setPasswordBlurred((prev) => ({ ...prev, [field]: true }));
     };
 
-  const handleCheckId = () => {
+  /** 아이디 중복확인 */
+  const handleCheckId = async () => {
     const trimmed = form.id.trim();
     if (!trimmed) {
       setIdCheckStatus("empty");
@@ -54,27 +61,60 @@ export default function RegisterPage() {
       setCheckedId(null);
       return;
     }
-    if (!isIdAvailable(trimmed)) {
+
+    try {
+      const res = await authAPI.checkId(trimmed);
+      if (res.data?.available) {
+        setIdCheckStatus("available");
+        setIdCheckMessage("사용 가능한 ID입니다.");
+        setCheckedId(trimmed);
+      } else {
+        setIdCheckStatus("duplicate");
+        setIdCheckMessage("이미 사용 중인 ID입니다.");
+        setCheckedId(null);
+      }
+    } catch (_error) {
       setIdCheckStatus("duplicate");
-      setIdCheckMessage("이미 사용 중인 ID입니다.");
-      setCheckedId(null);
-      return;
+      setIdCheckMessage("중복 확인 중 오류가 발생했습니다.");
     }
-    setIdCheckStatus("available");
-    setIdCheckMessage("사용 가능한 ID입니다.");
-    setCheckedId(trimmed);
   };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  /** 회원가입 제출 */
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const result = register(form.id, form.password);
-    if (!result.success) {
-      setSubmitError(result.message);
+
+    const trimmedId = form.id.trim();
+    if (!trimmedId || !form.email || !form.password) {
+      setSubmitError("모든 필드를 입력해 주세요.");
       return;
     }
-    navigate("/start", { replace: true });
+
+    try {
+      const res = await authAPI.register({
+        user_id: trimmedId,
+        email: form.email.trim(),
+        password: form.password,
+        language: "py",
+        level: 4,
+        purpose: "prob",
+      });
+
+      if (res.status === 200 || res.status === 201) {
+        navigate("/start", { replace: true });
+      }
+    } catch (error: unknown) {
+      // no-explicit-any 해결 → unknown 사용
+      if (axios.isAxiosError(error)) {
+        const msg =
+          error.response?.data?.message || "회원가입 중 오류가 발생했습니다.";
+        setSubmitError(msg);
+      } else {
+        setSubmitError("알 수 없는 오류가 발생했습니다.");
+      }
+    }
   };
 
+  // 상태 계산
   const idCheckDone =
     idCheckStatus === "available" && checkedId === form.id.trim();
   const passwordsMatch =
@@ -83,44 +123,33 @@ export default function RegisterPage() {
     form.password === form.confirm;
   const showPasswordFeedback =
     passwordBlurred.password || passwordBlurred.confirm;
+
   const passwordFeedbackMessage = passwordsMatch
     ? "비밀번호가 일치합니다."
     : form.password === "" || form.confirm === ""
-      ? "비밀번호를 모두 입력해 주세요."
-      : "비밀번호가 일치하지 않습니다.";
+    ? "비밀번호를 모두 입력해 주세요."
+    : "비밀번호가 일치하지 않습니다.";
 
   const canSubmit =
     form.id.trim() !== "" &&
+    form.email.trim() !== "" &&
     form.password !== "" &&
     form.confirm !== "" &&
     idCheckDone &&
     passwordsMatch;
 
+  /** JSX */
   return (
     <div className="register-page">
-      <div
-        className="register-page__decor register-page__decor--stack"
-        aria-hidden="true"
-      />
-      <div
-        className="register-page__decor register-page__decor--bubble"
-        aria-hidden="true"
-      >
-        <span className="register-page__bubble-dot" />
-        <span className="register-page__bubble-dot" />
-        <span className="register-page__bubble-dot" />
-      </div>
-      <div
-        className="register-page__decor register-page__decor--brackets"
-        aria-hidden="true"
-      />
       <section className="register-card" aria-labelledby="register-title">
         <header className="register-card__header">
           <h1 id="register-title">회원가입</h1>
-          <p>새 계정을 만들고 AI 학습 플랫폼을 시작해 보세요.</p>
+          <p>새 계정을 만들고 서비스를 시작해 보세요.</p>
         </header>
 
+        {/* form에 onSubmit 연결 */}
         <form className="register-form" onSubmit={onSubmit}>
+          {/* ID */}
           <div className="register-field">
             <label htmlFor="register-id">ID</label>
             <div className="register-field__input-group">
@@ -140,7 +169,7 @@ export default function RegisterPage() {
                 중복확인
               </button>
             </div>
-            {idCheckMessage ? (
+            {idCheckMessage && (
               <p
                 className={`register-helper ${
                   idCheckStatus === "available"
@@ -150,9 +179,23 @@ export default function RegisterPage() {
               >
                 {idCheckMessage}
               </p>
-            ) : null}
+            )}
           </div>
 
+          {/* Email */}
+          <div className="register-field">
+            <label htmlFor="register-email">이메일</label>
+            <input
+              id="register-email"
+              type="email"
+              value={form.email}
+              onChange={onChange("email")}
+              placeholder="이메일을 입력해 주세요"
+              required
+            />
+          </div>
+
+          {/* Password */}
           <div className="register-field">
             <label htmlFor="register-password">비밀번호</label>
             <input
@@ -165,6 +208,8 @@ export default function RegisterPage() {
               required
             />
           </div>
+
+          {/* Password Confirm */}
           <div className="register-field">
             <label htmlFor="register-confirm">비밀번호 확인</label>
             <input
@@ -176,7 +221,7 @@ export default function RegisterPage() {
               placeholder="비밀번호를 다시 입력해 주세요"
               required
             />
-            {showPasswordFeedback ? (
+            {showPasswordFeedback && (
               <p
                 className={`register-helper ${
                   passwordsMatch
@@ -186,16 +231,21 @@ export default function RegisterPage() {
               >
                 {passwordFeedbackMessage}
               </p>
-            ) : null}
+            )}
           </div>
 
-          {submitError ? (
+          {/* Error */}
+          {submitError && (
             <p className="register-submit-error" role="alert">
               {submitError}
             </p>
-          ) : null}
+          )}
 
-          <button type="submit" className="register-submit" disabled={!canSubmit}>
+          <button
+            type="submit"
+            className="register-submit"
+            disabled={!canSubmit}
+          >
             회원가입 완료
           </button>
         </form>
