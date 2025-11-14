@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./HomePage.css";
+const personImg = new URL("../../assets/person.png", import.meta.url).href;
 
 type Problem = {
   id: string;
@@ -456,16 +457,23 @@ export default function HomePage() {
             })).map((r) => (
               <li key={r.rank} className="ranking__item">
                 <span className={`rank rank--${r.rank <= 3 ? r.rank : "n"}`}>{r.rank}</span>
-                <span className="avatar avatar--sm" aria-hidden="true">
-                  {r.name.slice(0, 1)}
-                </span>
+
+            <img
+              src={personImg}
+              alt="사용자 아바타"
+              className="avatar avatar--sm"
+            />
                 <span className="name">{r.name}</span>
                 <span className="score">{r.score.toLocaleString()}</span>
               </li>
             ))}
           </ol>
+
           <div className="my-rank">
-            내 순위 <strong>23위</strong> <span className="muted">(667xp)</span>
+            <span className="my-rank__label">내 순위</span>
+            <span className="my-rank__value">
+              23위 <span className="muted">(667xp)</span>
+            </span>
           </div>
         </section>
       </aside>
