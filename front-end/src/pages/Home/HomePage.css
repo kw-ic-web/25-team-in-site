@@ -1,6 +1,6 @@
 :root {
   --home-bg: #f6f7fb;
-  --home-card-radius: 8px;
+  --home-card-radius: 10px;
   --home-card-shadow: 0 12px 32px rgba(23, 40, 89, 0.08);
   --home-border: #e2e7ff;
   --home-text: #1c2143;
@@ -35,7 +35,6 @@
 }
 .home-card--emph {
   width: 100%;
-  height: 240px;
 }
 
 .home-card__header {
@@ -174,18 +173,17 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
 }
 
 .problem-item {
   background: #fff;
   border-radius: var(--home-card-radius);
   border: 1px solid var(--home-border);
-  padding: 24px 28px;
+  padding: 20px 20px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 24px;
-  align-items: center;
   box-shadow: 0 14px 28px rgba(24, 39, 87, 0.08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -246,8 +244,18 @@
   font-weight: 500;
 }
 
-.problem-item__right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-.correctness { font-size: 17px; color: var(--home-muted); padding-top: 39px; }
+.problem-item__right { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: flex-end; 
+  gap: 10px;
+  align-self: stretch;
+}
+.correctness { 
+  font-size: 17px; 
+  color: var(--home-muted); 
+}
+
 .correctness strong { color: var(--home-text); margin-left: 4px; font-size: 20px; }
 
 .btn-primary {
@@ -272,7 +280,6 @@
 }
 .page.is-active { background: var(--home-accent); color: #fff; }
 
-/* 추천 카드 */
 .recommend {
   border-radius: 20px;
   padding: 28px;
@@ -443,7 +450,6 @@
   }
 }
 
-/* --- Dropdown / Toggle --- */
 .dropdown { position: relative; }
 .dropdown__trigger { all: unset; cursor: pointer; }
 .dropdown__trigger .dropdown__icon {

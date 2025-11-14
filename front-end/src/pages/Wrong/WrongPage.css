@@ -1,6 +1,6 @@
 :root {
   --home-bg: #f6f7fb;
-  --home-card-radius: 8px;
+  --home-card-radius: 10px;
   --home-card-shadow: 0 12px 32px rgba(23, 40, 89, 0.08);
   --home-border: #e2e7ff;
   --home-text: #1c2143;
@@ -17,7 +17,7 @@
   grid-template-columns: 320px minmax(0, 1fr) 320px;
   column-gap: 28px;
   color: var(--home-text);
-  background-color: var(--home-bg); /* 페이지 배경색 추가 */
+  background-color: var(--home-bg); 
 }
 
 .home__sidebar,
@@ -89,14 +89,13 @@
   color: #6366f1; 
 }
 
-/* 난이도 필터 */
 .level-filters {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  list-style: none;     /* ← 불릿 제거 */
-  padding: 0;           /* ← 기본 들여쓰기 제거 */
-  margin: 0;            /* ← 기본 여백 제거 */
+  list-style: none;    
+  padding: 0;          
+  margin: 0;           
 }
 
 .level-label {
@@ -204,17 +203,13 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 20px; /* 문제 카드 사이 간격 */
+  gap: 20px; 
 }
 
-/* 👇 1. `.problem-item` (문제 카드) 스타일 수정
-*/
 .problem-item {
   background: #fff;
-  /* 하단 모서리 둥글기 제거 (어시스턴스와 연결) */
   border-radius: var(--home-card-radius) var(--home-card-radius) 0 0;
   border: 1px solid var(--home-border);
-  /* 하단 패딩 0으로 변경 */
   padding: 24px 28px 0; 
   display: grid;
   grid-template-columns: 1fr auto;
@@ -222,7 +217,6 @@
   align-items: center;
   box-shadow: 0 14px 28px rgba(24, 39, 87, 0.08);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
-  /* 어시스턴스가 모서리를 벗어나지 않도록 */
   overflow: hidden; 
 }
 
@@ -266,7 +260,7 @@
   font-size: 13px;
   color: #6b6b6b;
   margin-top: 15px;
-  padding-bottom: 24px; /* 👇 상단 padding: 0으로 인해 생긴 여백 보충 */
+  padding-bottom: 24px; 
 }
 
 .badge {
@@ -368,7 +362,6 @@
   color: #fff;
 }
 
-/* --- (우측 추천 카드) --- */
 .recommend {
   border-radius: 20px;
   padding: 28px;
@@ -466,7 +459,6 @@
   transform: translateY(-1px);
 }
 
-/* --- (최근 푼 문제) --- */
 .recent-list {
   margin: 0;
   padding: 0;
@@ -593,7 +585,6 @@
   }
 }
 
-/* --- (드롭다운) --- */
 .dropdown {
   position: relative;
 }
@@ -677,23 +668,15 @@
   }
 }
 
-/* =================================================================
-  👇 2. 여기에 어시스턴스 관련 CSS를 새로 추가합니다.
-================================================================= 
-*/
+
 .solution-assistant {
-  /* .problem-item (li)의 grid 컬럼 2개를 모두 차지 */
   grid-column: 1 / -1; 
   
-  /* 부모(.problem-item)의 padding(28px)과 border(1px)를 
-    무시하고 꽉 채우기 위해-29px, -28px 사용 
-  */
   margin: 0 -29px;
 
-  /* 하단 모서리 둥글게 */
   border-radius: 0 0 var(--home-card-radius) var(--home-card-radius);
-  overflow: hidden; /* 모서리 둥글게 적용 */
-  border-top: 1px solid var(--home-border); /* 문제 카드와의 구분선 */
+  overflow: hidden;
+  border-top: 1px solid var(--home-border);
 }
 
 .assistant-toggle {
@@ -701,8 +684,8 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 16px 28px; /* problem-item의 padding과 맞춤 */
-  background-color: #f9f8ff; /* 이미지의 연보라 배경 */
+  padding: 16px 28px;
+  background-color: #f9f8ff;
   border: none;
   cursor: pointer;
   font-size: 16px;
@@ -710,19 +693,16 @@
   color: #333;
 }
 
-/* 열린 상태일 때 토글 버튼 하단에 구분선 추가 */
 .solution-assistant[data-open="true"] .assistant-toggle {
   border-bottom: 1px solid var(--home-border);
 }
 
-/* "도우미 어시스턴트" 제목 */
 .assistant-title {
   font-weight: 600;
   font-size: 16px;
   color: #222;
 }
 
-/* "펼쳐보기" / "닫기" 텍스트 + 아이콘 */
 .assistant-toggle-text {
   display: flex;
   align-items: center;
@@ -732,10 +712,9 @@
   color: #555;
 }
 
-/* 열렸을 때의 콘텐츠 영역 */
 .assistant-content {
   padding: 24px 28px;
-  background-color: #f9f8ff; /* 열린 콘텐츠도 연보라 배경 */
+  background-color: #f9f8ff;
   font-size: 14px;
   color: #333;
   line-height: 1.6;
@@ -752,7 +731,7 @@
 .assistant-content ul {
   padding-left: 20px;
   margin-top: 8px;
-  list-style-type: disc; /* 불릿 포인트 보이게 */
+  list-style-type: disc;
 }
 
 .assistant-content li {
