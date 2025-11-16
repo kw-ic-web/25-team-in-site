@@ -345,37 +345,48 @@ export default function HomePage() {
         </header>
 
         <ul className="problem-list">
-          {current.map((p) => (
-            <li key={p.id} className="problem-item">
-              <div className="problem-item__left">
-                <h4 className="problem-item__title">{p.title}</h4>
-                <div className="problem-item__labels">
-                  <span className="pill pill--level">레벨 {p.difficulty}</span>
+          {current.map((p) => {
+            const xp = p.difficulty * 25;
+
+            return (
+              <li key={p.id} className="problem-item">
+                <div className="problem-item__left">
+                  {/* 제목 + 정답률 */}
+                  <div className="problem-item__top">
+                    <h4 className="problem-item__title">{p.title}</h4>
+                    <span className="correctness">정답률 {p.correctness}%</span>
+                  </div>
+
+                  <div className="problem-item__labels">
+                    <span className="pill pill--level">레벨 {p.difficulty}</span>
+                  </div>
+
+                  <div className="problem-item__meta">
+                    {p.tags.map((t) => (
+                      <span key={t}>#{t}</span>
+                    ))}
+                    <span>#{p.kind}</span>
+                    <span>#{p.language}</span>
+                  </div>
                 </div>
-                <div className="problem-item__meta">
-                  {p.tags.map((t) => (
-                    <span key={t}>#{t}</span>
-                  ))}
-                  <span>#{p.kind}</span>
-                  <span>#{p.language}</span>
+
+                <div className="problem-item__right">
+                  <span className="xp-badge">{xp}xp</span>
+                  <button type="button" className="btn-primary">
+                    풀이하기
+                  </button>
                 </div>
-              </div>
-              <div className="problem-item__right">
-                <span className="correctness">
-                  정답률 <strong>{p.correctness}%</strong>
-                </span>
-                <button type="button" className="btn-primary">
-                  풀어보기
-                </button>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
+
           {current.length === 0 && (
             <li className="problem-item" style={{ justifyContent: "center" }}>
               조건에 맞는 문제가 없습니다.
             </li>
           )}
         </ul>
+
 
         {/* 페이지네이션 */}
         <footer className="pagination" role="navigation" aria-label="페이지네이션">
