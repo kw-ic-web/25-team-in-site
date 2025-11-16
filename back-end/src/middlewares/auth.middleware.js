@@ -5,6 +5,7 @@ import { ERROR } from "../mapper/error.mapper.js";
 const _publicPaths = [
   "/api/v1/auth/login",
   "/api/v1/auth/register",
+  "/api/v1/user/check-id",
   "/api-docs",
   "/api-docs.json",
 ];

@@ -3,8 +3,10 @@ import { ConflictError } from "../errors/conflict.error.js";
 import { UnauthorizedError } from "../errors/unauthorized.error.js";
 
 export const ERROR = {
-  INVALID_REGISTER_REQUEST: () =>
-    new BadRequestError("아이디, 비밀번호, 이메일을 입력하세요."),
+  INVALID_ID_FORMAT: () =>
+    new BadRequestError("아이디 형식이 올바르지 않습니다."),
+  INVALID_PASSWORD_FORMAT: () =>
+    new BadRequestError("비밀번호 형식이 올바르지 않습니다."),
   INVALID_EMAIL_FORMAT: () =>
     new BadRequestError("올바른 이메일 형식이 아닙니다."),
   INVALID_LANGUAGE: () =>
