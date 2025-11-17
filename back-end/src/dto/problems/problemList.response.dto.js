@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProbDetailResponseDto } from "./problem.response.dto";
+import { ProbDetailResponseDto } from "./problem.response.dto.js";
 
 const ProbListItemResponseDto = ProbDetailResponseDto.omit({
   problem_body: true,
