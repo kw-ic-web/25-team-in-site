@@ -87,11 +87,11 @@ export const ProblemRepository = {
   }) {
     const filter = {};
 
-    if (Array.isArray(difficulties)) {
+    if (Array.isArray(difficulties) && difficulties.length > 0) {
       filter.problem_difficulty = { $in: difficulties };
     }
 
-    if (Array.isArray(languages)) {
+    if (Array.isArray(languages) && languages.length > 0) {
       filter.problem_lang = { $in: languages };
     }
 
