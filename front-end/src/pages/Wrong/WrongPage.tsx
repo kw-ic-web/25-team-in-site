@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react"; 
 import "./WrongPage.css";
 
-type Problem = {
+type Solved = {
   id: string;
   title: string;
   tags: string[];
@@ -90,7 +90,7 @@ const SolutionAssistant = () => {
 
 // --- (WrongPage 메인 컴포넌트) ---
 export default function WrongPage() {
-  const problems: Problem[] = useMemo(
+  const solved: Solved[] = useMemo(
     () =>
       Array.from({ length: 24 }, (_, i) => ({
         id: `p${i + 1}`,
@@ -147,7 +147,7 @@ export default function WrongPage() {
   const clearKind = () => setSelectedKind(null);
 
   const filtered = useMemo(() => {
-    let list = [...problems];
+    let list = [...solved];
 
     if (query.trim()) {
       const q = query.trim().toLowerCase();
@@ -176,7 +176,7 @@ export default function WrongPage() {
 
     return list;
   }, [
-    problems,
+    solved,
     query,
     selectedLangs,
     selectedLevels,
@@ -194,7 +194,7 @@ export default function WrongPage() {
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
-  const recommendedProblem = problems[0];
+  const recommendedProblem = solved[0];
   const expectedSolveTime = "30분";
 
   // 최근 푼 문제 목록 (Mock 데이터)
@@ -373,27 +373,27 @@ export default function WrongPage() {
           </div>
         </header>
 
-        <ul className="problem-list">
+        <ul className="solved-list">
           {current.map((p) => (
-            <li key={p.id} className="problem-item">
-              <div className="problem-item__left">
-                <div className="problem-item__header">
-                  <h4 className="problem-item__title">
+            <li key={p.id} className="solved-item">
+              <div className="solved-item__left">
+                <div className="solved-item__header">
+                  <h4 className="solved-item__title">
                     {p.title.replace(/\s\d+$/, "")}
                   </h4>
                   <span className="badge badge--error">힌트 4회 사용</span>
                 </div>
-                <div className="problem-item__labels">
+                <div className="solved-item__labels">
                   <span className="pill pill--level">레벨 {p.difficulty}</span>
                 </div>
-                <div className="problem-item__meta">
+                <div className="solved-item__meta">
                   {p.tags.map((t: string, idx: number) => (
                     <span key={`${t}-${idx}`}>#{t}</span>
                   ))}
                 </div>
               </div>
 
-              <div className="problem-item__right">
+              <div className="solved-item__right">
                 <button type="button" className="btn-primary">
                   풀이하기
                 </button>
@@ -404,7 +404,7 @@ export default function WrongPage() {
           ))}
 
           {current.length === 0 && (
-            <li className="problem-item" style={{ justifyContent: "center" }}>
+            <li className="solved-item" style={{ justifyContent: "center" }}>
               조건에 맞는 문제가 없습니다.
             </li>
           )}
