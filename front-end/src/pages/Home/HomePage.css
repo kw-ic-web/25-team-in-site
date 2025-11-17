@@ -1,6 +1,6 @@
 :root {
   --home-bg: #f6f7fb;
-  --home-card-radius: 8px;
+  --home-card-radius: 10px;
   --home-card-shadow: 0 12px 32px rgba(23, 40, 89, 0.08);
   --home-border: #e2e7ff;
   --home-text: #1c2143;
@@ -35,7 +35,6 @@
 }
 .home-card--emph {
   width: 100%;
-  height: 240px;
 }
 
 .home-card__header {
@@ -174,20 +173,19 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
 }
 
 .problem-item {
   background: #fff;
   border-radius: var(--home-card-radius);
   border: 1px solid var(--home-border);
-  padding: 24px 28px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
-  align-items: center;
+  padding: 1px 32px !important;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   box-shadow: 0 14px 28px rgba(24, 39, 87, 0.08);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .problem-item:hover {
@@ -196,27 +194,50 @@
 }
 
 .problem-item__left {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex: 1;
 }
 .problem-item__labels {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin: 0 0 8px;
 }
 
-.problem-item__title { margin: 0; font-size: 18px; font-weight: 600; color: var(--home-text); }
+.problem-item__stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.problem-item__top {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.xp-badge {
+  font-size: 18px;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.problem-item__title { 
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--home-text);
+}
+
 .problem-item__meta {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b6b6b;
-  margin-top: 15px;
+  margin: 0;
 }
 
 .dot {
@@ -246,9 +267,23 @@
   font-weight: 500;
 }
 
-.problem-item__right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-.correctness { font-size: 17px; color: var(--home-muted); padding-top: 39px; }
-.correctness strong { color: var(--home-text); margin-left: 4px; font-size: 20px; }
+.problem-item__right { 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.correctness {
+  font-size: 16px;
+  color: #6A6AFF !important;
+  font-weight: 600;
+}
+
+.correctness strong {
+  font-size: 16px;
+  color: #6f6cfb;
+}
 
 .btn-primary {
   border: 0;
@@ -272,7 +307,6 @@
 }
 .page.is-active { background: var(--home-accent); color: #fff; }
 
-/* 추천 카드 */
 .recommend {
   border-radius: 20px;
   padding: 28px;
@@ -362,28 +396,54 @@
 .ranking { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .ranking__item { display: grid; grid-template-columns: 28px 32px 1fr auto; align-items: center; gap: 10px; }
 .rank { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #eef0ff; color: #6f6cfb; font-weight: 800; font-size: 12px; }
-.rank--1 { background: #ffe9a3; color: #8a5b00; }
-.rank--2 { background: #f0f3ff; color: #2f49c8; }
-.rank--3 { background: #ffe0c2; color: #a04f00; }
+.rank--1 { background: #FFD900; color: #000000; }
+.rank--2 { background: #9A9A9A; color: #000000; }
+.rank--3 { background: #AF6C1A; color: #000000; }
 .name { color: var(--home-text); font-size: 14px; }
 .score { color: var(--home-accent); font-weight: 700; }
-.my-rank { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--home-border); font-size: 14px; }
-.my-rank .muted { color: var(--home-muted); font-weight: 500; }
+.my-rank {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--home-border);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4b4b4b;
+}
+
+.my-rank__value {
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.my-rank__value .muted {
+  margin-left: 4px;
+  font-weight: 500;
+  color: #6366f1;
+}
+
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  overflow: hidden;
   background: #f0f2ff;
-  color: var(--home-accent);
-  display: grid;
-  place-items: center;
-  font-weight: 700;
+  display: inline-block;
 }
 
 .avatar--sm {
-  font-size: 13px;
+  width: 32px;
+  height: 32px;
 }
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 
 @media (max-width: 1200px) {
   .home {
@@ -417,7 +477,6 @@
   }
 }
 
-/* --- Dropdown / Toggle --- */
 .dropdown { position: relative; }
 .dropdown__trigger { all: unset; cursor: pointer; }
 .dropdown__trigger .dropdown__icon {
