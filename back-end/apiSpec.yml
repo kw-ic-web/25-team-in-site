@@ -139,7 +139,7 @@ paths:
         - in: path
           name: problemId
           required: true
-          schema: { type: string, format: uuid }
+          schema: { type: string, format: UUIDv7 }
           description: "문제의 ID (uuid v7)"
       responses:
         "200":
