@@ -8,6 +8,7 @@ export const problemsController = {
       const responseDto = await req.services.problems.getProblemById(dto);
 
       res.status(200).json({
+        id: responseDto.problem_id,
         difficulty: responseDto.problem_difficulty,
         language: responseDto.problem_lang,
         main_category: responseDto.problem_main_category,
