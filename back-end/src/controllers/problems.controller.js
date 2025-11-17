@@ -1,7 +1,5 @@
-import {
-  ProbDetailRequestDto,
-  ProbListRequestDto,
-} from "../dto/problems/problem.request.dto.js";
+import { ProbDetailRequestDto } from "../dto/problems/problem.request.dto.js";
+import { ProbListRequestDto } from "../dto/problems/problemList.request.dto.js";
 
 export const problemsController = {
   async getProblemDetail(req, res, next) {
@@ -24,13 +22,7 @@ export const problemsController = {
   },
   async getProblems(req, res, next) {
     try {
-      const dto = ProbListRequestDto.parse({
-        ...req.query,
-        languages: req.query.languages ?? req.query.language,
-        difficulties: req.query.difficulties ?? req.query.difficulty,
-        main_category: req.query.main_category ?? req.query.mainCategory,
-        sub_category: req.query.sub_category ?? req.query.subCategory,
-      });
+      const dto = ProbListRequestDto.parse({ ...req.query });
 
       const responseDto = await req.services.problems.getProblemList(dto);
 
