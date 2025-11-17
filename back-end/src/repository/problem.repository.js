@@ -38,8 +38,9 @@ const mergeProblemDetail = (problem, problemDetail) => {
     ...rest
   } = problemDetail;
 
-  const normalizedDetailAttachments =
-    normalizeStringArray(problem_attachment_urls);
+  const normalizedDetailAttachments = normalizeStringArray(
+    problem_attachment_urls,
+  );
   const fallbackAttachments =
     normalizedDetailAttachments.length > 0
       ? normalizedDetailAttachments
@@ -86,11 +87,11 @@ export const ProblemRepository = {
   }) {
     const filter = {};
 
-    if (difficulties?.length) {
+    if (Array.isArray(difficulties)) {
       filter.problem_difficulty = { $in: difficulties };
     }
 
-    if (languages?.length) {
+    if (Array.isArray(languages)) {
       filter.problem_lang = { $in: languages };
     }
 
