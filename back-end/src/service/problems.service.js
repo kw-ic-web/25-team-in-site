@@ -1,7 +1,5 @@
-import {
-  ProbDetailResponseDto,
-  ProbListResponseDto,
-} from "../dto/problems/problem.response.dto.js";
+import { ProbDetailResponseDto } from "../dto/problems/problem.response.dto.js";
+import { ProbListResponseDto } from "../dto/problems/problemList.response.dto.js";
 import { ERROR } from "../mapper/error.mapper.js";
 import { ProblemRepository } from "../repository/problem.repository.js";
 
