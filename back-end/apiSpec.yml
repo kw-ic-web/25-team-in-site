@@ -54,6 +54,39 @@ paths:
         '500':
           description: '서버 내부 오류'
 
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 로그인
+      description: '이메일/비밀번호를 검증하고 인증 토큰을 발급합니다.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthLoginRequest' }
+      responses:
+        '200':
+          description: '로그인 성공. 인증 토큰이 쿠키로 발급됩니다.'
+          headers:
+            Set-Cookie:
+              description: '`token=<JWT>` 형태의 httpOnly 쿠키'
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '400':
+          description: '이메일/비밀번호 누락 혹은 형식 오류'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          description: '이메일 혹은 비밀번호 불일치'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '500':
+          description: '서버 내부 오류'
+
   /problems:
     get:
       tags: [Problems]
@@ -116,39 +149,6 @@ paths:
               schema: { $ref: '#/components/schemas/ProblemDetail' }
         '400':
           description: '잘못된 문제 ID'
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '500':
-          description: '서버 내부 오류'
-
-  /auth/login:
-    post:
-      tags: [Auth]
-      summary: 로그인
-      description: '이메일/비밀번호를 검증하고 인증 토큰을 발급합니다.'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/AuthLoginRequest' }
-      responses:
-        '200':
-          description: '로그인 성공. 인증 토큰이 쿠키로 발급됩니다.'
-          headers:
-            Set-Cookie:
-              description: '`token=<JWT>` 형태의 httpOnly 쿠키'
-              schema: { type: string }
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AuthResponse' }
-        '400':
-          description: '이메일/비밀번호 누락 혹은 형식 오류'
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '401':
-          description: '이메일 혹은 비밀번호 불일치'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
