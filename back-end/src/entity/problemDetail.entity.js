@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const problemDetailSchema = new mongoose.Schema(
   {
     problem_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Problem",
       unique: true,
       required: true,
