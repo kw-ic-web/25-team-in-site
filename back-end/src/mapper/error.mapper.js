@@ -23,6 +23,7 @@ export const ERROR = {
   INVALID_LOGIN_INFO: () =>
     new UnauthorizedError("이메일 또는 비밀번호가 올바르지 않습니다."),
   INVALID_TOKEN: () => new UnauthorizedError("인증 정보가 올바르지 않습니다."),
+  USER_NOT_FOUND: () => new UnauthorizedError("사용자 정보를 찾을 수 없습니다."),
   INVALID_PROB_ID: () => new BadRequestError("문제 ID가 올바르지 않습니다."),
   FAIL_TO_GET_PROB_DETAIL: () =>
     new InternalServerError("문제 세부사항을 찾을 수 없습니다."),
