@@ -5,9 +5,9 @@ import { ProblemRepository } from "../repository/problem.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { SolvedRepository } from "../repository/solved.repository.js";
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const _clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-const normalizeLanguageArray = (value) => {
+const _normalizeLanguageArray = (value) => {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -38,7 +38,7 @@ export const ProblemsService = {
 
   _calculateExpectedXp(problem, user) {
     const difficulty = problem.problem_difficulty || 1;
-    const successRate = clamp(problem.problem_success_rate ?? 50, 0, 100);
+    const successRate = _clamp(problem.problem_success_rate ?? 50, 0, 100);
     const userLevel = user?.metalevel ?? user?.user_level ?? 1;
 
     const baseXp = 50;
@@ -55,7 +55,7 @@ export const ProblemsService = {
   },
 
   _deriveDifficultyRange(level) {
-    const normalizedLevel = clamp(level || 1, 1, levelDifficultyRange.length);
+    const normalizedLevel = _clamp(level || 1, 1, levelDifficultyRange.length);
     return levelDifficultyRange[normalizedLevel - 1];
   },
 
@@ -66,7 +66,7 @@ export const ProblemsService = {
 
     return {
       ...problem,
-      problem_lang: normalizeLanguageArray(problem.problem_lang),
+      problem_lang: _normalizeLanguageArray(problem.problem_lang),
     };
   },
 
@@ -91,7 +91,7 @@ export const ProblemsService = {
     return problems
       .map((problem) => {
         let score = 0;
-        const languages = normalizeLanguageArray(problem.problem_lang);
+        const languages = _normalizeLanguageArray(problem.problem_lang);
 
         if (preferLanguage && languages.includes(preferLanguage)) {
           score += 30;
@@ -102,7 +102,7 @@ export const ProblemsService = {
         );
         score -= difficultyGap * 8;
 
-        const successRate = clamp(problem.problem_success_rate ?? 50, 0, 100);
+        const successRate = _clamp(problem.problem_success_rate ?? 50, 0, 100);
         score += Math.max(0, 70 - successRate) / 2;
 
         if (problem.createdAt) {
@@ -124,7 +124,7 @@ export const ProblemsService = {
     desiredCount,
   }) {
     const unique = new Map();
-    const addItems = (items) => {
+    const _addItems = (items) => {
       items.forEach((item) => {
         if (!unique.has(item.problem_id)) {
           unique.set(item.problem_id, item);
@@ -157,7 +157,7 @@ export const ProblemsService = {
         excludeProblemIds: solvedIds,
         limit: desiredCount * 4,
       });
-      addItems(items);
+      _addItems(items);
     }
 
     return Array.from(unique.values());

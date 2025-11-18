@@ -4,7 +4,7 @@ import { ProbRecommendRequestDto } from "../dto/problems/problemRecommend.reques
 import { SimilarProblemRequestDto } from "../dto/problems/problemSimilar.request.dto.js";
 import { RecentSolvedListRequestDto } from "../dto/problems/problemRecentSolved.request.dto.js";
 
-const transformProblemSummary = (problem) => ({
+const _transformProblemSummary = (problem) => ({
   id: problem.problem_id,
   difficulty: problem.problem_difficulty,
   language: problem.problem_lang,
@@ -57,7 +57,7 @@ export const problemsController = {
           total_count: responseDto.totalCount,
           total_pages: responseDto.totalPages,
         },
-        problems: responseDto.problems.map(transformProblemSummary),
+        problems: responseDto.problems.map(_transformProblemSummary),
       });
     } catch (error) {
       next(error);
@@ -73,7 +73,7 @@ export const problemsController = {
 
       res.status(200).json({
         count: problems.length,
-        problems: problems.map(transformProblemSummary),
+        problems: problems.map(_transformProblemSummary),
       });
     } catch (error) {
       next(error);
@@ -92,7 +92,7 @@ export const problemsController = {
 
       res.status(200).json({
         count: problems.length,
-        problems: problems.map(transformProblemSummary),
+        problems: problems.map(_transformProblemSummary),
       });
     } catch (error) {
       next(error);
@@ -116,7 +116,7 @@ export const problemsController = {
               : item.solved_at,
           runtime_ms: item.runtime_ms,
           memory_kb: item.memory_kb,
-          problem: transformProblemSummary(item.problem),
+          problem: _transformProblemSummary(item.problem),
         })),
       });
     } catch (error) {

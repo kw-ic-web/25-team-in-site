@@ -11,7 +11,7 @@ const PROBLEM_SUMMARY_PROJECTION = {
   createdAt: 1,
 };
 
-const normalizeStringArray = (value) => {
+const _normalizeStringArray = (value) => {
   if (Array.isArray(value)) {
     return value
       .map((item) => (typeof item === "string" ? item.trim() : String(item)))
@@ -26,16 +26,16 @@ const normalizeStringArray = (value) => {
   return [];
 };
 
-const normalizeProblemDoc = (problem = {}) => ({
+const _normalizeProblemDoc = (problem = {}) => ({
   ...problem,
-  problem_lang: normalizeStringArray(problem.problem_lang),
+  problem_lang: _normalizeStringArray(problem.problem_lang),
 });
 
-const mergeProblemDetail = (problem, problemDetail) => {
+const _mergeProblemDetail = (problem, problemDetail) => {
   if (!problemDetail) {
     return {
       problem_body: problem.problem_body,
-      problem_attachment_urls: normalizeStringArray(
+      problem_attachment_urls: _normalizeStringArray(
         problem.problem_attachment_urls,
       ),
     };
@@ -48,13 +48,13 @@ const mergeProblemDetail = (problem, problemDetail) => {
     ...rest
   } = problemDetail;
 
-  const normalizedDetailAttachments = normalizeStringArray(
+  const normalizedDetailAttachments = _normalizeStringArray(
     problem_attachment_urls,
   );
   const fallbackAttachments =
     normalizedDetailAttachments.length > 0
       ? normalizedDetailAttachments
-      : normalizeStringArray(problem.problem_attachment_urls);
+      : _normalizeStringArray(problem.problem_attachment_urls);
 
   return {
     problem_body: problem_body ?? problem.problem_body,
@@ -69,7 +69,7 @@ const SORT_FIELD_MAP = {
   success_rate: "problem_success_rate",
 };
 
-const buildSortOption = (sortBy, sortOrder) => {
+const _buildSortOption = (sortBy, sortOrder) => {
   const sortField = SORT_FIELD_MAP[sortBy] ?? SORT_FIELD_MAP.created_at;
   const order = sortOrder === "asc" ? 1 : -1;
 
@@ -81,7 +81,7 @@ const buildSortOption = (sortBy, sortOrder) => {
   return sortOption;
 };
 
-const scoreSimilarity = (problem, target) => {
+const _scoreSimilarity = (problem, target) => {
   let score = 0;
 
   if (
@@ -98,7 +98,7 @@ const scoreSimilarity = (problem, target) => {
     score += 25;
   }
 
-  const targetLangs = normalizeStringArray(target.problem_lang);
+  const targetLangs = _normalizeStringArray(target.problem_lang);
   if (targetLangs.length) {
     const overlap = problem.problem_lang.filter((lang) =>
       targetLangs.includes(lang),
@@ -132,8 +132,8 @@ export const ProblemRepository = {
       problem_id: probInfo._id,
     }).lean();
 
-    const normalizedProbInfo = normalizeProblemDoc(probInfo);
-    const detailFields = mergeProblemDetail(normalizedProbInfo, probDetail);
+    const normalizedProbInfo = _normalizeProblemDoc(probInfo);
+    const detailFields = _mergeProblemDetail(normalizedProbInfo, probDetail);
 
     if (!detailFields.problem_body) {
       return null;
@@ -178,7 +178,7 @@ export const ProblemRepository = {
     }
 
     const skip = (page - 1) * limit;
-    const sort = buildSortOption(sort_by, sort_order);
+    const sort = _buildSortOption(sort_by, sort_order);
 
     const [items, total] = await Promise.all([
       Problem.find(filter)
@@ -191,7 +191,7 @@ export const ProblemRepository = {
     ]);
 
     return {
-      items: items.map((item) => normalizeProblemDoc(item)),
+      items: items.map((item) => _normalizeProblemDoc(item)),
       total,
     };
   },
@@ -224,7 +224,7 @@ export const ProblemRepository = {
       .select(PROBLEM_SUMMARY_PROJECTION)
       .lean();
 
-    return items.map((item) => normalizeProblemDoc(item));
+    return items.map((item) => _normalizeProblemDoc(item));
   },
   async findSimilarProblems(targetProblem, { limit = 5, excludeIds = [] } = {}) {
     if (!targetProblem?._id) {
@@ -233,7 +233,7 @@ export const ProblemRepository = {
 
     const targetDifficulty = targetProblem.problem_difficulty || 1;
     const matchClauses = [];
-    const normalizedLangs = normalizeStringArray(targetProblem.problem_lang);
+    const normalizedLangs = _normalizeStringArray(targetProblem.problem_lang);
 
     if (targetProblem.problem_main_category) {
       matchClauses.push({
@@ -274,15 +274,15 @@ export const ProblemRepository = {
       .select(PROBLEM_SUMMARY_PROJECTION)
       .lean();
 
-    const normalizedTarget = normalizeProblemDoc(targetProblem);
+    const normalizedTarget = _normalizeProblemDoc(targetProblem);
     const normalizedCandidates = candidates.map((item) =>
-      normalizeProblemDoc(item),
+      _normalizeProblemDoc(item),
     );
 
     const ranked = normalizedCandidates
       .map((problem) => ({
         ...problem,
-        _score: scoreSimilarity(problem, normalizedTarget),
+        _score: _scoreSimilarity(problem, normalizedTarget),
       }))
       .sort((a, b) => b._score - a._score)
       .slice(0, limit)

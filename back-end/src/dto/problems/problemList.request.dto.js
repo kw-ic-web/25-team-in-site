@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // === HELPER ===
-const toStringArray = (value) => {
+const _toStringArray = (value) => {
   if (Array.isArray(value)) {
     return value
       .map((item) => (typeof item === "string" ? item : String(item)))
@@ -19,13 +19,13 @@ const toStringArray = (value) => {
   return [];
 };
 
-const toNumberArray = (value) => {
-  return toStringArray(value)
+const _toNumberArray = (value) => {
+  return _toStringArray(value)
     .map((item) => Number(item))
     .filter((item) => Number.isInteger(item));
 };
 
-const toBoolean = (value) => {
+const _toBoolean = (value) => {
   if (typeof value === "boolean") {
     return value;
   }
@@ -43,7 +43,7 @@ const toBoolean = (value) => {
   return undefined;
 };
 
-const normalizeEnumValue = (value, allowed, fallback) => {
+const _normalizeEnumValue = (value, allowed, fallback) => {
   if (typeof value !== "string") {
     return fallback;
   }
@@ -71,30 +71,30 @@ export const ProbListRequestDto = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
   difficulties: z
     .preprocess(
-      (value) => toNumberArray(value),
+      (value) => _toNumberArray(value),
       z.array(z.number().int().min(1).max(5)),
     )
     .default([]),
   languages: z
-    .preprocess((value) => toStringArray(value), z.array(z.string().min(1)))
+    .preprocess((value) => _toStringArray(value), z.array(z.string().min(1)))
     .default([]),
   main_category: optionalQueryString,
   sub_category: optionalQueryString,
   sort_by: z
     .preprocess(
-      (value) => normalizeEnumValue(value, SORT_BY_VALUES, "created_at"),
+      (value) => _normalizeEnumValue(value, SORT_BY_VALUES, "created_at"),
       z.enum(SORT_BY_VALUES),
     )
     .default("created_at"),
   sort_order: z
     .preprocess(
-      (value) => normalizeEnumValue(value, SORT_ORDER_VALUES, "desc"),
+      (value) => _normalizeEnumValue(value, SORT_ORDER_VALUES, "desc"),
       z.enum(SORT_ORDER_VALUES),
     )
     .default("desc"),
   exclude_solved: z
     .preprocess((value) => {
-      const normalized = toBoolean(value);
+      const normalized = _toBoolean(value);
       return typeof normalized === "boolean" ? normalized : undefined;
     }, z.boolean())
     .default(false),
