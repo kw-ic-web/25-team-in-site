@@ -1,105 +1,137 @@
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./SolvePage.css";
-import { solveApi } from "../../shared/api/solve";
-import { fallbackProblem, useSolveProblem } from "./useSolveProblem";
 
-import IDEEditor from "../../components/IDEEditer/IDEEditer"; // ★ IDE 추가
+import apiClient from "../../api/client";
+import IDEEditor from "../../components/IDEEditer/IDEEditer";
 
 export default function SolvePage() {
   const [searchParams] = useSearchParams();
   const rawProblemId = searchParams.get("problemId");
 
-  const { problem, languagePresets, isLoading, error } =
-    useSolveProblem(rawProblemId);
+  /** 상세 문제 데이터 */
+  const [problem, setProblem] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [detailError, setDetailError] = useState("");
 
-  const problemId = rawProblemId ?? problem?.id ?? fallbackProblem.id;
-
-  const [language, setLanguage] = useState<string>("");
-  const [code, setCode] = useState<string>("");
+  /** 언어 / 코드 / 결과 */
+  const [languagePresets, setLanguagePresets] = useState<any[]>([]);
+  const [language, setLanguage] = useState("");
+  const [code, setCode] = useState("");
   const [result, setResult] = useState<string | null>(null);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /** 언어 Preset 변경 시 starter 자동 반영 */
+  const problemId = rawProblemId ?? "";
+
+  /** 🔥 문제 상세 API 호출 */
   useEffect(() => {
-    if (!languagePresets || languagePresets.length === 0) {
-      setLanguage("");
-      setCode("");
-      return;
+    if (!problemId) return;
+
+    async function fetchProblem() {
+      try {
+        setIsLoading(true);
+        const res = await apiClient.get(`/problems/${problemId}`);
+
+        const p = res.data;
+
+        const mapped = {
+          id: p.id,
+          title: `${p.sub_category} 문제`,
+          description: p.body,
+          inputSpec: p.input_spec ?? "",
+          outputSpec: p.output_spec ?? "",
+          hints: p.hints ?? [],
+          difficulty: p.difficulty,
+          languages: p.language ?? ["python"],
+        };
+
+        setProblem(mapped);
+
+        setLanguagePresets(
+          mapped.languages.map((lang: string) => ({
+            label: lang.toUpperCase(),
+            value: lang,
+            starter: `// write your code here\n// language: ${lang}\n`,
+          }))
+        );
+      } catch (err) {
+        console.error(err);
+        setDetailError("문제 정보를 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    const initialPreset = languagePresets[0];
-    setLanguage(initialPreset.value);
-    setCode(initialPreset.starter);
-  }, [languagePresets, problem?.id]);
+    fetchProblem();
+  }, [problemId]);
 
-  /** 문제 ID 변경 시 실행 결과 초기화 */
+  /** 언어 프리셋 적용 */
   useEffect(() => {
-    setResult(null);
-  }, [problem?.id]);
+    if (languagePresets.length === 0) return;
 
+    const first = languagePresets[0];
+    setLanguage(first.value);
+    setCode(first.starter);
+  }, [languagePresets]);
+
+  /** 현재 선택된 언어 구조 */
   const currentLanguage = useMemo(
     () => languagePresets.find((preset) => preset.value === language),
     [language, languagePresets]
   );
 
-  const handleLanguageChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const next = event.target.value;
+  /** 언어 변경 */
+  const handleLanguageChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const next = e.target.value;
     const preset = languagePresets.find((item) => item.value === next);
 
     setLanguage(next);
     if (preset) setCode(preset.starter);
   };
 
+  /** 초기화 */
   const handleReset = () => {
     if (currentLanguage) setCode(currentLanguage.starter);
   };
 
+  /** 실행 */
   const handleRun = async () => {
-    if (language.trim().length === 0) return;
+    if (!language) return;
 
     setIsRunning(true);
     setResult(null);
 
     try {
-      const response = await solveApi.run(problemId, { language, code });
+      const res = await apiClient.post(`/problems/${problemId}/run`, {
+        language,
+        code,
+      });
 
-      setResult(
-        response.passed
-          ? `✅ 샘플 테스트 통과\n${response.stdout}`
-          : `❌ 샘플 테스트 실패\n${response.stderr ?? response.stdout}`
-      );
-    } catch (runError: unknown) {
-      const message =
-        runError instanceof Error ? runError.message : "알 수 없는 오류";
-      setResult(`⚠️ 실행 오류: ${message}`);
+      setResult(res.data.output);
+    } catch (e: any) {
+      setResult(`⚠ 실행 오류\n${e.message}`);
     } finally {
       setIsRunning(false);
     }
   };
 
+  /** 제출 */
   const handleSubmit = async () => {
-    if (language.trim().length === 0) return;
+    if (!language) return;
 
     setIsSubmitting(true);
     setResult(null);
 
     try {
-      const response = await solveApi.submit(problemId, { language, code });
+      const res = await apiClient.post(`/problems/${problemId}/submit`, {
+        language,
+        code,
+      });
 
-      const prefix =
-        response.status === "accepted"
-          ? "✅ 정답입니다!"
-          : response.status === "rejected"
-          ? "❌ 오답입니다."
-          : "⏳ 채점 중입니다.";
-
-      setResult(`${prefix}\n${response.message}`);
-    } catch (submitError: unknown) {
-      const message =
-        submitError instanceof Error ? submitError.message : "알 수 없는 오류";
-      setResult(`⚠️ 제출 오류: ${message}`);
+      setResult(res.data.output);
+    } catch (e: any) {
+      setResult(`⚠ 제출 오류\n${e.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -107,27 +139,17 @@ export default function SolvePage() {
 
   return (
     <div className="solve-page">
-      {/* 문제 설명 영역 */}
+      {/* ------------------------------ */}
+      {/* 좌측 문제 설명 영역 */}
+      {/* ------------------------------ */}
       <section className="solve-page__problem">
         <header className="problem-header">
           <div>
-            <p className="problem-header__tag">{problem?.difficulty}</p>
+            <p className="problem-header__tag">레벨 {problem?.difficulty}</p>
             <h1 className="problem-header__title">{problem?.title}</h1>
           </div>
-
-          <dl className="problem-meta">
-            <div>
-              <dt>시간 제한</dt>
-              <dd>{problem?.timeLimit}</dd>
-            </div>
-            <div>
-              <dt>메모리 제한</dt>
-              <dd>{problem?.memoryLimit}</dd>
-            </div>
-          </dl>
         </header>
 
-        {/* 문제 본문 */}
         <article className="problem-section card">
           <header className="card__head">
             <h2>문제 설명</h2>
@@ -135,14 +157,16 @@ export default function SolvePage() {
 
           <div className="card__body">
             {isLoading ? (
-              <p>문제를 불러오는 중입니다...</p>
+              <p>문제를 불러오는 중...</p>
             ) : (
               <>
                 <p>{problem?.description}</p>
+
                 <section className="card__subsection">
                   <h3>입력 형식</h3>
                   <p>{problem?.inputSpec}</p>
                 </section>
+
                 <section className="card__subsection">
                   <h3>출력 형식</h3>
                   <p>{problem?.outputSpec}</p>
@@ -152,33 +176,25 @@ export default function SolvePage() {
           </div>
         </article>
 
-        {/* 힌트 */}
+        {/* 힌트 영역 */}
         <section className="hint-card card">
           <header className="card__head">
             <h2>힌트</h2>
           </header>
 
           <div className="hint-card__body">
-            {isLoading ? (
-              <p>힌트를 불러오는 중입니다...</p>
-            ) : (
-              problem?.hints?.map((hint: string, index: number) => (
-                <p key={`hint-${index}`}>{hint}</p>
-              ))
-            )}
+            {problem?.hints?.map((hint: string, i: number) => (
+              <p key={i}>{hint}</p>
+            ))}
           </div>
         </section>
 
-        {error ? (
-          <p className="solve-page__error">
-            서버에서 문제를 가져오지 못했습니다. 다시 시도해 주세요.
-            <br />
-            {error}
-          </p>
-        ) : null}
+        {detailError && <p className="solve-page__error">{detailError}</p>}
       </section>
 
-      {/* IDE + 제출 영역 */}
+      {/* ------------------------------ */}
+      {/* 우측 IDE + 실행/제출 영역 */}
+      {/* ------------------------------ */}
       <section className="solve-page__workspace card workspace-card">
         <header className="workspace-card__head">
           <h2>코드</h2>
@@ -203,9 +219,7 @@ export default function SolvePage() {
               </select>
             </div>
 
-            {/* 초기화 버튼 */}
             <button
-              type="button"
               className="workspace-header__reset"
               onClick={handleReset}
               disabled={!currentLanguage}
@@ -214,34 +228,38 @@ export default function SolvePage() {
             </button>
           </div>
 
-          {/* CodeMirror IDE 영역 */}
+          {/* IDE */}
           <div className="workspace-editor">
             <IDEEditor value={code} onChange={setCode} language={language} />
           </div>
 
-          {/* 버튼 + 결과 */}
+          {/* 실행 / 제출 버튼 */}
           <footer className="workspace-footer">
             <div className="workspace-footer__buttons">
               <button
-                type="button"
-                onClick={handleRun}
                 className="btn btn--ghost"
+                onClick={handleRun}
                 disabled={isRunning || isLoading}
               >
-                {isRunning ? "실행 중..." : "테스트 실행"}
+                {isRunning ? "실행 중..." : "실행하기"}
               </button>
 
               <button
-                type="button"
-                onClick={handleSubmit}
                 className="btn btn--primary"
+                onClick={handleSubmit}
                 disabled={isSubmitting || isLoading}
               >
                 {isSubmitting ? "제출 중..." : "제출하기"}
               </button>
             </div>
 
-            {result && <div className="workspace-footer__result">{result}</div>}
+            {/* 테스트 실행 결과 → 아래 A 영역 */}
+            {result && (
+              <div className="workspace-footer__result">
+                <h3>실행 결과</h3>
+                <pre>{result}</pre>
+              </div>
+            )}
           </footer>
         </div>
       </section>
