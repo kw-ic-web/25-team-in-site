@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import apiClient from "../../api/client";
+import { getChoseong } from "es-hangul";
 import "./HomePage.css";
 
 import { useNavigate } from "react-router-dom";
@@ -40,6 +41,9 @@ export const KINDS = [
   "그리디 알고리즘",
   "백트래킹",
 ] as const;
+
+// 공백 제거 + 소문자 변환용 유틸
+const normalize = (text: string) => text.replace(/\s+/g, "").toLowerCase();
 
 // 외부 클릭 감지
 function useClickOutside<T extends HTMLElement>(onClose: () => void) {
@@ -145,8 +149,26 @@ export default function HomePage() {
     let list = [...problems];
 
     if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      list = list.filter((p) => p.title.toLowerCase().includes(q));
+      const raw = query.trim();
+      const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
+      const rawNoSpace = raw.replace(/\s+/g, "");
+      const queryChoseong = getChoseong(raw).replace(/\s+/g, "");
+
+      list = list.filter((p) => {
+        const title = p.title;
+        const normalizedTitle = normalize(title);
+        const titleChoseong = getChoseong(title).replace(/\s+/g, "");
+
+        return (
+          // 1) 공백 무시한 일반 검색
+          //    "최단경로찾기1" -> "최단 경로 찾기 1" 매칭 가능
+          normalizedTitle.includes(normalizedQuery) ||
+          // 2) 초성 직접 입력: "ㅊㄷㄱ" 입력 시
+          titleChoseong.includes(rawNoSpace) ||
+          // 3) 입력을 초성으로 바꿔서 비교: "최단경로" -> "ㅊㄷㄱㄹ"
+          titleChoseong.includes(queryChoseong)
+        );
+      });
     }
 
     if (selectedLangs.size)
