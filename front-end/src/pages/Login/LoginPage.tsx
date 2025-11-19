@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { authAPI } from "../../api/auth"; // axios 기반 API
+import { toast } from "react-toastify";
 import "./LoginPage.css";
 
 const naverLogo = new URL("../../assets/logos/naver.png", import.meta.url).href;
@@ -13,7 +14,8 @@ const loginTopIllustration = new URL(
 const loginStackIllustration = new URL(
   "../../assets/login/login2.png",
   import.meta.url
-).href;
+).href; 
+
 const loginBracketsIllustration = new URL(
   "../../assets/login/login3.png",
   import.meta.url
@@ -69,8 +71,8 @@ export default function LoginPage() {
           localStorage.setItem("accessToken", token);
         }
 
-        alert("로그인 성공!");
-        navigate(from, { replace: true });
+        toast.success("로그인 성공! 환영합니다.");
+        navigate(from, { replace: true });  
       }
     } catch (error: unknown) {
       // 타입 안전한 axios 에러 처리
