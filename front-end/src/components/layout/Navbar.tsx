@@ -29,7 +29,7 @@ export default function Navbar() {
         <nav className="topnav__tabs">
           {Tab("/home", "HOME")}
           {Tab("/mypage", "MY PAGE")}
-          {Tab("/wrong", "COMMUNITY")}
+          {Tab("/wrong", "REVIEW")}
         </nav>
 
         {/* 오른쪽 프로필 아바타 */}

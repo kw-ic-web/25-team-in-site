@@ -9,7 +9,7 @@ type Problem = {
   difficulty: number;      // 1~5
   correctness: number;     // %
   language: string;        // "JavaScript" 등
-  type: "기본 문제" | "자료구조" | "알고리즘" | "응용 문제" | "실전/프로젝트형";
+  type: "기본 문제" | "자료구조" | "알고리즘";
   kind:
     | "정렬"
     | "탐색"
@@ -35,8 +35,6 @@ const TYPES = [
   "기본 문제",
   "자료구조",
   "알고리즘",
-  "응용 문제",
-  "실전/프로젝트형",
 ] as const;
 
 const KINDS = [
@@ -73,7 +71,7 @@ export default function HomePage() {
         difficulty: ((i % 5) + 1) as 1 | 2 | 3 | 4 | 5,
         correctness: 67,
         language: LANGUAGES[i % LANGUAGES.length],
-        type: TYPES[i % TYPES.length],
+        type: TYPES[i % TYPES.length], 
         kind: KINDS[i % KINDS.length],
         solved: i % 4 === 0,
       })),
@@ -88,7 +86,6 @@ export default function HomePage() {
   const [selectedType, setSelectedType] = useState<(typeof TYPES)[number] | null>(null);
   const [selectedKind, setSelectedKind] = useState<(typeof KINDS)[number] | null>(null);
   const [solvedOnly, setSolvedOnly] = useState(false);
-
   // 드롭다운 토글
   const [typeOpen, setTypeOpen] = useState(false);
   const [kindOpen, setKindOpen] = useState(false);

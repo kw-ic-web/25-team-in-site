@@ -9,7 +9,7 @@ type Solved = {
   difficulty: number;
   correctness: number;
   language: string;
-  type: "기본 문제" | "자료구조" | "알고리즘" | "응용 문제" | "실전/프로젝트형";
+  type: "기본 문제" | "자료구조" | "알고리즘";
   kind:
     | "정렬"
     | "탐색"
@@ -35,8 +35,6 @@ const TYPES = [
   "기본 문제",
   "자료구조",
   "알고리즘",
-  "응용 문제",
-  "실전/프로젝트형",
 ] as const;
 const KINDS = [
   "정렬",
@@ -295,7 +293,7 @@ export default function WrongPage() {
                   >
                     전체 해제
                   </button>
-                  {TYPES.map((t) => (
+                  {TYPES.map((t) => ( 
                     <button
                       key={t}
                       role="menuitem"
@@ -313,7 +311,7 @@ export default function WrongPage() {
                 </div>
               )}
             </div>
-
+            
             <div className="chip dropdown" ref={kindRef}>
               <button
                 type="button"
