@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import apiClient from "../../api/client";
 import "./HomePage.css";
-import { useNavigate } from "react-router-dom";
 
 const personImg = new URL("../../assets/person.png", import.meta.url).href;
 
@@ -17,7 +16,7 @@ export type Problem = {
   solved: boolean;
 };
 
-//  ESLint unused-vars 경고 해결 → export를 붙인다
+// ESLint unused-vars 경고 해결 → export를 붙인다
 export const LANGUAGES = [
   "HTML",
   "JavaScript",
@@ -60,7 +59,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // /api/v1/problems API 연동
+  //  /api/v1/problems API 연동
   useEffect(() => {
     async function fetchProblems() {
       try {
@@ -120,8 +119,6 @@ export default function HomePage() {
 
   const [page, setPage] = useState(1);
   const pageSize = 8;
-
-  const navigate = useNavigate();
 
   const toggleLang = (l: string) =>
     setSelectedLangs((prev) => {
@@ -412,13 +409,7 @@ export default function HomePage() {
 
                 <div className="problem-item__right">
                   <span className="xp-badge">{xp}xp</span>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => navigate(`/solve?problemId=${p.id}`)}
-                  >
-                    풀이하기
-                  </button>{" "}
+                  <button className="btn-primary">풀이하기</button>
                 </div>
               </li>
             );
