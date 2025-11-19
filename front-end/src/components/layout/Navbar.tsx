@@ -34,11 +34,7 @@ export default function Navbar() {
 
         {/* 오른쪽 프로필 아바타 */}
         <div className="topnav__right">
-          <img
-            src={personImg}
-            alt="사용자 프로필"
-            className="topnav__avatar"
-          />
+          <img src={personImg} alt="사용자 프로필" className="topnav__avatar" />
         </div>
       </div>
     </header>
