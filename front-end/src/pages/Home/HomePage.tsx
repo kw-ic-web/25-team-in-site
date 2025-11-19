@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./HomePage.css";
+import { getChoseong } from "es-hangul";
+
 const personImg = new URL("../../assets/person.png", import.meta.url).href;
 
 type Problem = {
   id: string;
   title: string;
-  tags: string[];          // ["백준","그래프"] 등
-  difficulty: number;      // 1~5
-  correctness: number;     // %
-  language: string;        // "JavaScript" 등
+  tags: string[]; // ["백준","그래프"] 등
+  difficulty: number; // 1~5
+  correctness: number; // %
+  language: string; // "JavaScript" 등
   type: "기본 문제" | "자료구조" | "알고리즘";
   kind:
     | "정렬"
@@ -17,7 +19,7 @@ type Problem = {
     | "동적 계획법"
     | "그리디 알고리즘"
     | "백트래킹";
-  solved?: boolean;        // 해결 여부
+  solved?: boolean; // 해결 여부
 };
 
 const LANGUAGES = [
@@ -31,11 +33,7 @@ const LANGUAGES = [
   "MySQL",
 ] as const;
 
-const TYPES = [
-  "기본 문제",
-  "자료구조",
-  "알고리즘",
-] as const;
+const TYPES = ["기본 문제", "자료구조", "알고리즘"] as const;
 
 const KINDS = [
   "정렬",
@@ -45,6 +43,9 @@ const KINDS = [
   "그리디 알고리즘",
   "백트래킹",
 ] as const;
+
+// 공백 제거 + 소문자 변환용 유틸
+const normalize = (text: string) => text.replace(/\s+/g, "").toLowerCase();
 
 // ----- 유틸: 바깥 클릭 닫기
 function useClickOutside<T extends HTMLElement>(onClose: () => void) {
@@ -71,7 +72,7 @@ export default function HomePage() {
         difficulty: ((i % 5) + 1) as 1 | 2 | 3 | 4 | 5,
         correctness: 67,
         language: LANGUAGES[i % LANGUAGES.length],
-        type: TYPES[i % TYPES.length], 
+        type: TYPES[i % TYPES.length],
         kind: KINDS[i % KINDS.length],
         solved: i % 4 === 0,
       })),
@@ -83,9 +84,12 @@ export default function HomePage() {
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
-  const [selectedType, setSelectedType] = useState<(typeof TYPES)[number] | null>(null);
-  const [selectedKind, setSelectedKind] = useState<(typeof KINDS)[number] | null>(null);
+  const [selectedType, setSelectedType] =
+    useState<(typeof TYPES)[number] | null>(null);
+  const [selectedKind, setSelectedKind] =
+    useState<(typeof KINDS)[number] | null>(null);
   const [solvedOnly, setSolvedOnly] = useState(false);
+
   // 드롭다운 토글
   const [typeOpen, setTypeOpen] = useState(false);
   const [kindOpen, setKindOpen] = useState(false);
@@ -120,10 +124,30 @@ export default function HomePage() {
   const filtered = useMemo(() => {
     let list = [...problems];
 
+    // 🔍 검색 (공백 무시 + 초성 검색)
     if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      list = list.filter((p) => p.title.toLowerCase().includes(q));
+      const raw = query.trim();
+      const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
+      const rawNoSpace = raw.replace(/\s+/g, "");
+      const queryChoseong = getChoseong(raw).replace(/\s+/g, "");
+
+      list = list.filter((p) => {
+        const title = p.title;
+        const normalizedTitle = normalize(title);
+        const titleChoseong = getChoseong(title).replace(/\s+/g, "");
+
+        return (
+          // 1) 공백 무시한 일반 검색
+          //    "최단경로찾기1" -> "최단 경로 찾기 1" 매칭 가능
+          normalizedTitle.includes(normalizedQuery) ||
+          // 2) 초성 직접 입력: "ㅊㄷㄱ" 입력 시
+          titleChoseong.includes(rawNoSpace) ||
+          // 3) 입력을 초성으로 바꿔서 비교: "최단경로" -> "ㅊㄷㄱㄹ"
+          titleChoseong.includes(queryChoseong)
+        );
+      });
     }
+
     if (selectedLangs.size) {
       list = list.filter((p) => selectedLangs.has(p.language));
     }
@@ -166,7 +190,6 @@ export default function HomePage() {
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
 
   // --------------------- 렌더 ---------------------
-  const XP_REWARD = 50;
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = problems[0];
   const expectedSolveTime = "30분";
@@ -258,19 +281,29 @@ export default function HomePage() {
                   setKindOpen(false);
                 }}
               >
-                    문제 유형 {selectedType ? `: ${selectedType}` : ""}
-                    <img src={dropdownIcon} alt="" aria-hidden="true" className="dropdown__icon" />
+                문제 유형 {selectedType ? `: ${selectedType}` : ""}
+                <img
+                  src={dropdownIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className="dropdown__icon"
+                />
               </button>
               {typeOpen && (
                 <div role="menu" className="dropdown__menu">
-                  <button className="dropdown__item dropdown__item--clear" onClick={clearType}>
+                  <button
+                    className="dropdown__item dropdown__item--clear"
+                    onClick={clearType}
+                  >
                     전체 해제
                   </button>
                   {TYPES.map((t) => (
                     <button
                       key={t}
                       role="menuitem"
-                      className={`dropdown__item ${selectedType === t ? "is-selected" : ""}`}
+                      className={`dropdown__item ${
+                        selectedType === t ? "is-selected" : ""
+                      }`}
                       onClick={() => {
                         setSelectedType(t);
                         setTypeOpen(false);
@@ -294,19 +327,29 @@ export default function HomePage() {
                   setTypeOpen(false);
                 }}
               >
-                    유형별 분류 {selectedKind ? `: ${selectedKind}` : ""}
-                    <img src={dropdownIcon} alt="" aria-hidden="true" className="dropdown__icon" />
+                유형별 분류 {selectedKind ? `: ${selectedKind}` : ""}
+                <img
+                  src={dropdownIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className="dropdown__icon"
+                />
               </button>
               {kindOpen && (
                 <div role="menu" className="dropdown__menu">
-                  <button className="dropdown__item dropdown__item--clear" onClick={clearKind}>
+                  <button
+                    className="dropdown__item dropdown__item--clear"
+                    onClick={clearKind}
+                  >
                     전체 해제
                   </button>
                   {KINDS.map((k) => (
                     <button
                       key={k}
                       role="menuitem"
-                      className={`dropdown__item ${selectedKind === k ? "is-selected" : ""}`}
+                      className={`dropdown__item ${
+                        selectedKind === k ? "is-selected" : ""
+                      }`}
                       onClick={() => {
                         setSelectedKind(k);
                         setKindOpen(false);
@@ -351,11 +394,15 @@ export default function HomePage() {
                   {/* 제목 + 정답률 */}
                   <div className="problem-item__top">
                     <h4 className="problem-item__title">{p.title}</h4>
-                    <span className="correctness">정답률 {p.correctness}%</span>
+                    <span className="correctness">
+                      정답률 {p.correctness}%
+                    </span>
                   </div>
 
                   <div className="problem-item__labels">
-                    <span className="pill pill--level">레벨 {p.difficulty}</span>
+                    <span className="pill pill--level">
+                      레벨 {p.difficulty}
+                    </span>
                   </div>
 
                   <div className="problem-item__meta">
@@ -383,7 +430,6 @@ export default function HomePage() {
             </li>
           )}
         </ul>
-
 
         {/* 페이지네이션 */}
         <footer className="pagination" role="navigation" aria-label="페이지네이션">
@@ -434,8 +480,13 @@ export default function HomePage() {
             </span>
             <div className="recommend__tags-row">
               <div className="recommend__info">
-                <p className="recommend__time">예상 시간: {expectedSolveTime}</p>
-                <div className="recommend__tags" aria-label="추천 문제 유형">
+                <p className="recommend__time">
+                  예상 시간: {expectedSolveTime}
+                </p>
+                <div
+                  className="recommend__tags"
+                  aria-label="추천 문제 유형"
+                >
                   {recommendedProblem ? (
                     <>
                       <span>#{recommendedProblem.type}</span>
@@ -464,13 +515,19 @@ export default function HomePage() {
               score: 1234 - i * 7,
             })).map((r) => (
               <li key={r.rank} className="ranking__item">
-                <span className={`rank rank--${r.rank <= 3 ? r.rank : "n"}`}>{r.rank}</span>
+                <span
+                  className={`rank rank--${
+                    r.rank <= 3 ? r.rank : "n"
+                  }`}
+                >
+                  {r.rank}
+                </span>
 
-            <img
-              src={personImg}
-              alt="사용자 아바타"
-              className="avatar avatar--sm"
-            />
+                <img
+                  src={personImg}
+                  alt="사용자 아바타"
+                  className="avatar avatar--sm"
+                />
                 <span className="name">{r.name}</span>
                 <span className="score">{r.score.toLocaleString()}</span>
               </li>
