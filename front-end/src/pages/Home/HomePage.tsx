@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import apiClient from "../../api/client";
 import "./HomePage.css";
 
+import { useNavigate } from "react-router-dom";
+
 const personImg = new URL("../../assets/person.png", import.meta.url).href;
 
 export type Problem = {
@@ -119,6 +121,8 @@ export default function HomePage() {
 
   const [page, setPage] = useState(1);
   const pageSize = 8;
+
+  const navigate = useNavigate();
 
   const toggleLang = (l: string) =>
     setSelectedLangs((prev) => {
@@ -409,7 +413,12 @@ export default function HomePage() {
 
                 <div className="problem-item__right">
                   <span className="xp-badge">{xp}xp</span>
-                  <button className="btn-primary">풀이하기</button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => navigate(`/solve?problemId=${p.id}`)}
+                  >
+                    풀이하기
+                  </button>{" "}
                 </div>
               </li>
             );
