@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react"; 
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { getChoseong } from "es-hangul"; // ✅ 초성 추출
 import "./WrongPage.css";
 
 type Solved = {
@@ -31,11 +32,7 @@ const LANGUAGES = [
   "Python",
   "MySQL",
 ] as const;
-const TYPES = [
-  "기본 문제",
-  "자료구조",
-  "알고리즘",
-] as const;
+const TYPES = ["기본 문제", "자료구조", "알고리즘"] as const;
 const KINDS = [
   "정렬",
   "탐색",
@@ -44,6 +41,9 @@ const KINDS = [
   "그리디 알고리즘",
   "백트래킹",
 ] as const;
+
+// 공백 제거 + 소문자 변환
+const normalize = (text: string) => text.replace(/\s+/g, "").toLowerCase();
 
 function useClickOutside<T extends HTMLElement>(onClose: () => void) {
   const ref = useRef<T | null>(null);
@@ -85,7 +85,6 @@ const SolutionAssistant = () => {
   );
 };
 
-
 // --- (WrongPage 메인 컴포넌트) ---
 export default function WrongPage() {
   const solved: Solved[] = useMemo(
@@ -109,12 +108,10 @@ export default function WrongPage() {
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
-  const [selectedType, setSelectedType] = useState<
-    (typeof TYPES)[number] | null
-  >(null);
-  const [selectedKind, setSelectedKind] = useState<
-    (typeof KINDS)[number] | null
-  >(null);
+  const [selectedType, setSelectedType] =
+    useState<(typeof TYPES)[number] | null>(null);
+  const [selectedKind, setSelectedKind] =
+    useState<(typeof KINDS)[number] | null>(null);
   const [solvedOnly, setSolvedOnly] = useState(false);
 
   const [typeOpen, setTypeOpen] = useState(false);
@@ -147,10 +144,29 @@ export default function WrongPage() {
   const filtered = useMemo(() => {
     let list = [...solved];
 
+    // 🔍 검색 (공백 무시 + 초성 검색)
     if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      list = list.filter((p) => p.title.toLowerCase().includes(q));
+      const raw = query.trim();
+      const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
+      const rawNoSpace = raw.replace(/\s+/g, "");
+      const queryChoseong = getChoseong(raw).replace(/\s+/g, "");
+
+      list = list.filter((p) => {
+        const title = p.title;
+        const normalizedTitle = normalize(title);
+        const titleChoseong = getChoseong(title).replace(/\s+/g, "");
+
+        return (
+          // 1) 공백 무시 일반 검색
+          normalizedTitle.includes(normalizedQuery) ||
+          // 2) 초성 직접 입력 ("ㅊㄷㄱ" 등)
+          titleChoseong.includes(rawNoSpace) ||
+          // 3) 입력값을 초성으로 변환 후 비교
+          titleChoseong.includes(queryChoseong)
+        );
+      });
     }
+
     if (selectedLangs.size) {
       list = list.filter((p) => selectedLangs.has(p.language));
     }
@@ -195,7 +211,6 @@ export default function WrongPage() {
   const recommendedProblem = solved[0];
   const expectedSolveTime = "30분";
 
-  // 최근 푼 문제 목록 (Mock 데이터)
   const recentProblems = Array.from({ length: 6 }, (_, i) => ({
     id: `recent${i + 1}`,
     title: "알고리즘 문제",
@@ -293,7 +308,7 @@ export default function WrongPage() {
                   >
                     전체 해제
                   </button>
-                  {TYPES.map((t) => ( 
+                  {TYPES.map((t) => (
                     <button
                       key={t}
                       role="menuitem"
@@ -311,7 +326,7 @@ export default function WrongPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="chip dropdown" ref={kindRef}>
               <button
                 type="button"
