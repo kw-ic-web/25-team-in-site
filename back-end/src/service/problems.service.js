@@ -4,17 +4,9 @@ import { ERROR } from "../mapper/error.mapper.js";
 import { ProblemRepository } from "../repository/problem.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { SolvedRepository } from "../repository/solved.repository.js";
+import { normalizeStringArray } from "../utils/utils.js";
 
 const _clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
-const _normalizeLanguageArray = (value) => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .map((lang) => (typeof lang === "string" ? lang.trim() : String(lang)))
-    .filter(Boolean);
-};
 
 const levelDifficultyRange = [
   { min: 1, max: 2 },
@@ -66,7 +58,7 @@ export const ProblemsService = {
 
     return {
       ...problem,
-      problem_lang: _normalizeLanguageArray(problem.problem_lang),
+      problem_lang: normalizeStringArray(problem.problem_lang),
     };
   },
 
@@ -91,7 +83,7 @@ export const ProblemsService = {
     return problems
       .map((problem) => {
         let score = 0;
-        const languages = _normalizeLanguageArray(problem.problem_lang);
+        const languages = normalizeStringArray(problem.problem_lang);
 
         if (preferLanguage && languages.includes(preferLanguage)) {
           score += 30;
