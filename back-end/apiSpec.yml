@@ -10,6 +10,7 @@ tags:
   - name: Auth
   - name: User
   - name: Problems
+  - name: Code
 
 paths:
   /health:
@@ -81,6 +82,35 @@ paths:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "401":
           description: "이메일 혹은 비밀번호 불일치"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "500":
+          description: "서버 내부 오류"
+
+  /code/tokenize:
+    post:
+      tags: [Code]
+      summary: 코드 토큰화
+      description: "tiktoken 기반으로 코드 문자열을 토큰화합니다."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CodeTokenizeRequest" }
+      responses:
+        "200":
+          description: "토큰화 결과"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CodeTokenizeResponse" }
+        "400":
+          description: "잘못된 모델/인코딩 혹은 토큰 수 초과"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "413":
+          description: "코드 길이가 허용 범위를 초과"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -326,3 +356,47 @@ components:
         problems:
           type: array
           items: { $ref: "#/components/schemas/ProblemSummary" }
+
+    # ==== CODE ====
+    CodeTokenizeRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: "토큰화할 코드 문자열"
+          maxLength: 200000
+        model:
+          type: string
+          description: "선택 사항. 예: gpt-4o-mini"
+        encoding:
+          type: string
+          description: "선택 사항. 직접 인코딩(o200k_base 등)을 지정할 수 있습니다."
+        include_tokens:
+          type: boolean
+          default: true
+          description: "true일 때 토큰 ID 배열을 응답에 포함합니다."
+
+    CodeTokenizeResponse:
+      type: object
+      required: [model, encoding, token_count, preview]
+      properties:
+        model:
+          type: string
+          description: "사용된 모델 이름(요청값 또는 기본값)"
+        encoding:
+          type: string
+          description: "사용된 tiktoken 인코딩"
+        used_fallback:
+          type: boolean
+          description: "모델→인코딩 추론 실패로 기본값을 사용했는지 여부"
+        token_count:
+          type: integer
+          description: "전체 토큰 수"
+        tokens:
+          type: array
+          items: { type: integer }
+          description: "토큰 ID 배열(include_tokens=true인 경우에만 포함)"
+        preview:
+          type: string
+          description: "앞부분 미리보기 (최대 10줄, 1,000자)"
