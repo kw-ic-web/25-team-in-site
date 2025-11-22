@@ -1,5 +1,6 @@
 import { Problem } from "../entity/problem.entity.js";
 import { ProblemDetail } from "../entity/problemDetail.entity.js";
+import { normalizeStringArray } from "../utils/utils.js";
 
 const PROBLEM_SUMMARY_PROJECTION = {
   problem_id: 1,
@@ -11,31 +12,16 @@ const PROBLEM_SUMMARY_PROJECTION = {
   createdAt: 1,
 };
 
-const _normalizeStringArray = (value) => {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => (typeof item === "string" ? item.trim() : String(item)))
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? [trimmed] : [];
-  }
-
-  return [];
-};
-
 const _normalizeProblemDoc = (problem = {}) => ({
   ...problem,
-  problem_lang: _normalizeStringArray(problem.problem_lang),
+  problem_lang: normalizeStringArray(problem.problem_lang),
 });
 
 const _mergeProblemDetail = (problem, problemDetail) => {
   if (!problemDetail) {
     return {
       problem_body: problem.problem_body,
-      problem_attachment_urls: _normalizeStringArray(
+      problem_attachment_urls: normalizeStringArray(
         problem.problem_attachment_urls,
       ),
     };
@@ -48,13 +34,13 @@ const _mergeProblemDetail = (problem, problemDetail) => {
     ...rest
   } = problemDetail;
 
-  const normalizedDetailAttachments = _normalizeStringArray(
+  const normalizedDetailAttachments = normalizeStringArray(
     problem_attachment_urls,
   );
   const fallbackAttachments =
     normalizedDetailAttachments.length > 0
       ? normalizedDetailAttachments
-      : _normalizeStringArray(problem.problem_attachment_urls);
+      : normalizeStringArray(problem.problem_attachment_urls);
 
   return {
     problem_body: problem_body ?? problem.problem_body,
@@ -98,7 +84,7 @@ const _scoreSimilarity = (problem, target) => {
     score += 25;
   }
 
-  const targetLangs = _normalizeStringArray(target.problem_lang);
+  const targetLangs = normalizeStringArray(target.problem_lang);
   if (targetLangs.length) {
     const overlap = problem.problem_lang.filter((lang) =>
       targetLangs.includes(lang),
@@ -233,7 +219,7 @@ export const ProblemRepository = {
 
     const targetDifficulty = targetProblem.problem_difficulty || 1;
     const matchClauses = [];
-    const normalizedLangs = _normalizeStringArray(targetProblem.problem_lang);
+    const normalizedLangs = normalizeStringArray(targetProblem.problem_lang);
 
     if (targetProblem.problem_main_category) {
       matchClauses.push({
