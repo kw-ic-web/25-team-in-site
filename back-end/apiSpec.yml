@@ -105,7 +105,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CodeTokenizeResponse" }
         "400":
-          description: "잘못된 모델/인코딩 혹은 토큰 수 초과"
+          description: "잘못된 요청 혹은 토큰 수 초과"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -366,37 +366,11 @@ components:
           type: string
           description: "토큰화할 코드 문자열"
           maxLength: 200000
-        model:
-          type: string
-          description: "선택 사항. 예: gpt-4o-mini"
-        encoding:
-          type: string
-          description: "선택 사항. 직접 인코딩(o200k_base 등)을 지정할 수 있습니다."
-        include_tokens:
-          type: boolean
-          default: true
-          description: "true일 때 토큰 ID 배열을 응답에 포함합니다."
 
     CodeTokenizeResponse:
       type: object
-      required: [model, encoding, token_count, preview]
+      required: [token_count]
       properties:
-        model:
-          type: string
-          description: "사용된 모델 이름(요청값 또는 기본값)"
-        encoding:
-          type: string
-          description: "사용된 tiktoken 인코딩"
-        used_fallback:
-          type: boolean
-          description: "모델→인코딩 추론 실패로 기본값을 사용했는지 여부"
         token_count:
           type: integer
           description: "전체 토큰 수"
-        tokens:
-          type: array
-          items: { type: integer }
-          description: "토큰 ID 배열(include_tokens=true인 경우에만 포함)"
-        preview:
-          type: string
-          description: "앞부분 미리보기 (최대 10줄, 1,000자)"
