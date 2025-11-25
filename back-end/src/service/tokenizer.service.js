@@ -2,14 +2,10 @@ import { get_encoding, get_encoding_name_for_model } from "tiktoken";
 import {
   DEFAULT_ENCODING,
   DEFAULT_MODEL,
-  MAX_CODE_CHAR_LENGTH,
   MAX_TOKEN_LENGTH,
-  PREVIEW_MAX_CHARS,
-  PREVIEW_MAX_LINES,
 } from "../constants/tokenizer.constants.js";
 import { ERROR } from "../mapper/error.mapper.js";
-
-const normalizeNewLines = (value) => value.replace(/\r\n/g, "\n");
+import { CodeTokenizeResponseDto } from "../dto/code/tokenize.response.dto.js";
 
 const encoderCache = new Map();
 let cleanupRegistered = false;
@@ -50,64 +46,29 @@ const getEncoder = (encoding) => {
   return encoderCache.get(encoding);
 };
 
-const buildPreview = (code) => {
-  if (!code) {
-    return "";
-  }
-  const normalized = normalizeNewLines(code);
-  const previewLines = normalized.split("\n").slice(0, PREVIEW_MAX_LINES);
-  let preview = previewLines.join("\n");
-  if (preview.length > PREVIEW_MAX_CHARS) {
-    preview = preview.slice(0, PREVIEW_MAX_CHARS);
-  }
-  return preview;
-};
-
-const resolveModelEncoding = ({ model, encoding }) => {
-  if (encoding) {
-    return {
-      model: model || DEFAULT_MODEL,
-      encoding,
-      usedFallback: false,
-    };
-  }
-
-  const normalizedModel = model || DEFAULT_MODEL;
+const resolveEncoding = () => {
   try {
-    const inferred = get_encoding_name_for_model(normalizedModel);
+    const inferred = get_encoding_name_for_model(DEFAULT_MODEL);
     if (inferred) {
-      return {
-        model: normalizedModel,
-        encoding: inferred,
-        usedFallback: false,
-      };
+      return inferred;
     }
   } catch {
-    // swallow and fall back
+    // fall back to default
   }
 
-  return {
-    model: normalizedModel,
-    encoding: DEFAULT_ENCODING,
-    usedFallback: true,
-  };
+  // fallback 사용 시 에러 발생
+  throw ERROR.UNSUPPORTED_ENCODING();
 };
 
 export const TokenizerService = {
-  async tokenize({ code, model, encoding, include_tokens = true }) {
-    if (!code || code.length === 0) {
-      throw ERROR.CODE_REQUIRED();
-    }
+  async tokenize({ code }) {
+    // DTO에서 이미 검증된 값이므로 중복 검증 제거
 
-    if (code.length > MAX_CODE_CHAR_LENGTH) {
-      throw ERROR.CODE_TOO_LARGE();
-    }
-
-    const resolved = resolveModelEncoding({ model, encoding });
+    const encoding = resolveEncoding();
 
     let tokenizer;
     try {
-      tokenizer = getEncoder(resolved.encoding);
+      tokenizer = getEncoder(encoding);
     } catch {
       throw ERROR.UNSUPPORTED_ENCODING();
     }
@@ -119,15 +80,10 @@ export const TokenizerService = {
       throw ERROR.TOKEN_LIMIT_EXCEEDED();
     }
 
-    const tokensPayload = include_tokens ? Array.from(tokens) : undefined;
-
-    return {
-      model: resolved.model,
-      encoding: resolved.encoding,
-      used_fallback: resolved.usedFallback,
+    const result = {
       token_count: tokenCount,
-      ...(include_tokens && { tokens: tokensPayload }),
-      preview: buildPreview(code),
     };
+
+    return CodeTokenizeResponseDto.parse(result);
   },
 };
