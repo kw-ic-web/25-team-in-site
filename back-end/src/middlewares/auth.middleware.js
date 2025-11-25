@@ -6,7 +6,6 @@ const _publicPaths = [
   "/api/v1/auth/login",
   "/api/v1/auth/register",
   "/api/v1/user/check-id",
-  "/api/v1/code/tokenize",
   "/api-docs",
   "/api-docs.json",
 ];
