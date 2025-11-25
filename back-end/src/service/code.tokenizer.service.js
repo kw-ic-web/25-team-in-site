@@ -1,6 +1,5 @@
 import { get_encoding, get_encoding_name_for_model } from "tiktoken";
 import {
-  DEFAULT_ENCODING,
   DEFAULT_MODEL,
   MAX_TOKEN_LENGTH,
 } from "../constants/tokenizer.constants.js";
