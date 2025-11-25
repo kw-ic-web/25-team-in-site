@@ -3,7 +3,7 @@ import { MAX_CODE_CHAR_LENGTH } from "../../constants/tokenizer.constants.js";
 
 export const CodeTokenizeRequestDto = z.object({
   code: z
-    .string()
+    .string("INVALID_CODE_TYPE")
     .min(1, "CODE_REQUIRED")
     .max(MAX_CODE_CHAR_LENGTH, "CODE_TOO_LARGE"),
 });
