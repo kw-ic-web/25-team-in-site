@@ -9,13 +9,15 @@ const problemSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
-    problem_difficulty: { type: Number, required: true },
-    problem_lang: { type: [String], required: true },
-    problem_main_category: { type: String },
-    problem_sub_category: { type: String },
-    problem_success_rate: { type: Number },
+    problem_source_id: { type: String, required: true },
+    problem_title: { type: String, required: true },
+    problem_difficulty: { type: Number, required: true, min: 1, max: 5 },
+    problem_lang: { type: [String], required: true, default: ["Python"] },
+    problem_main_category: { type: [String], default: [] },
+    problem_sub_category: { type: [String], default: [] },
+    problem_success_rate: { type: Number, default: 0 },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export const Problem = mongoose.model("Problem", problemSchema);
