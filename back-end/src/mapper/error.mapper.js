@@ -2,6 +2,7 @@ import { BadRequestError } from "../errors/badRequest.error.js";
 import { ConflictError } from "../errors/conflict.error.js";
 import { InternalServerError } from "../errors/internalServerError.error.js";
 import { UnauthorizedError } from "../errors/unauthorized.error.js";
+import { PayloadTooLargeError } from "../errors/payloadTooLarge.error.js";
 
 export const ERROR = {
   INVALID_ID_FORMAT: () =>
@@ -27,4 +28,13 @@ export const ERROR = {
   INVALID_PROB_ID: () => new BadRequestError("문제 ID가 올바르지 않습니다."),
   FAIL_TO_GET_PROB_DETAIL: () =>
     new InternalServerError("문제 세부사항을 찾을 수 없습니다."),
+  INVALID_CODE_TYPE: () =>
+    new BadRequestError("코드는 문자열 타입이어야 합니다."),
+  CODE_REQUIRED: () => new BadRequestError("토큰화할 코드를 입력해주세요."),
+  CODE_TOO_LARGE: () =>
+    new PayloadTooLargeError("허용된 코드 길이를 초과했습니다."),
+  UNSUPPORTED_ENCODING: () =>
+    new BadRequestError("지원하지 않는 인코딩입니다."),
+  TOKEN_LIMIT_EXCEEDED: () =>
+    new BadRequestError("허용된 토큰 수를 초과했습니다."),
 };

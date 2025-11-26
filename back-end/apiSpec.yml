@@ -10,6 +10,7 @@ tags:
   - name: Auth
   - name: User
   - name: Problems
+  - name: Code
 
 paths:
   /health:
@@ -81,6 +82,35 @@ paths:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "401":
           description: "이메일 혹은 비밀번호 불일치"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "500":
+          description: "서버 내부 오류"
+
+  /code/tokenize:
+    post:
+      tags: [Code]
+      summary: 코드 토큰화
+      description: "tiktoken 기반으로 코드 문자열을 토큰화합니다."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CodeTokenizeRequest" }
+      responses:
+        "200":
+          description: "토큰화 결과"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CodeTokenizeResponse" }
+        "400":
+          description: "잘못된 요청 혹은 토큰 수 초과"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "413":
+          description: "코드 길이가 허용 범위를 초과"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -326,3 +356,21 @@ components:
         problems:
           type: array
           items: { $ref: "#/components/schemas/ProblemSummary" }
+
+    # ==== CODE ====
+    CodeTokenizeRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: "토큰화할 코드 문자열"
+          maxLength: 200000
+
+    CodeTokenizeResponse:
+      type: object
+      required: [token_count]
+      properties:
+        token_count:
+          type: integer
+          description: "전체 토큰 수"
