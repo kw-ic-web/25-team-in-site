@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
     prefer_language: { type: String },
     purpose: { type: String },
     metalevel: { type: Number }, //서버 내부 레벨 <- 초기값은 유저 선택 레벨
+    last_active: { type: Date, default: Date.now },
   },
   { timestamps: true },
 );
