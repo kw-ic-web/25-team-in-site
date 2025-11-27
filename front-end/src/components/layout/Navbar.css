@@ -28,6 +28,12 @@
   font-weight: 700;
   font-size: 22px;
 }
+.topnav__brand .brand__logo {
+  display: block;
+  width: 120px;
+  height: 42px;
+  object-fit: contain;
+}
 
 /* 중앙 탭 바 */
 .topnav__tabs {

@@ -91,8 +91,15 @@
   text-align: center;
 }
 
+.login-card__logo {
+  display: block;
+  width: clamp(110px, 22vw, 150px);
+  height: auto;
+  margin: 0 auto 8px;
+}
+
 .login-card__header h1 {
-  margin: 0 0 8px;
+  margin: 8px 0 8px;
   font-size: 30px;
   font-weight: 700;
   color: #181936;

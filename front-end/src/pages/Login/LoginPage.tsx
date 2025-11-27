@@ -7,6 +7,10 @@ import "./LoginPage.css";
 
 const naverLogo = new URL("../../assets/logos/naver.png", import.meta.url).href;
 const kakaoLogo = new URL("../../assets/logos/kakao.png", import.meta.url).href;
+const insiteLoginLogo = new URL(
+  "../../assets/logos/insite_login_logo.png",
+  import.meta.url
+).href;
 const loginTopIllustration = new URL(
   "../../assets/login/login1.png",
   import.meta.url
@@ -111,7 +115,11 @@ export default function LoginPage() {
       {/* 로그인 카드 */}
       <section className="login-card" aria-labelledby="login-title">
         <header className="login-card__header">
-          <h1 id="login-title">코딩도우미</h1>
+          <img
+            src={insiteLoginLogo}
+            alt="INSITE 로고"
+            className="login-card__logo"
+          />
           <p>AI 기반 코딩 학습 플랫폼</p>
         </header>
 
