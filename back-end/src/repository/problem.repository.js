@@ -5,6 +5,7 @@ import { normalizeStringArray } from "../utils/utils.js";
 // === Projection ===
 const PROBLEM_SUMMARY_PROJECTION = {
   problem_id: 1,
+  problem_title: 1,
   problem_difficulty: 1,
   problem_lang: 1,
   problem_main_category: 1,
