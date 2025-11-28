@@ -6,6 +6,7 @@ import { RecentSolvedListRequestDto } from "../dto/problems/problemRecentSolved.
 
 const _transformProblemSummary = (problem) => ({
   id: problem.problem_id,
+  title: problem.problem_title,
   difficulty: problem.problem_difficulty,
   language: problem.problem_lang,
   main_category: problem.problem_main_category,
@@ -27,6 +28,7 @@ export const problemsController = {
 
       res.status(200).json({
         id: problem.problem_id,
+        title: problem.problem_title,
         difficulty: problem.problem_difficulty,
         language: problem.problem_lang,
         main_category: problem.problem_main_category,
@@ -34,6 +36,9 @@ export const problemsController = {
         success_rate: problem.problem_success_rate,
         body: problem.problem_body,
         attachments_urls: problem.problem_attachment_urls,
+        test_cases: problem.problem_test_cases,
+        time_limit: problem.problem_time_limit,
+        memory_limit: problem.problem_memory_limit,
         expected_xp: responseDto.expectedXp,
         is_solved: responseDto.isSolved,
       });
