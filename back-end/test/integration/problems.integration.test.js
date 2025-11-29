@@ -101,12 +101,15 @@ describe("Problems API Integration", () => {
 
   it("GET /api/v1/problems → 문제가 하나도 없는 경우 빈 결과를 반환한다", async () => {
     // 새로운 사용자로 테스트 (문제가 없는 상태)
+    // beforeEach에서 생성된 문제들을 제외하기 위해 존재하지 않는 필터 사용
     const newUser = await createAuthenticatedUser({
       prefer_language: "js",
     });
 
     const res = await appRequest()
-      .get("/api/v1/problems?page=1&limit=10")
+      .get(
+        "/api/v1/problems?page=1&limit=10&languages=NonExistentLanguage&main_category=NonExistentCategory",
+      )
       .set("Cookie", newUser.cookie);
 
     expect(res.status).toBe(200);
@@ -133,6 +136,17 @@ describe("Problems API Integration", () => {
     const newUser = await createAuthenticatedUser({
       prefer_language: "js",
     });
+    // beforeEach에서 생성된 문제들도 모두 해결
+    await seedSolvedRecord({
+      user: newUser.user,
+      problem: problemA.problem,
+      language: "Python",
+    });
+    await seedSolvedRecord({
+      user: newUser.user,
+      problem: problemB.problem,
+      language: "Python",
+    });
     const newProblem = await seedProblemWithDetail({
       problem_difficulty: 1,
       problem_lang: ["JavaScript"],
@@ -153,10 +167,14 @@ describe("Problems API Integration", () => {
   });
 
   it("GET /api/v1/problems/:id/similar → 유사 문제가 없는 경우 빈 결과를 반환한다", async () => {
+    // difficulty 5, Rust 언어, UniqueCategory인 문제 생성
+    // beforeEach에서 생성된 문제들( difficulty 2, 3, Python, Algorithm)은
+    // difficulty 범위(4~5)와 언어/카테고리 조건을 만족하지 않으므로 필터링되어야 함
     const isolatedProblem = await seedProblemWithDetail({
       problem_difficulty: 5,
       problem_lang: ["Rust"],
       problem_main_category: ["UniqueCategory"],
+      problem_sub_category: ["UniqueSubCategory"],
     });
 
     const res = await appRequest()
@@ -166,6 +184,7 @@ describe("Problems API Integration", () => {
       .set("Cookie", cookie);
 
     expect(res.status).toBe(200);
+    // difficulty 4~5 범위에 있고, Rust 언어이거나 UniqueCategory인 문제가 없어야 함
     expect(res.body.count).toBe(0);
     expect(res.body.problems).toEqual([]);
   });
