@@ -214,6 +214,25 @@ paths:
         "500":
           description: "서버 내부 오류"
 
+  /user/stats:
+    get:
+      tags: [User]
+      summary: 사용자 통계 조회
+      description: "로그인한 사용자의 프로필, 통계, 배지, 히트맵 정보를 조회합니다."
+      responses:
+        "200":
+          description: "사용자 통계 조회 성공"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserStatsResponse" }
+        "401":
+          description: "인증되지 않은 사용자"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "500":
+          description: "서버 내부 오류"
+
 components:
   schemas:
     # ==== AUTH ====
@@ -293,6 +312,83 @@ components:
         available:
           type: boolean
           description: "true이면 아직 사용되지 않은 아이디"
+
+    UserStatsResponse:
+      type: object
+      required:
+        [
+          profile,
+          stats,
+          badges,
+          levelDistribution,
+          languageDistribution,
+          heatmap,
+        ]
+      properties:
+        profile:
+          type: object
+          required:
+            [
+              nickname,
+              avatarImage,
+              bio,
+              level,
+              exp,
+              preferLanguage,
+              totalSolved,
+              rank,
+            ]
+          properties:
+            nickname:
+              type: string
+            avatarImage:
+              type: string
+              description: "레벨에 따른 아바타 이미지 경로"
+            bio:
+              type: string
+              description: "가입 목적에 따른 상태 메시지"
+            level:
+              type: integer
+            exp:
+              type: integer
+            preferLanguage:
+              type: string
+            totalSolved:
+              type: integer
+            rank:
+              type: string
+              description: "현재는 Unranked 고정"
+        stats:
+          type: object
+          required: [streak, todaySolved, thisWeekSolved, mostUsedLanguage]
+          properties:
+            streak:
+              type: integer
+            todaySolved:
+              type: integer
+            thisWeekSolved:
+              type: integer
+            mostUsedLanguage:
+              type: string
+        badges:
+          type: array
+          items: { type: string }
+          description: "현재는 빈 배열"
+        levelDistribution:
+          type: object
+          additionalProperties:
+            type: integer
+          description: "레벨별 문제 풀이 수 (예: { '1': 10, '2': 5 })"
+        languageDistribution:
+          type: object
+          additionalProperties:
+            type: integer
+          description: "언어별 문제 풀이 수 (예: { 'js': 10, 'py': 5 })"
+        heatmap:
+          type: object
+          additionalProperties:
+            type: integer
+          description: "날짜별 문제 풀이 수 (예: { '2023-10-01': 3 })"
 
     # ==== PROBLEMS ====
     ProblemSummary:
