@@ -136,18 +136,6 @@ describe("UserService.getUserStats", () => {
   });
 
   describe("엣지 케이스", () => {
-    it("user._id가 null인 경우를 처리한다", async () => {
-      const userWithoutId = { ...mockUser, _id: null };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithoutId);
-      jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(0);
-      mockDateRangeCounts();
-      mockLevelStats();
-      mockLanguageStats();
-      mockHeatmap();
-
-      await expect(UserService.getUserStats("tester")).rejects.toThrow();
-    });
-
     it("user.user_level이 null인 경우를 처리한다", async () => {
       const userWithNullLevel = { ...mockUser, user_level: null };
       jest

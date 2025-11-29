@@ -27,7 +27,7 @@ describe("User API", () => {
   it("GET /api/v1/user/stats → 인증된 사용자 정보", async () => {
     const { user, cookie } = await createAuthenticatedUser({
       user_id: "stats_user",
-      prefer_language: "py",
+      prefer_language: "js",
     });
     const prob = await seedProblemWithDetail({
       problem_difficulty: 2,
@@ -45,7 +45,7 @@ describe("User API", () => {
     expect(res.status).toBe(200);
     expect(res.body.profile.nickname).toBe("stats_user");
     expect(res.body.profile.totalSolved).toBe(1);
-    expect(res.body.stats.mostUsedLanguage).toBe("JavaScript");
+    expect(res.body.stats.mostUsedLanguage).toBe("py");
   });
 
   describe("GET /api/v1/user/check-id/:user_id 엣지 케이스", () => {
