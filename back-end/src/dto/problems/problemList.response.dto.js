@@ -7,9 +7,21 @@ const ProbListItemResponseDto = ProbDetailResponseDto.omit({
 });
 
 export const ProbListResponseDto = z.object({
-  page: z.number().int().min(1),
-  limit: z.number().int().positive(),
-  totalCount: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
-  problems: z.array(ProbListItemResponseDto),
+  page: z
+    .number("FAIL_TO_GET_PROB_DETAIL")
+    .int("FAIL_TO_GET_PROB_DETAIL")
+    .min(1),
+  limit: z
+    .number("FAIL_TO_GET_PROB_DETAIL")
+    .int("FAIL_TO_GET_PROB_DETAIL")
+    .positive("FAIL_TO_GET_PROB_DETAIL"),
+  totalCount: z
+    .number("FAIL_TO_GET_PROB_DETAIL")
+    .int("FAIL_TO_GET_PROB_DETAIL")
+    .nonnegative("FAIL_TO_GET_PROB_DETAIL"),
+  totalPages: z
+    .number("FAIL_TO_GET_PROB_DETAIL")
+    .int("FAIL_TO_GET_PROB_DETAIL")
+    .nonnegative("FAIL_TO_GET_PROB_DETAIL"),
+  problems: z.array(ProbListItemResponseDto, "FAIL_TO_GET_PROB_DETAIL"),
 });
