@@ -2,8 +2,10 @@ import { Problem } from "../entity/problem.entity.js";
 import { ProblemDetail } from "../entity/problemDetail.entity.js";
 import { normalizeStringArray } from "../utils/utils.js";
 
+// === Projection ===
 const PROBLEM_SUMMARY_PROJECTION = {
   problem_id: 1,
+  problem_title: 1,
   problem_difficulty: 1,
   problem_lang: 1,
   problem_main_category: 1,
@@ -12,6 +14,7 @@ const PROBLEM_SUMMARY_PROJECTION = {
   createdAt: 1,
 };
 
+// === Helper Functions ===
 const _normalizeProblemDoc = (problem = {}) => ({
   ...problem,
   problem_lang: normalizeStringArray(problem.problem_lang),
@@ -70,18 +73,34 @@ const _buildSortOption = (sortBy, sortOrder) => {
 const _scoreSimilarity = (problem, target) => {
   let score = 0;
 
-  if (
-    target.problem_main_category &&
-    problem.problem_main_category === target.problem_main_category
-  ) {
-    score += 40;
+  const targetMainCategories = normalizeStringArray(
+    target.problem_main_category,
+  );
+  const problemMainCategories = normalizeStringArray(
+    problem.problem_main_category,
+  );
+  if (targetMainCategories.length > 0 && problemMainCategories.length > 0) {
+    const hasOverlap = targetMainCategories.some((cat) =>
+      problemMainCategories.includes(cat),
+    );
+    if (hasOverlap) {
+      score += 40;
+    }
   }
 
-  if (
-    target.problem_sub_category &&
-    problem.problem_sub_category === target.problem_sub_category
-  ) {
-    score += 25;
+  const targetSubCategories = normalizeStringArray(
+    target.problem_sub_category,
+  );
+  const problemSubCategories = normalizeStringArray(
+    problem.problem_sub_category,
+  );
+  if (targetSubCategories.length > 0 && problemSubCategories.length > 0) {
+    const hasOverlap = targetSubCategories.some((cat) =>
+      problemSubCategories.includes(cat),
+    );
+    if (hasOverlap) {
+      score += 25;
+    }
   }
 
   const targetLangs = normalizeStringArray(target.problem_lang);
@@ -106,6 +125,7 @@ const _scoreSimilarity = (problem, target) => {
   return score;
 };
 
+// === Repository ===
 export const ProblemRepository = {
   async findProblemById(id) {
     const probInfo = await Problem.findOne({ problem_id: id }).lean();
@@ -152,11 +172,11 @@ export const ProblemRepository = {
     }
 
     if (main_category) {
-      filter.problem_main_category = main_category;
+      filter.problem_main_category = { $in: [main_category] };
     }
 
     if (sub_category) {
-      filter.problem_sub_category = sub_category;
+      filter.problem_sub_category = { $in: [sub_category] };
     }
 
     if (Array.isArray(excludeProblemIds) && excludeProblemIds.length > 0) {
@@ -221,15 +241,21 @@ export const ProblemRepository = {
     const matchClauses = [];
     const normalizedLangs = normalizeStringArray(targetProblem.problem_lang);
 
-    if (targetProblem.problem_main_category) {
+    const normalizedMainCategories = normalizeStringArray(
+      targetProblem.problem_main_category,
+    );
+    if (normalizedMainCategories.length > 0) {
       matchClauses.push({
-        problem_main_category: targetProblem.problem_main_category,
+        problem_main_category: { $in: normalizedMainCategories },
       });
     }
 
-    if (targetProblem.problem_sub_category) {
+    const normalizedSubCategories = normalizeStringArray(
+      targetProblem.problem_sub_category,
+    );
+    if (normalizedSubCategories.length > 0) {
       matchClauses.push({
-        problem_sub_category: targetProblem.problem_sub_category,
+        problem_sub_category: { $in: normalizedSubCategories },
       });
     }
 

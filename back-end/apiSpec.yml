@@ -298,11 +298,14 @@ components:
     ProblemSummary:
       type: object
       required:
-        [id, difficulty, language, main_category, sub_category, success_rate]
+        [id, title, difficulty, language, main_category, sub_category, success_rate]
       properties:
         id:
           type: string
           description: "문제를 식별하는 uuid v7"
+        title:
+          type: string
+          description: "문제 제목"
         difficulty:
           type: integer
           minimum: 1
@@ -312,9 +315,13 @@ components:
           items: { type: string }
           description: "출제 언어(복수)"
         main_category:
-          type: string
+          type: array
+          items: { type: string }
+          description: "문제의 대분류"
         sub_category:
-          type: string
+          type: array
+          items: { type: string }
+          description: "문제의 소분류"
         success_rate:
           type: number
           format: float
@@ -331,6 +338,16 @@ components:
             attachments_urls:
               type: array
               items: { type: string, format: uri }
+            test_cases:
+              type: array
+              items: { type: string }
+              description: "테스트 케이스 목록"
+            time_limit:
+              type: integer
+              description: "시간 제한 (밀리초 단위)"
+            memory_limit:
+              type: integer
+              description: "메모리 제한 (바이트 단위)"
 
     ProblemListResponse:
       type: object

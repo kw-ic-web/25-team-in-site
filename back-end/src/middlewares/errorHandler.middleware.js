@@ -9,12 +9,19 @@ export default (err, req, res, next) => {
   if (err instanceof ZodError) {
     const issue = err.issues[0]; //TODO: 여러개의 validation 에러 볼 수 있도록(UX)
     const code = issue.message;
-    const errorInfo = ERROR[code]();
 
-    if (errorInfo) {
-      status = errorInfo.status;
-      name = errorInfo.name;
-      message = errorInfo.message;
+    if (ERROR[code] && typeof ERROR[code] === "function") {
+      const errorInfo = ERROR[code]();
+      if (errorInfo) {
+        status = errorInfo.status;
+        name = errorInfo.name;
+        message = errorInfo.message;
+      }
+    } else {
+      // ERROR 매퍼에 없는 경우 기본 validation 에러로 처리
+      status = 400;
+      name = "ValidationError";
+      message = `Validation failed: ${issue.path.join(".")} - ${issue.message}`;
     }
   }
   const responseBody = {
