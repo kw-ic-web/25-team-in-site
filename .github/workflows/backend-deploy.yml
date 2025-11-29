@@ -48,18 +48,24 @@ jobs:
       - name: Upload bundle to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.BE_EC2_HOST }}
-          username: ${{ secrets.BE_EC2_USERNAME }}
-          key: ${{ secrets.BE_EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          timeout: 60s
+          command_timeout: 60s
           source: backend.tar.gz
           target: ${{ steps.envfile.outputs.target }}
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.BE_EC2_HOST }}
-          username: ${{ secrets.BE_EC2_USERNAME }}
-          key: ${{ secrets.BE_EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          timeout: 60s
+          command_timeout: 300s
           script: |
             set -euo pipefail
             cd "${{ steps.envfile.outputs.target }}"
