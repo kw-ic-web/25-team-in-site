@@ -71,14 +71,15 @@ export const problemsController = {
   async getPersonalRecommendations(req, res, next) {
     try {
       const dto = ProbRecommendRequestDto.parse({ ...req.query });
-      const problems = await req.services.problems.getPersonalRecommendations(
-        dto,
-        req.user?.user_id,
-      );
+      const responseDto =
+        await req.services.problems.getPersonalRecommendations(
+          dto,
+          req.user?.user_id,
+        );
 
       res.status(200).json({
-        count: problems.length,
-        problems: problems.map(_transformProblemSummary),
+        count: responseDto.count,
+        problems: responseDto.problems.map(_transformProblemSummary),
       });
     } catch (error) {
       next(error);
@@ -90,14 +91,14 @@ export const problemsController = {
         id: req.params.id,
         limit: req.query.limit,
       });
-      const problems = await req.services.problems.getSimilarProblems(
+      const responseDto = await req.services.problems.getSimilarProblems(
         dto,
         req.user?.user_id,
       );
 
       res.status(200).json({
-        count: problems.length,
-        problems: problems.map(_transformProblemSummary),
+        count: responseDto.count,
+        problems: responseDto.problems.map(_transformProblemSummary),
       });
     } catch (error) {
       next(error);
@@ -106,14 +107,14 @@ export const problemsController = {
   async getRecentSolvedProblems(req, res, next) {
     try {
       const dto = RecentSolvedListRequestDto.parse({ ...req.query });
-      const recent = await req.services.problems.getRecentSolvedProblems(
+      const responseDto = await req.services.problems.getRecentSolvedProblems(
         dto,
         req.user?.user_id,
       );
 
       res.status(200).json({
-        count: recent.length,
-        items: recent.map((item) => ({
+        count: responseDto.count,
+        items: responseDto.items.map((item) => ({
           solved_id: item.solved_id,
           solved_at:
             item.solved_at instanceof Date
