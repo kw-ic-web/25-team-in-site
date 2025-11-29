@@ -1,5 +1,9 @@
 import { ProbDetailResponseDto } from "../dto/problems/problem.response.dto.js";
 import { ProbListResponseDto } from "../dto/problems/problemList.response.dto.js";
+import { ProbRecommendResponseDto } from "../dto/problems/problemRecommend.response.dto.js";
+import { SimilarProblemResponseDto } from "../dto/problems/problemSimilar.response.dto.js";
+import { RecentSolvedListResponseDto } from "../dto/problems/problemRecentSolved.response.dto.js";
+import { ProbSummaryWithStateResponseDto } from "../dto/problems/problemSummary.response.dto.js";
 import { ERROR } from "../mapper/error.mapper.js";
 import { ProblemRepository } from "../repository/problem.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
@@ -42,7 +46,9 @@ export const ProblemsService = {
 
     return Math.max(
       10,
-      Math.round(baseXp * difficultyMultiplier * successMultiplier * levelMultiplier),
+      Math.round(
+        baseXp * difficultyMultiplier * successMultiplier * levelMultiplier,
+      ),
     );
   },
 
@@ -166,13 +172,7 @@ export const ProblemsService = {
     }
 
     const [detail, isSolved] = await Promise.all([
-      (async () => {
-        try {
-          return ProbDetailResponseDto.parse(problem);
-        } catch {
-          throw ERROR.FAIL_TO_GET_PROB_DETAIL();
-        }
-      })(),
+      ProbDetailResponseDto.parse(problem),
       SolvedRepository.hasUserSolvedProblem(user._id, problem._id),
     ]);
 
@@ -274,12 +274,19 @@ export const ProblemsService = {
       targetDifficulty,
     });
 
-    return ranked
+    const problems = ranked
       .slice(0, dto.limit)
-      .map((problem) =>
-        this._buildProblemSummary(problem, user, solvedSet),
-      )
+      .map((problem) => this._buildProblemSummary(problem, user, solvedSet))
       .filter(Boolean);
+
+    const validatedProblems = problems.map((problem) =>
+      ProbSummaryWithStateResponseDto.parse(problem),
+    );
+
+    return ProbRecommendResponseDto.parse({
+      count: validatedProblems.length,
+      problems: validatedProblems,
+    });
   },
 
   async getSimilarProblems(dto, userId) {
@@ -302,9 +309,18 @@ export const ProblemsService = {
       excludeIds: solvedIds,
     });
 
-    return similar
+    const problems = similar
       .map((problem) => this._buildProblemSummary(problem, user, solvedSet))
       .filter(Boolean);
+
+    const validatedProblems = problems.map((problem) =>
+      ProbSummaryWithStateResponseDto.parse(problem),
+    );
+
+    return SimilarProblemResponseDto.parse({
+      count: validatedProblems.length,
+      problems: validatedProblems,
+    });
   },
 
   async getRecentSolvedProblems(dto, userId) {
@@ -313,7 +329,7 @@ export const ProblemsService = {
       limit: dto.limit,
     });
 
-    return recent
+    const items = recent
       .filter((item) => item.problem_id)
       .map((item) => {
         const problemSummary = this._buildProblemSummary(
@@ -329,14 +345,22 @@ export const ProblemsService = {
           return null;
         }
 
+        const validatedProblem =
+          ProbSummaryWithStateResponseDto.parse(problemSummary);
+
         return {
           solved_id: item.solved_id,
           solved_at: item.createdAt,
           runtime_ms: item.solved_runtime ?? null,
           memory_kb: item.solved_memory_usage ?? null,
-          problem: problemSummary,
+          problem: validatedProblem,
         };
       })
       .filter(Boolean);
+
+    return RecentSolvedListResponseDto.parse({
+      count: items.length,
+      items,
+    });
   },
 };
