@@ -43,4 +43,65 @@ export const SolvedRepository = {
       })
       .lean();
   },
+
+  async countByUserId(userObjectId) {
+    return Solved.countDocuments({ user_id: userObjectId });
+  },
+
+  async countByUserIdAndDateRange(userObjectId, startDate, endDate) {
+    return Solved.countDocuments({
+      user_id: userObjectId,
+      createdAt: { $gte: startDate, $lt: endDate },
+    });
+  },
+
+  async groupByLevel(userObjectId) {
+    return Solved.aggregate([
+      { $match: { user_id: userObjectId } },
+      {
+        $lookup: {
+          from: "problems",
+          localField: "problem_id",
+          foreignField: "_id",
+          as: "problem",
+        },
+      },
+      { $unwind: "$problem" },
+      {
+        $group: {
+          _id: "$problem.problem_difficulty",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+  },
+
+  async groupByLanguage(userObjectId) {
+    return Solved.aggregate([
+      { $match: { user_id: userObjectId } },
+      {
+        $group: {
+          _id: "$language",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+  },
+
+  async getDailyActivity(userObjectId, startDate) {
+    return Solved.aggregate([
+      {
+        $match: {
+          user_id: userObjectId,
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+  },
 };

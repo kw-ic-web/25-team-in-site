@@ -14,6 +14,8 @@ const solvedSchema = new mongoose.Schema(
       ref: "Problem",
       required: true,
     },
+    //TODO: ENUM 사용
+    language: { type: String, required: true }, // 통계용 언어 필드 추가
     solved_feedback: { type: String },
     solved_runtime: { type: Number },
     solved_memory_usage: { type: Number },
