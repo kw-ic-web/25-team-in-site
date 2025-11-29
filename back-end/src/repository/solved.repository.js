@@ -33,6 +33,7 @@ export const SolvedRepository = {
         path: "problem_id",
         select: {
           problem_id: 1,
+          problem_title: 1,
           problem_difficulty: 1,
           problem_lang: 1,
           problem_main_category: 1,
