@@ -6,13 +6,15 @@ import { Problem } from "../src/entity/problem.entity.js";
 import mongoose from "mongoose";
 
 async function runTest() {
+    let user, problem;
+
     try {
         await connectDB();
         console.log("DB Connected");
 
         // 1. Create Test User
         const userId = "test_user_" + Date.now();
-        const user = await User.create({
+        user = await User.create({
             user_id: userId,
             user_pw: "password123",
             user_email: `${userId}@example.com`,
@@ -23,7 +25,7 @@ async function runTest() {
         console.log("User Created:", user.user_id);
 
         // 2. Create Test Problem
-        const problem = await Problem.create({
+        problem = await Problem.create({
             problem_difficulty: 2,
             problem_lang: ["JavaScript"],
             problem_main_category: "Algorithm",
@@ -60,14 +62,17 @@ async function runTest() {
 
         console.log("\n✅ Test Passed!");
 
-        // Cleanup
-        await User.deleteOne({ _id: user._id });
-        await Solved.deleteMany({ user_id: user._id });
-        await Problem.deleteOne({ _id: problem._id });
-
     } catch (error) {
         console.error("❌ Test Failed:", error);
     } finally {
+        if (user?._id) {
+            await User.deleteOne({ _id: user._id });
+            await Solved.deleteMany({ user_id: user._id });
+        }
+        if (problem?._id) {
+            await Problem.deleteOne({ _id: problem._id });
+        }
+
         await mongoose.disconnect();
     }
 }
