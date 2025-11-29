@@ -4,7 +4,7 @@ info:
   version: "0.1.0"
 
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: http://localhost:20991/api/v1
 
 tags:
   - name: Auth
@@ -15,7 +15,7 @@ tags:
 paths:
   /health:
     servers:
-      - url: http://localhost:3000/
+      - url: http://localhost:20991/
     get:
       responses:
         "200":
@@ -394,7 +394,15 @@ components:
     ProblemSummary:
       type: object
       required:
-        [id, title, difficulty, language, main_category, sub_category, success_rate]
+        [
+          id,
+          title,
+          difficulty,
+          language,
+          main_category,
+          sub_category,
+          success_rate,
+        ]
       properties:
         id:
           type: string
