@@ -83,8 +83,6 @@
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 4vh, 36px);
-  max-height: calc(100vh - clamp(40px, 12vh, 160px));
-  overflow-y: auto;
 }
 
 .login-card__header {
