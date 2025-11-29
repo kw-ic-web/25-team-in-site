@@ -102,5 +102,87 @@ describe("SessionStoreRepository", () => {
 
     expect(store.delete).toHaveBeenCalledWith("user-6");
   });
+
+  it("getSession은 code.diff를 포함한 세션을 반환한다", async () => {
+    const mockDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;";
+    const session = Session.create({
+      userId: "user-7",
+      data: {
+        code: {
+          full: "const x = 2;",
+          diff: mockDiff,
+        },
+      },
+    });
+    const record = session.toRecord();
+    store.get.mockResolvedValue(record);
+
+    const retrieved = await repository.getSession("user-7");
+
+    expect(store.get).toHaveBeenCalledWith("user-7");
+    expect(retrieved).toBeInstanceOf(Session);
+    expect(retrieved.userId).toBe("user-7");
+    expect(retrieved.data.code.full).toBe("const x = 2;");
+    expect(retrieved.data.code.diff).toBe(mockDiff);
+  });
+
+  it("saveSession은 code.diff를 포함한 세션을 저장한다", async () => {
+    const mockDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;";
+    const session = Session.create({
+      userId: "user-8",
+      data: {
+        code: {
+          full: "const x = 2;",
+          diff: mockDiff,
+        },
+      },
+    });
+
+    await repository.saveSession(session);
+
+    expect(store.set).toHaveBeenCalledWith(
+      "user-8",
+      session.toRecord(),
+      SESSION_TTL_MS,
+    );
+    const savedRecord = store.set.mock.calls[0][1];
+    expect(savedRecord.data.code.diff).toBe(mockDiff);
+  });
+
+  it("updateSession은 code.diff를 포함한 세션을 업데이트한다", async () => {
+    const existingDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;";
+    const existing = Session.create({
+      userId: "user-9",
+      data: {
+        code: {
+          full: "const x = 2;",
+          diff: existingDiff,
+        },
+      },
+    });
+    store.update.mockImplementation(async (key, handler) => {
+      expect(key).toBe("user-9");
+      return handler(existing.toRecord());
+    });
+
+    const newDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 2;\n+const x = 3;";
+    const updated = await repository.updateSession("user-9", (session) =>
+      session.withData({
+        code: {
+          full: "const x = 3;",
+          diff: newDiff,
+        },
+      }),
+    );
+
+    expect(store.update).toHaveBeenCalledWith(
+      "user-9",
+      expect.any(Function),
+      SESSION_TTL_MS,
+    );
+    expect(updated).toBeInstanceOf(Session);
+    expect(updated.data.code.full).toBe("const x = 3;");
+    expect(updated.data.code.diff).toBe(newDiff);
+  });
 });
 

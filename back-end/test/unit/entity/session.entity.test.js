@@ -134,5 +134,56 @@ describe("Session entity", () => {
       expiresAt: session.expiresAt.toISOString(),
     });
   });
+
+  it("withData는 code.diff를 포함한 복잡한 데이터 구조를 처리한다", () => {
+    const baseSession = Session.create({
+      userId: "user-7",
+      data: {
+        code: {
+          full: "const x = 1;",
+          diff: null,
+        },
+      },
+    });
+
+    const nextMoment = new Date("2024-01-01T04:00:00.000Z");
+    jest.setSystemTime(nextMoment);
+
+    const mockDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;";
+    const patched = baseSession.withData(
+      {
+        code: {
+          full: "const x = 2;",
+          diff: mockDiff,
+        },
+      },
+      2000,
+    );
+
+    expect(patched.data.code.full).toBe("const x = 2;");
+    expect(patched.data.code.diff).toBe(mockDiff);
+    expect(patched.expiresAt.getTime()).toBe(nextMoment.getTime() + 2000);
+  });
+
+  it("fromRecord는 code.diff를 포함한 레코드를 복원한다", () => {
+    const mockDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 1;\n+const x = 2;";
+    const original = Session.create({
+      userId: "user-8",
+      data: {
+        code: {
+          full: "const x = 2;",
+          diff: mockDiff,
+        },
+      },
+      ttlMs: 1000,
+    });
+
+    const restored = Session.fromRecord(original.toRecord());
+
+    expect(restored).toBeInstanceOf(Session);
+    expect(restored.userId).toBe(original.userId);
+    expect(restored.data.code.full).toBe("const x = 2;");
+    expect(restored.data.code.diff).toBe(mockDiff);
+  });
 });
 
