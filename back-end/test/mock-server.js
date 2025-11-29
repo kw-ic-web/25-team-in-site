@@ -1,6 +1,6 @@
 // 1. Set Mock Env Vars
 process.env.JWT_SECRET = "test_secret";
-process.env.PORT = "3000";
+process.env.PORT = "20991";
 
 // 2. Import App and Service
 import app from "../src/app.js";
@@ -42,7 +42,7 @@ UserService.getUserStats = async (userId) => {
 };
 
 // 4. Start Server
-const port = 3000;
+const port = 20991;
 app.listen(port, () => {
   console.log(`\n🚀 Mock Server running at http://localhost:${port}`);
 
