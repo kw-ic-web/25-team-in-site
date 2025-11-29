@@ -12,4 +12,14 @@ export const UserController = {
       next(e);
     }
   },
+
+  async getStats(req, res, next) {
+    try {
+      const userId = req.user.user_id;
+      const stats = await req.services.user.getUserStats(userId);
+      res.status(200).json(stats);
+    } catch (e) {
+      next(e);
+    }
+  },
 };

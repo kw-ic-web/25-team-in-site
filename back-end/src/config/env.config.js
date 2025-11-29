@@ -13,7 +13,7 @@ dotenv.config({ path: envFilePath });
 
 export default {
   env: envLabel,
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 20991,
   databaseUrl: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
 };

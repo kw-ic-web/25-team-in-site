@@ -11,6 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(express.static("public")); // 정적 파일 제공 (이미지 등)
 // TODO: Auth기능 테스트 가능한 엔드포인트 생겼을 시, Health 엔드포인트 여기로 옮기기. 현재는 health/로 auth 기능 작동 테스트
 app.use(authMiddleware);
 app.use(serviceInjector);
