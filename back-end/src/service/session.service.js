@@ -1,7 +1,6 @@
 import { createTwoFilesPatch } from "diff";
 import { sessionStoreRepository } from "../repository/sessionStore.repository.js";
 import { Session } from "../entity/session.entity.js";
-import { SessionResponseDto } from "../dto/session/session.dto.js";
 import { SESSION_TTL_MS } from "../constants/session.constants.js";
 
 export class SessionService {
@@ -85,7 +84,7 @@ export class SessionService {
     }
 
     #toResponse(session) {
-        return SessionResponseDto.parse(session.toRecord());
+        return session.toRecord();
     }
 }
 
