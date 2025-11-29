@@ -62,6 +62,9 @@ export const ProblemsService = {
       return null;
     }
 
+    // ProblemRepository를 거친 데이터는 이미 정규화되지만,
+    // SolvedRepository.populate로 가져온 데이터는 정규화되지 않을 수 있으므로
+    // 안전하게 정규화를 수행 (정규화는 idempotent하므로 중복 수행해도 안전)
     return {
       ...problem,
       problem_lang: normalizeStringArray(problem.problem_lang),
@@ -338,12 +341,15 @@ export const ProblemsService = {
             _id: item.problem_id._id,
           },
           user,
-          new Set([item.problem_id._id?.toString()]),
+          new Set(), // 빈 Set 전달 (아래에서 is_solved를 강제로 true로 설정)
         );
 
         if (!problemSummary) {
           return null;
         }
+
+        // 최근 해결 문제는 정의상 항상 해결된 문제이므로 is_solved를 true로 설정
+        problemSummary.is_solved = true;
 
         const validatedProblem =
           ProbSummaryWithStateResponseDto.parse(problemSummary);
