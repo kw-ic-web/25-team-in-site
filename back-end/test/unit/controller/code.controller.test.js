@@ -67,4 +67,3 @@ describe("CodeController.tokenize", () => {
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
 });
-

@@ -66,5 +66,3 @@ describe("ProbListResponseDto", () => {
     expectDtoFail(ProbListResponseDto, payload, "FAIL_TO_GET_PROB_DETAIL");
   });
 });
-
-

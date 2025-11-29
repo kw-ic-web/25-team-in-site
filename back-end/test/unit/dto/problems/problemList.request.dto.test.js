@@ -44,54 +44,33 @@ describe("ProbListRequestDto", () => {
   });
 
   it("난이도가 범위를 벗어나면 에러를 던진다", () => {
-    expectDtoFail(
-      ProbListRequestDto,
-      buildQuery({ difficulties: "1,7" }),
-    );
+    expectDtoFail(ProbListRequestDto, buildQuery({ difficulties: "1,7" }));
   });
 
   it("limit이 50을 초과하면 에러를 던진다", () => {
-    expectDtoFail(
-      ProbListRequestDto,
-      buildQuery({ limit: 51 }),
-    );
+    expectDtoFail(ProbListRequestDto, buildQuery({ limit: 51 }));
   });
 
   it("page가 0이면 에러를 던진다", () => {
-    expectDtoFail(
-      ProbListRequestDto,
-      buildQuery({ page: 0 }),
-    );
+    expectDtoFail(ProbListRequestDto, buildQuery({ page: 0 }));
   });
 
   it("page가 음수면 에러를 던진다", () => {
-    expectDtoFail(
-      ProbListRequestDto,
-      buildQuery({ page: -1 }),
-    );
+    expectDtoFail(ProbListRequestDto, buildQuery({ page: -1 }));
   });
 
   it("limit이 정확히 1 (최소값)인 경우 통과한다", () => {
-    const parsed = expectDtoPass(
-      ProbListRequestDto,
-      buildQuery({ limit: 1 }),
-    );
+    const parsed = expectDtoPass(ProbListRequestDto, buildQuery({ limit: 1 }));
     expect(parsed.limit).toBe(1);
   });
 
   it("limit이 정확히 50 (최대값)인 경우 통과한다", () => {
-    const parsed = expectDtoPass(
-      ProbListRequestDto,
-      buildQuery({ limit: 50 }),
-    );
+    const parsed = expectDtoPass(ProbListRequestDto, buildQuery({ limit: 50 }));
     expect(parsed.limit).toBe(50);
   });
 
   it("page가 정확히 1 (최소값)인 경우 통과한다", () => {
-    const parsed = expectDtoPass(
-      ProbListRequestDto,
-      buildQuery({ page: 1 }),
-    );
+    const parsed = expectDtoPass(ProbListRequestDto, buildQuery({ page: 1 }));
     expect(parsed.page).toBe(1);
   });
 
@@ -172,5 +151,3 @@ describe("ProbListRequestDto", () => {
     expect(parsed.exclude_solved).toBe(false);
   });
 });
-
-

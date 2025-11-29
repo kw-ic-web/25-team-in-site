@@ -50,5 +50,3 @@ describe("ProbDetailResponseDto", () => {
     expectDtoFail(ProbDetailResponseDto, detail, "FAIL_TO_GET_PROB_DETAIL");
   });
 });
-
-

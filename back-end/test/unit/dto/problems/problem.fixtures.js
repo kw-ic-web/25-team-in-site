@@ -25,5 +25,3 @@ export const makeProblemDetail = (overrides = {}) => ({
   problem_memory_limit: 256,
   ...overrides,
 });
-
-

@@ -63,5 +63,3 @@ describe("SimilarProblemRequestDto", () => {
     expect(parsed.limit).toBe(20);
   });
 });
-
-

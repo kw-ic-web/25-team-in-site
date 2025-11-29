@@ -28,7 +28,11 @@ describe("RecentSolvedListResponseDto", () => {
       count: 1,
       items: [{ ...baseItem, solved_at: "2024-01-01" }],
     };
-    expectDtoFail(RecentSolvedListResponseDto, payload, "FAIL_TO_GET_PROB_DETAIL");
+    expectDtoFail(
+      RecentSolvedListResponseDto,
+      payload,
+      "FAIL_TO_GET_PROB_DETAIL",
+    );
   });
 
   it("runtime_ms가 null이어도 허용한다", () => {
@@ -49,5 +53,3 @@ describe("RecentSolvedListResponseDto", () => {
     expect(parsed.items[0].memory_kb).toBeNull();
   });
 });
-
-

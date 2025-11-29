@@ -15,7 +15,11 @@ describe("CheckUserIdDto", () => {
   });
 
   it("아이디 길이가 3 미만이면 실패한다", () => {
-    expectDtoFail(CheckUserIdDto, buildBody({ user_id: "ab" }), "INVALID_ID_FORMAT");
+    expectDtoFail(
+      CheckUserIdDto,
+      buildBody({ user_id: "ab" }),
+      "INVALID_ID_FORMAT",
+    );
   });
 
   it("특수 문자를 포함하면 실패한다", () => {
@@ -89,5 +93,3 @@ describe("CheckUserIdDto", () => {
     );
   });
 });
-
-

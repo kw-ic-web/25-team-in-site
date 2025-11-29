@@ -35,7 +35,7 @@ describe("User API", () => {
     await seedSolvedRecord({
       user,
       problem: prob.problem,
-      language: "JavaScript",
+      language: "py",
     });
 
     const res = await appRequest()

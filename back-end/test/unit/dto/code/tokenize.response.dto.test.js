@@ -14,5 +14,3 @@ describe("CodeTokenizeResponseDto", () => {
     expectDtoFail(CodeTokenizeResponseDto, { token_count: -1 });
   });
 });
-
-

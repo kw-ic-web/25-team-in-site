@@ -71,9 +71,7 @@ describe("Auth API", () => {
     });
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe(
-      "이메일 또는 비밀번호가 올바르지 않습니다.",
-    );
+    expect(res.body.message).toBe("이메일 또는 비밀번호가 올바르지 않습니다.");
   });
 
   it("POST /api/v1/auth/register - 중복 아이디 등록 시 409를 반환한다", async () => {
@@ -89,13 +87,14 @@ describe("Auth API", () => {
 
     await appRequest().post("/api/v1/auth/register").send(payload);
 
-    const dupRes = await appRequest().post("/api/v1/auth/register").send({
-      ...payload,
-      email: `another_${Date.now()}@example.com`,
-    });
+    const dupRes = await appRequest()
+      .post("/api/v1/auth/register")
+      .send({
+        ...payload,
+        email: `another_${Date.now()}@example.com`,
+      });
 
     expect(dupRes.status).toBe(409);
     expect(dupRes.body.message).toBe("이미 등록된 아이디입니다.");
   });
 });
-

@@ -196,9 +196,7 @@ describe("Problems API", () => {
 
     it("exclude_solved=true일 때 해결한 문제를 제외한다", async () => {
       const res = await appRequest()
-        .get(
-          `/api/v1/problems?page=1&limit=10&exclude_solved=true`,
-        )
+        .get(`/api/v1/problems?page=1&limit=10&exclude_solved=true`)
         .set("Cookie", cookie);
 
       expect(res.status).toBe(200);
@@ -232,7 +230,9 @@ describe("Problems API", () => {
 
     it("sort_by와 sort_order가 동작한다", async () => {
       const res = await appRequest()
-        .get("/api/v1/problems?page=1&limit=10&sort_by=difficulty&sort_order=asc")
+        .get(
+          "/api/v1/problems?page=1&limit=10&sort_by=difficulty&sort_order=asc",
+        )
         .set("Cookie", cookie);
 
       expect(res.status).toBe(200);

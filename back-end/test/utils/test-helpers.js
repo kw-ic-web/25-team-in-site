@@ -63,4 +63,3 @@ export const seedSolvedProblems = async ({ user, count = 1 }) => {
 
   return problems;
 };
-

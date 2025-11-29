@@ -30,12 +30,10 @@ describe("사용자 여정 E2E", () => {
       cookie.startsWith("token="),
     );
 
-    const loginRes = await appRequest()
-      .post("/api/v1/auth/login")
-      .send({
-        email: registerPayload.email.toUpperCase(),
-        password: registerPayload.password,
-      });
+    const loginRes = await appRequest().post("/api/v1/auth/login").send({
+      email: registerPayload.email.toUpperCase(),
+      password: registerPayload.password,
+    });
     expect(loginRes.status).toBe(200);
     const authCookie =
       loginRes.headers["set-cookie"]?.find((cookie) =>
@@ -67,5 +65,3 @@ describe("사용자 여정 E2E", () => {
     expect(statsRes.body.profile.totalSolved).toBeGreaterThanOrEqual(1);
   });
 });
-
-

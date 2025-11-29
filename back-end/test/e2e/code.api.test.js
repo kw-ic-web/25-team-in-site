@@ -61,4 +61,3 @@ describe("Code API", () => {
   // E2E에서는 코드 길이 제한(MAX_CODE_CHAR_LENGTH)으로 인해
   // 실제 토큰 수 초과를 테스트하기 어려움
 });
-

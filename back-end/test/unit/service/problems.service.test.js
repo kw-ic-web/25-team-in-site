@@ -84,20 +84,20 @@ describe("ProblemsService.getProblemList", () => {
   });
 
   it("userId가 null이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemListDto();
-    await expect(
-      ProblemsService.getProblemList(dto, null),
-    ).rejects.toThrow("사용자 정보를 찾을 수 없습니다.");
+    await expect(ProblemsService.getProblemList(dto, null)).rejects.toThrow(
+      "사용자 정보를 찾을 수 없습니다.",
+    );
   });
 
   it("userId가 undefined이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemListDto();
     await expect(
@@ -106,9 +106,9 @@ describe("ProblemsService.getProblemList", () => {
   });
 
   it("사용자를 찾을 수 없으면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemListDto();
     await expect(
@@ -185,26 +185,26 @@ describe("ProblemsService.getProblemById", () => {
 
     const dto = buildProblemDetailDto({ id: PROBLEM_ID });
 
-    await expect(
-      ProblemsService.getProblemById(dto, "tester"),
-    ).rejects.toThrow("문제 세부사항을 찾을 수 없습니다.");
+    await expect(ProblemsService.getProblemById(dto, "tester")).rejects.toThrow(
+      "문제 세부사항을 찾을 수 없습니다.",
+    );
   });
 
   it("userId가 null이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemDetailDto();
-    await expect(
-      ProblemsService.getProblemById(dto, null),
-    ).rejects.toThrow("사용자 정보를 찾을 수 없습니다.");
+    await expect(ProblemsService.getProblemById(dto, null)).rejects.toThrow(
+      "사용자 정보를 찾을 수 없습니다.",
+    );
   });
 
   it("userId가 undefined이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemDetailDto();
     await expect(
@@ -213,9 +213,9 @@ describe("ProblemsService.getProblemById", () => {
   });
 
   it("사용자를 찾을 수 없으면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildProblemDetailDto();
     await expect(
@@ -280,9 +280,7 @@ describe("ProblemsService.getPersonalRecommendations", () => {
     jest
       .spyOn(ProblemsService, "_scoreRecommendations")
       .mockReturnValue(candidates);
-    jest
-      .spyOn(ProblemsService, "_buildProblemSummary")
-      .mockReturnValue(null);
+    jest.spyOn(ProblemsService, "_buildProblemSummary").mockReturnValue(null);
 
     const dto = buildRecommendDto();
     const result = await ProblemsService.getPersonalRecommendations(
@@ -295,9 +293,9 @@ describe("ProblemsService.getPersonalRecommendations", () => {
   });
 
   it("userId가 null이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecommendDto();
     await expect(
@@ -306,9 +304,9 @@ describe("ProblemsService.getPersonalRecommendations", () => {
   });
 
   it("userId가 undefined이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecommendDto();
     await expect(
@@ -317,9 +315,9 @@ describe("ProblemsService.getPersonalRecommendations", () => {
   });
 
   it("사용자를 찾을 수 없으면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecommendDto();
     await expect(
@@ -426,9 +424,7 @@ describe("ProblemsService.getSimilarProblems", () => {
         _id: "mongo-prob-2",
       },
     ]);
-    jest
-      .spyOn(ProblemsService, "_buildProblemSummary")
-      .mockReturnValue(null);
+    jest.spyOn(ProblemsService, "_buildProblemSummary").mockReturnValue(null);
 
     const dto = buildSimilarDto();
     const result = await ProblemsService.getSimilarProblems(dto, "tester");
@@ -438,20 +434,20 @@ describe("ProblemsService.getSimilarProblems", () => {
   });
 
   it("userId가 null이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildSimilarDto();
-    await expect(
-      ProblemsService.getSimilarProblems(dto, null),
-    ).rejects.toThrow("사용자 정보를 찾을 수 없습니다.");
+    await expect(ProblemsService.getSimilarProblems(dto, null)).rejects.toThrow(
+      "사용자 정보를 찾을 수 없습니다.",
+    );
   });
 
   it("userId가 undefined이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildSimilarDto();
     await expect(
@@ -460,9 +456,9 @@ describe("ProblemsService.getSimilarProblems", () => {
   });
 
   it("사용자를 찾을 수 없으면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildSimilarDto();
     await expect(
@@ -508,10 +504,7 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
     ]);
 
     const dto = buildRecentSolvedDto();
-    const result = await ProblemsService.getRecentSolvedProblems(
-      dto,
-      "tester",
-    );
+    const result = await ProblemsService.getRecentSolvedProblems(dto, "tester");
 
     expect(result.count).toBe(1);
     expect(result.items[0].problem.is_solved).toBe(true);
@@ -525,10 +518,7 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
       .mockResolvedValue([]);
 
     const dto = buildRecentSolvedDto();
-    const result = await ProblemsService.getRecentSolvedProblems(
-      dto,
-      "tester",
-    );
+    const result = await ProblemsService.getRecentSolvedProblems(dto, "tester");
 
     expect(result.count).toBe(0);
     expect(result.items).toEqual([]);
@@ -556,10 +546,7 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
     ]);
 
     const dto = buildRecentSolvedDto();
-    const result = await ProblemsService.getRecentSolvedProblems(
-      dto,
-      "tester",
-    );
+    const result = await ProblemsService.getRecentSolvedProblems(dto, "tester");
 
     expect(result.count).toBe(1);
     expect(result.items[0].solved_id).toBe("solved-1");
@@ -580,10 +567,7 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
     ]);
 
     const dto = buildRecentSolvedDto();
-    const result = await ProblemsService.getRecentSolvedProblems(
-      dto,
-      "tester",
-    );
+    const result = await ProblemsService.getRecentSolvedProblems(dto, "tester");
 
     expect(result.count).toBe(1);
     expect(result.items[0].runtime_ms).toBeNull();
@@ -603,24 +587,19 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
         },
       },
     ]);
-    jest
-      .spyOn(ProblemsService, "_buildProblemSummary")
-      .mockReturnValue(null);
+    jest.spyOn(ProblemsService, "_buildProblemSummary").mockReturnValue(null);
 
     const dto = buildRecentSolvedDto();
-    const result = await ProblemsService.getRecentSolvedProblems(
-      dto,
-      "tester",
-    );
+    const result = await ProblemsService.getRecentSolvedProblems(dto, "tester");
 
     expect(result.count).toBe(0);
     expect(result.items).toEqual([]);
   });
 
   it("userId가 null이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecentSolvedDto();
     await expect(
@@ -629,9 +608,9 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
   });
 
   it("userId가 undefined이면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecentSolvedDto();
     await expect(
@@ -640,9 +619,9 @@ describe("ProblemsService.getRecentSolvedProblems", () => {
   });
 
   it("사용자를 찾을 수 없으면 USER_NOT_FOUND 에러를 던진다", async () => {
-    jest.spyOn(ProblemsService, "_getUserOrThrow").mockRejectedValue(
-      ERROR.USER_NOT_FOUND(),
-    );
+    jest
+      .spyOn(ProblemsService, "_getUserOrThrow")
+      .mockRejectedValue(ERROR.USER_NOT_FOUND());
 
     const dto = buildRecentSolvedDto();
     await expect(

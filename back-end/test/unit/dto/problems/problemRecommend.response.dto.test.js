@@ -21,5 +21,3 @@ describe("ProbRecommendResponseDto", () => {
     expectDtoFail(ProbRecommendResponseDto, payload, "FAIL_TO_GET_PROB_DETAIL");
   });
 });
-
-

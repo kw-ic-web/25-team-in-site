@@ -75,4 +75,3 @@ export const createSolvedRecord = async ({
     solved_memory_usage,
   });
 };
-

@@ -158,4 +158,3 @@ describe("UserController.getStats", () => {
     expect(next).not.toHaveBeenCalled();
   });
 });
-

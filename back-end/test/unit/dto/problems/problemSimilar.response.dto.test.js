@@ -26,8 +26,10 @@ describe("SimilarProblemResponseDto", () => {
       count: -1,
       problems: [makeProblemSummaryWithState()],
     };
-    expectDtoFail(SimilarProblemResponseDto, payload, "FAIL_TO_GET_PROB_DETAIL");
+    expectDtoFail(
+      SimilarProblemResponseDto,
+      payload,
+      "FAIL_TO_GET_PROB_DETAIL",
+    );
   });
 });
-
-

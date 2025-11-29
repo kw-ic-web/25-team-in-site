@@ -8,25 +8,16 @@ import {
 
 describe("ProbRecommendRequestDto", () => {
   it("기본 limit 5를 적용한다", () => {
-    const parsed = expectDtoPass(
-      ProbRecommendRequestDto,
-      buildQuery({}),
-    );
+    const parsed = expectDtoPass(ProbRecommendRequestDto, buildQuery({}));
     expect(parsed.limit).toBe(5);
   });
 
   it("limit이 0이면 실패한다", () => {
-    expectDtoFail(
-      ProbRecommendRequestDto,
-      buildQuery({ limit: 0 }),
-    );
+    expectDtoFail(ProbRecommendRequestDto, buildQuery({ limit: 0 }));
   });
 
   it("limit이 20을 초과하면 실패한다", () => {
-    expectDtoFail(
-      ProbRecommendRequestDto,
-      buildQuery({ limit: 21 }),
-    );
+    expectDtoFail(ProbRecommendRequestDto, buildQuery({ limit: 21 }));
   });
 
   it("limit이 정확히 1 (최소값)인 경우 통과한다", () => {
@@ -45,5 +36,3 @@ describe("ProbRecommendRequestDto", () => {
     expect(parsed.limit).toBe(20);
   });
 });
-
-

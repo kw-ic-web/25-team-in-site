@@ -3,10 +3,7 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import config from "../../src/config/env.config.js";
 import { User } from "../../src/entity/user.entity.js";
-import {
-  appRequest,
-  setupTestDBHooks,
-} from "../utils/test-helpers.js";
+import { appRequest, setupTestDBHooks } from "../utils/test-helpers.js";
 
 setupTestDBHooks();
 
@@ -15,10 +12,10 @@ const buildRegisterPayload = (overrides = {}) => {
   return {
     user_id: `integration_${suffix}`,
     email: `integration_${suffix}@example.com`,
-  password: "Password123!",
-  language: "js",
-  level: 2,
-  purpose: "learn",
+    password: "Password123!",
+    language: "js",
+    level: 2,
+    purpose: "learn",
     ...overrides,
   };
 };
@@ -62,8 +59,9 @@ describe("Auth API Integration", () => {
     expect(stored.user_pw).not.toBe(payload.password);
 
     // 비밀번호 해시 검증 강화: bcrypt로 실제 검증
-    const userDoc = await User.findOne({ user_id: payload.user_id })
-      .select("+user_pw");
+    const userDoc = await User.findOne({ user_id: payload.user_id }).select(
+      "+user_pw",
+    );
     const isPasswordValid = await userDoc.comparePassword(payload.password);
     expect(isPasswordValid).toBe(true);
 
@@ -164,7 +162,9 @@ describe("Auth API Integration", () => {
   describe("POST /api/v1/auth/register - DTO 검증 실패", () => {
     it("user_id가 너무 짧으면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ user_id: "ab" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("아이디 형식이 올바르지 않습니다");
@@ -174,7 +174,9 @@ describe("Auth API Integration", () => {
       const payload = buildRegisterPayload({
         user_id: "a".repeat(51),
       });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("아이디 형식이 올바르지 않습니다");
@@ -182,7 +184,9 @@ describe("Auth API Integration", () => {
 
     it("user_id에 특수문자가 포함되면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ user_id: "user@id" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("아이디 형식이 올바르지 않습니다");
@@ -190,7 +194,9 @@ describe("Auth API Integration", () => {
 
     it("잘못된 이메일 형식이면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ email: "invalid-email" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("올바른 이메일 형식이 아닙니다");
@@ -198,7 +204,9 @@ describe("Auth API Integration", () => {
 
     it("비밀번호가 너무 짧으면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ password: "short" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("비밀번호 형식이 올바르지 않습니다");
@@ -208,7 +216,9 @@ describe("Auth API Integration", () => {
       const payload = buildRegisterPayload({
         password: "a".repeat(129),
       });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("비밀번호 형식이 올바르지 않습니다");
@@ -216,7 +226,9 @@ describe("Auth API Integration", () => {
 
     it("잘못된 language enum 값이면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ language: "ruby" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain(
@@ -226,7 +238,9 @@ describe("Auth API Integration", () => {
 
     it("level이 0이면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ level: 0 });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("숙련도는 1~4 사이의 정수여야 합니다");
@@ -234,7 +248,9 @@ describe("Auth API Integration", () => {
 
     it("level이 5이면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ level: 5 });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("숙련도는 1~4 사이의 정수여야 합니다");
@@ -242,7 +258,9 @@ describe("Auth API Integration", () => {
 
     it("level이 정수가 아니면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ level: 2.5 });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.name).toBe("ValidationError");
@@ -250,7 +268,9 @@ describe("Auth API Integration", () => {
 
     it("잘못된 purpose enum 값이면 400을 반환한다", async () => {
       const payload = buildRegisterPayload({ purpose: "unknown" });
-      const res = await appRequest().post("/api/v1/auth/register").send(payload);
+      const res = await appRequest()
+        .post("/api/v1/auth/register")
+        .send(payload);
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("가입 목적이 올바르지 않습니다");
@@ -287,7 +307,9 @@ describe("Auth API Integration", () => {
       });
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe("이메일 또는 비밀번호가 올바르지 않습니다.");
+      expect(res.body.message).toBe(
+        "이메일 또는 비밀번호가 올바르지 않습니다.",
+      );
     });
 
     it("잘못된 비밀번호면 401을 반환한다", async () => {
@@ -300,7 +322,9 @@ describe("Auth API Integration", () => {
       });
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe("이메일 또는 비밀번호가 올바르지 않습니다.");
+      expect(res.body.message).toBe(
+        "이메일 또는 비밀번호가 올바르지 않습니다.",
+      );
     });
   });
 });

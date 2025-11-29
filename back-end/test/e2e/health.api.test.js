@@ -9,4 +9,3 @@ describe("Health API", () => {
     expect(res.body).toEqual({ status: "ok" });
   });
 });
-

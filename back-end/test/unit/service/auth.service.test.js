@@ -210,9 +210,7 @@ describe("AuthService.login", () => {
       password: "Password123!",
     });
 
-    await expect(AuthService.login(dto)).rejects.toThrow(
-      "JWT signing failed",
-    );
+    await expect(AuthService.login(dto)).rejects.toThrow("JWT signing failed");
   });
 
   it("AuthResponseDto.parse가 실패하면 에러를 전파한다", async () => {
@@ -254,9 +252,9 @@ describe("AuthService.isIdAvailable / isEmailAvailable", () => {
   it("사용 가능한 이메일이면 true를 반환한다", async () => {
     jest.spyOn(UserRepository, "findOne").mockResolvedValueOnce(null);
 
-    await expect(
-      AuthService.isEmailAvailable("new@example.com"),
-    ).resolves.toBe(true);
+    await expect(AuthService.isEmailAvailable("new@example.com")).resolves.toBe(
+      true,
+    );
   });
 
   it("이미 존재하는 이메일이면 false를 반환한다", async () => {
@@ -264,9 +262,8 @@ describe("AuthService.isIdAvailable / isEmailAvailable", () => {
       user_email: "dup@example.com",
     });
 
-    await expect(
-      AuthService.isEmailAvailable("dup@example.com"),
-    ).resolves.toBe(false);
+    await expect(AuthService.isEmailAvailable("dup@example.com")).resolves.toBe(
+      false,
+    );
   });
 });
-

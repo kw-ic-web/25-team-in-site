@@ -31,9 +31,9 @@ const mockLanguageStats = () =>
   ]);
 
 const mockHeatmap = () =>
-  jest.spyOn(SolvedRepository, "getDailyActivity").mockResolvedValue([
-    { _id: "2024-01-01", count: 2 },
-  ]);
+  jest
+    .spyOn(SolvedRepository, "getDailyActivity")
+    .mockResolvedValue([{ _id: "2024-01-01", count: 2 }]);
 
 describe("UserService.getUserStats", () => {
   beforeEach(() => {
@@ -150,7 +150,9 @@ describe("UserService.getUserStats", () => {
 
     it("user.user_level이 null인 경우를 처리한다", async () => {
       const userWithNullLevel = { ...mockUser, user_level: null };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithNullLevel);
+      jest
+        .spyOn(UserRepository, "findOne")
+        .mockResolvedValue(userWithNullLevel);
       jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(5);
       mockDateRangeCounts();
       mockLevelStats();
@@ -165,7 +167,9 @@ describe("UserService.getUserStats", () => {
 
     it("user.user_level이 0인 경우를 처리한다", async () => {
       const userWithZeroLevel = { ...mockUser, user_level: 0 };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithZeroLevel);
+      jest
+        .spyOn(UserRepository, "findOne")
+        .mockResolvedValue(userWithZeroLevel);
       jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(5);
       mockDateRangeCounts();
       mockLevelStats();
@@ -179,7 +183,9 @@ describe("UserService.getUserStats", () => {
 
     it("user.user_level이 5 이상인 경우를 처리한다", async () => {
       const userWithHighLevel = { ...mockUser, user_level: 5 };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithHighLevel);
+      jest
+        .spyOn(UserRepository, "findOne")
+        .mockResolvedValue(userWithHighLevel);
       jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(5);
       mockDateRangeCounts();
       mockLevelStats();
@@ -207,7 +213,9 @@ describe("UserService.getUserStats", () => {
 
     it("user.prefer_language가 null인 경우를 처리한다", async () => {
       const userWithNullLanguage = { ...mockUser, prefer_language: null };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithNullLanguage);
+      jest
+        .spyOn(UserRepository, "findOne")
+        .mockResolvedValue(userWithNullLanguage);
       jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(5);
       mockDateRangeCounts();
       mockLevelStats();
@@ -221,7 +229,9 @@ describe("UserService.getUserStats", () => {
 
     it("user.purpose가 null인 경우를 처리한다", async () => {
       const userWithNullPurpose = { ...mockUser, purpose: null };
-      jest.spyOn(UserRepository, "findOne").mockResolvedValue(userWithNullPurpose);
+      jest
+        .spyOn(UserRepository, "findOne")
+        .mockResolvedValue(userWithNullPurpose);
       jest.spyOn(SolvedRepository, "countByUserId").mockResolvedValue(5);
       mockDateRangeCounts();
       mockLevelStats();
@@ -338,4 +348,3 @@ describe("UserService.getUserStats", () => {
     });
   });
 });
-

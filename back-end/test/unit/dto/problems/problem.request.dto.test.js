@@ -14,5 +14,3 @@ describe("ProbDetailRequestDto", () => {
     expectDtoFail(ProbDetailRequestDto, { id: "123" }, "INVALID_PROB_ID");
   });
 });
-
-

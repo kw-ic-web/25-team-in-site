@@ -18,10 +18,10 @@ export const expectDtoFail = (schema, rawInput, expectedMessage) => {
   const result = schema.safeParse(rawInput);
   expect(result.success).toBe(false);
   if (expectedMessage) {
-    const messages = result.error.issues.map((issue) => issue.message).join(" ");
+    const messages = result.error.issues
+      .map((issue) => issue.message)
+      .join(" ");
     expect(messages).toContain(expectedMessage);
   }
   return result.error;
 };
-
-
