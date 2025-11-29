@@ -1,12 +1,13 @@
 import { UserRepository } from "../repository/user.repository.js";
 import { SolvedRepository } from "../repository/solved.repository.js";
 import { UserStatsResponseDto } from "../dto/user/userStats.response.dto.js";
+import { ERROR } from "../mapper/error.mapper.js";
 
 export const UserService = {
     async getUserStats(userId) {
         const user = await UserRepository.findOne({ user_id: userId });
         if (!user) {
-            throw new Error("User not found");
+            throw ERROR.USER_NOT_FOUND();
         }
 
         const userObjectId = user._id;
