@@ -17,10 +17,15 @@ interface LoginData {
   password: string;
 }
 
-// 공통 응답 타입
-interface ApiResponse<T> {
+// 로그인 응답 타입 (서버 응답 그대로)
+interface LoginResponse {
+  user_id: string;
+  email: string;
+}
+
+// 회원가입 응답 타입
+interface RegisterResponse {
   success: boolean;
-  data: T;
   message?: string;
 }
 
@@ -30,7 +35,7 @@ export const authAPI = {
     apiClient.get(`/user/check-id/${encodeURIComponent(user_id)}`),
 
   /** 회원가입 */
-  register: (data: RegisterData): Promise<AxiosResponse<ApiResponse<null>>> =>
+  register: (data: RegisterData): Promise<AxiosResponse<RegisterResponse>> =>
     apiClient.post("/auth/register", {
       user_id: data.user_id,
       email: data.email,
@@ -41,9 +46,7 @@ export const authAPI = {
     }),
 
   /** 로그인 (email 기반) */
-  login: (
-    data: LoginData
-  ): Promise<AxiosResponse<ApiResponse<{ token: string }>>> =>
+  login: (data: LoginData): Promise<AxiosResponse<LoginResponse>> =>
     apiClient.post("/auth/login", {
       email: data.email,
       password: data.password,
