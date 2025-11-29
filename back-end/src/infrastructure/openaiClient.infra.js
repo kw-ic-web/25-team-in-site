@@ -1,14 +1,8 @@
 import OpenAI from "openai";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY environment variable is required");
-}
+import config from "../config/env.config.js";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: config.openaiApiKey,
 });
 
 export const openaiClient = openai;
