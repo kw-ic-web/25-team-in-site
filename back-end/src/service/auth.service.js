@@ -67,8 +67,7 @@ export const AuthService = {
   },
 
   async isEmailAvailable(email) {
-    const normEmail = email.trim().toLowerCase();
-    const exist = await UserRepository.findOne({ user_email: normEmail });
+    const exist = await UserRepository.findOne({ user_email: email });
     if (exist) return false;
     return true;
   },
