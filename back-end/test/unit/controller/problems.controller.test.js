@@ -191,7 +191,9 @@ describe("problemsController.getProblemDetail", () => {
       params: { id: problemId },
       services: {
         problems: {
-          getProblemById: jest.fn().mockRejectedValue(new Error("service error")),
+          getProblemById: jest
+            .fn()
+            .mockRejectedValue(new Error("service error")),
         },
       },
       user: { user_id: "tester" },
@@ -316,7 +318,9 @@ describe("problemsController.getPersonalRecommendations", () => {
 
     await problemsController.getPersonalRecommendations(req, res, next);
 
-    expect(req.services.problems.getPersonalRecommendations).not.toHaveBeenCalled();
+    expect(
+      req.services.problems.getPersonalRecommendations,
+    ).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
 
@@ -358,10 +362,9 @@ describe("problemsController.getPersonalRecommendations", () => {
 
     await problemsController.getPersonalRecommendations(req, res, next);
 
-    expect(req.services.problems.getPersonalRecommendations).toHaveBeenCalledWith(
-      expect.any(Object),
-      undefined,
-    );
+    expect(
+      req.services.problems.getPersonalRecommendations,
+    ).toHaveBeenCalledWith(expect.any(Object), undefined);
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
@@ -592,7 +595,9 @@ describe("problemsController.getRecentSolvedProblems", () => {
 
     await problemsController.getRecentSolvedProblems(req, res, next);
 
-    expect(req.services.problems.getRecentSolvedProblems).not.toHaveBeenCalled();
+    expect(
+      req.services.problems.getRecentSolvedProblems,
+    ).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith(expect.any(Error));
   });
 
