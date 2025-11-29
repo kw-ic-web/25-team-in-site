@@ -11,7 +11,6 @@ tags:
   - name: User
   - name: Problems
   - name: Code
-  - name: Session
 
 paths:
   /health:
@@ -228,88 +227,6 @@ paths:
               schema: { $ref: "#/components/schemas/UserStatsResponse" }
         "401":
           description: "인증되지 않은 사용자"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "500":
-          description: "서버 내부 오류"
-
-  /sessions:
-    post:
-      tags: [Session]
-      summary: 세션 생성
-      description: "사용자 ID와 세션 데이터를 기반으로 새로운 세션을 발급합니다."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/SessionCreateRequest" }
-      responses:
-        "201":
-          description: "세션 생성 성공"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "400":
-          description: "요청 필드 누락 또는 잘못된 형식"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "500":
-          description: "서버 내부 오류"
-
-  /sessions/{userId}:
-    parameters:
-      - in: path
-        name: userId
-        required: true
-        schema: { type: string }
-        description: "세션 소유 사용자 ID"
-    get:
-      tags: [Session]
-      summary: 세션 조회
-      responses:
-        "200":
-          description: "세션 조회 성공"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "404":
-          description: "세션이 존재하지 않음"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "500":
-          description: "서버 내부 오류"
-    patch:
-      tags: [Session]
-      summary: 세션 데이터 갱신
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/SessionUpdateRequest" }
-      responses:
-        "200":
-          description: "세션 갱신 성공"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SessionResponse" }
-        "404":
-          description: "세션이 존재하지 않음"
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "500":
-          description: "서버 내부 오류"
-    delete:
-      tags: [Session]
-      summary: 세션 삭제
-      responses:
-        "204":
-          description: "세션 삭제 성공"
-        "404":
-          description: "세션이 존재하지 않음"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -578,40 +495,3 @@ components:
         token_count:
           type: integer
           description: "전체 토큰 수"
-
-    # ==== SESSION ====
-    SessionCreateRequest:
-      type: object
-      required: [userId]
-      properties:
-        userId:
-          type: string
-          description: "세션을 소유할 사용자 ID"
-        data:
-          type: object
-          additionalProperties: true
-          description: "세션에 저장할 임의의 키-값 데이터"
-
-    SessionUpdateRequest:
-      type: object
-      properties:
-        data:
-          type: object
-          additionalProperties: true
-          description: "세션 데이터 패치. 기존 데이터와 병합됩니다."
-
-    SessionResponse:
-      type: object
-      required: [userId, data, createdAt, expiresAt]
-      properties:
-        userId:
-          type: string
-        data:
-          type: object
-          additionalProperties: true
-        createdAt:
-          type: string
-          format: date-time
-        expiresAt:
-          type: string
-          format: date-time
