@@ -33,6 +33,7 @@ export class SessionStoreRepository {
     const updated = await this.store.update(
       this.#getKey(userId),
       (prev) => {
+        if (!prev) return null;
         const entity = Session.fromRecord(prev);
         const next = updater(entity);
         if (!next) return null;

@@ -20,11 +20,16 @@ export class Session {
 
   static fromRecord(record) {
     if (!record) return null;
+    const createdAt = new Date(record.createdAt);
+    const expiresAt = new Date(record.expiresAt);
+    if (isNaN(createdAt.getTime()) || isNaN(expiresAt.getTime())) {
+      return null;
+    }
     return new Session({
       userId: record.userId,
       data: record.data ?? {},
-      createdAt: new Date(record.createdAt),
-      expiresAt: new Date(record.expiresAt),
+      createdAt,
+      expiresAt,
     });
   }
 
