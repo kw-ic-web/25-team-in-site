@@ -1,7 +1,7 @@
 import http from "http";
 import app from "./app.js";
 import config from "./config/env.config.js";
-import connectDB from "./config/db.config.js";
+import connectDB from "./infrastructure/mongoConnection.infra.js";
 
 const port = config.port;
 app.set("port", port);
