@@ -7,6 +7,7 @@ import { AuthResponseDto } from "../dto/auth/auth.response.dto.js";
 export const AuthService = {
   async register(dto) {
     const { user_id, email, password, language, level, purpose } = dto;
+    const normEmail = email.trim().toLowerCase();
 
     const [idAvailable, emailAvailavble] = await Promise.all([
       this.isIdAvailable(user_id),
@@ -18,7 +19,7 @@ export const AuthService = {
     try {
       await UserRepository.create({
         user_id,
-        user_email: email,
+        user_email: normEmail,
         user_pw: password,
         prefer_language: language,
         purpose,
@@ -28,7 +29,7 @@ export const AuthService = {
       const token = await this._generateToken(user_id);
       return AuthResponseDto.parse({
         user_id,
-        email,
+        email: normEmail,
         token,
       });
     } catch (err) {
@@ -39,8 +40,9 @@ export const AuthService = {
 
   async login(dto) {
     const { email, password } = dto;
+    const normEmail = email.trim().toLowerCase();
     const user = await UserRepository.findOne(
-      { user_email: email },
+      { user_email: normEmail },
       { includePassword: true },
     );
     if (!user) throw ERROR.INVALID_LOGIN_INFO();
@@ -49,7 +51,7 @@ export const AuthService = {
     const token = await this._generateToken(user.user_id);
     return AuthResponseDto.parse({
       user_id: user.user_id,
-      email,
+      email: normEmail,
       token,
     });
   },
