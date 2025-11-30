@@ -22,11 +22,11 @@ jobs:
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "target=${{ secrets.FE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
             echo "port=20980" >> "$GITHUB_OUTPUT"
-            echo "pm2_name=[FE]in-site" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=[FE] in-site" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF_NAME}" == "front-end_deploy" ]]; then
             echo "target=${{ secrets.FE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
             echo "port=20981" >> "$GITHUB_OUTPUT"
-            echo "pm2_name=[FE]in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=[FE] in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
             exit 1
