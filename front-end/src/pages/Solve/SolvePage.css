@@ -16,6 +16,9 @@
 
 .solve-page__problem {
   padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .solve-page__workspace {
@@ -29,12 +32,13 @@
   }
 }
 
+/* 문제 상단 헤더 */
 .problem-header {
   display: flex;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  margin-bottom: 12px;
 }
 
 .problem-header__tag {
@@ -58,32 +62,7 @@
   color: #1f2237;
 }
 
-.problem-meta {
-  display: grid;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: 18px;
-  margin: 0;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.6);
-  border: 1px solid #dfe3f8;
-}
-
-.problem-meta dt {
-  font-size: 11px;
-  color: #8c91b4;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.problem-meta dd {
-  margin: 0;
-  font-weight: 700;
-  color: #323655;
-}
-
+/* 카드 공통 */
 .card {
   border: 1px solid #dfe3f3;
   border-radius: 16px;
@@ -94,19 +73,6 @@
 
 .card + .card {
   margin-top: 18px;
-}
-
-.card--banner {
-  padding: 0;
-}
-
-.card--banner .card__head {
-  padding: 16px 22px;
-}
-
-.card--banner .card__head h2 {
-  font-size: 15px;
-  letter-spacing: 0.02em;
 }
 
 .card__head {
@@ -134,6 +100,72 @@
   line-height: 1.7;
 }
 
+/* 입출력 예제 */
+.card__subsection {
+  background: #f8f9ff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  border: 1px solid rgba(212, 218, 243, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.card__subsection + .card__subsection {
+  margin-top: 8px;
+}
+
+.card__subsection h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2f3350;
+}
+
+.card__subsection p {
+  margin: 0;
+}
+
+/* -----------------------
+   힌트 카드 (신규 추가)
+------------------------ */
+.hint-section {
+  border-radius: 16px;
+  border: 1px solid #d5daf6;
+  box-shadow: 0 6px 16px rgba(69, 83, 141, 0.06);
+}
+
+.hint-text {
+  background: #f8faff;
+  color: #2f3359;
+  padding: 12px;
+  border-radius: 8px;
+  line-height: 1.65;
+  font-size: 15px;
+  border: 1px solid rgba(203, 209, 235, 0.8);
+}
+
+.btn--hint {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3f45f8, #7a68ff);
+  box-shadow: 0 8px 14px rgba(85, 90, 255, 0.25);
+}
+
+.btn--hint:hover {
+  background: linear-gradient(135deg, #3238ea, #6d5eed);
+}
+
+.btn--hint:active {
+  transform: scale(0.96);
+}
+
+/* -----------------------
+      코드 영역
+------------------------ */
 .workspace-card {
   display: flex;
   flex-direction: column;
@@ -159,38 +191,6 @@
   gap: 24px;
   padding: 24px;
   background: #ffffff;
-}
-
-.card__subsection {
-  background: #f8f9ff;
-  border-radius: 14px;
-  padding: 16px 18px;
-  border: 1px solid rgba(212, 218, 243, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.card__subsection + .card__subsection {
-  margin-top: 8px;
-}
-
-.card__subsection h3 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #2f3350;
-}
-
-.card__subsection p {
-  margin: 0;
-}
-
-.hint-card__body {
-  display: grid;
-  gap: 12px;
-  padding: 18px 20px 22px;
-  color: #3a3f64;
-  font-size: 15px;
-  line-height: 1.65;
 }
 
 .workspace-card__controls {
@@ -241,23 +241,6 @@
   overflow: hidden;
   background: #ffffff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
-}
-
-.workspace-editor textarea {
-  width: 100%;
-  min-height: 420px;
-  border: none;
-  resize: vertical;
-  background: #ffffff;
-  color: #12131f;
-  padding: 20px;
-  font-family: "Fira Code", "Source Code Pro", "Courier New", monospace;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.workspace-editor textarea:focus {
-  outline: none;
 }
 
 .workspace-footer {
@@ -340,12 +323,39 @@
     width: 100%;
   }
 }
-.problem-body-html-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+
+/* 힌트 헤더 레이아웃 */
+.hint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.problem-body-html {
-  white-space: pre-wrap;
+/* 힌트 생성 버튼 (헤더용 작은 스타일) */
+.btn--hint-small {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3f45f8, #7a68ff);
+  box-shadow: 0 4px 10px rgba(85, 90, 255, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn--hint-small:hover {
+  background: linear-gradient(135deg, #3238ea, #6d5eed);
+}
+
+.btn--hint-small:active {
+  transform: scale(0.96);
+}
+
+/* 힌트가 없을 때 안내 텍스트 */
+.hint-empty-text {
+  color: #7c81a4;
+  font-size: 14px;
+  padding: 4px 2px;
 }
