@@ -79,7 +79,7 @@ jobs:
             cd "$TARGET_DIR"
             rm -rf dist
             # 압축 해제 (dist 폴더 생성)
-            tar -xzf frontend-dist.tar.gz -C dist
+            tar -xzf frontend-dist.tar.gz
             # 배포 파일 정리
             rm -f frontend-dist.tar.gz
             # serve 패키지 전역 설치 (없는 경우)
