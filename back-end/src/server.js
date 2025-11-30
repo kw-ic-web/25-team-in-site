@@ -17,8 +17,13 @@ app.set("port", port);
   }
   const server = http.createServer(app);
 
-  const wss = initializeWebSocket(server);
-  setupSocketHandlers(wss);
+  try {
+    const wss = initializeWebSocket(server);
+    setupSocketHandlers(wss);
+  } catch (error) {
+    console.error("Failed to initialize WebSocket:", error);
+    process.exit(1);
+  }
 
   server.on("error", (error) => {
     if (error.syscall !== "listen") {
