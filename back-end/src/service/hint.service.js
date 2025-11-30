@@ -1,13 +1,7 @@
 import { openaiClient } from "../infrastructure/openaiClient.infra.js";
 
-export const OpenAIService = {
-  /**
-   * Get chat completion from OpenAI
-   * @param {Array} messages - Array of message objects [{ role: 'user', content: '...' }]
-   * @param {string} model - Model to use (default: gpt-3.5-turbo)
-   * @returns {Promise<string>} - The content of the response
-   */
-  async getChatCompletion(messages, model = "gpt-3.5-turbo") {
+export const HintService = {
+  async _getChatCompletion(messages, model = "gpt-5.1-codex") {
     try {
       const completion = await openaiClient.chat.completions.create({
         messages,
