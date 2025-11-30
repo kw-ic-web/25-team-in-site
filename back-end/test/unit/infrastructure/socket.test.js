@@ -185,6 +185,7 @@ describe("initializeWebSocket", () => {
       verifyClient({ req: mockReq }, callback);
 
       expect(callback).toHaveBeenCalledWith(true);
+      expect(mockReq.userId).toBe("test-user");
     });
 
     it("공백이 있는 쿠키를 올바르게 파싱한다", () => {
