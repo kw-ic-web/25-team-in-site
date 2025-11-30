@@ -519,7 +519,16 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <button className="recommend__cta">도전</button>
+              <button
+                className="recommend__cta"
+                onClick={() => {
+                  if (recommendedProblem?.id) {
+                    navigate(`/solve?problemId=${recommendedProblem.id}`);
+                  }
+                }}
+              >
+                도전
+              </button>
             </div>
           </div>
         </section>
