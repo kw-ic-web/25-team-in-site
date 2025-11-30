@@ -11,7 +11,7 @@ export const parseAndValidateMessage = (data) => {
     throw ERROR.INVALID_MESSAGE_FORMAT("Failed to parse message");
   }
 
-  if (!message || typeof message !== "object") {
+  if (!message || typeof message !== "object" || Array.isArray(message)) {
     throw ERROR.INVALID_MESSAGE_FORMAT("message must be an object");
   }
 
