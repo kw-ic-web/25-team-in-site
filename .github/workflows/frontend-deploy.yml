@@ -1,0 +1,97 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main, front-end_deploy]
+    paths:
+      - "front-end/**"
+      - ".github/workflows/frontend-deploy.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository_owner != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select env file and target path
+        id: envfile
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "target=${{ secrets.FE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
+            echo "port=20980" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=[FE]in-site" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF_NAME}" == "front-end_deploy" ]]; then
+            echo "target=${{ secrets.FE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
+            echo "port=20981" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=[FE]in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: front-end/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: front-end
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: front-end
+        run: npm run build
+        env:
+          VITE_API_URL: 'https://team09-api.kwweb.org/api/v1'
+
+      - name: Create deployment bundle
+        run: tar -czf frontend-dist.tar.gz -C front-end dist
+
+      - name: Upload bundle to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          timeout: 60s
+          command_timeout: 60s
+          source: frontend-dist.tar.gz
+          target: ${{ steps.envfile.outputs.target }}
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          timeout: 60s
+          command_timeout: 300s
+          envs: DEPLOY_PORT,PM2_NAME,TARGET_DIR
+          script: |
+            set -euo pipefail
+            cd "$TARGET_DIR"
+            rm -rf dist
+            # 압축 해제 (dist 폴더 생성)
+            tar -xzf frontend-dist.tar.gz -C dist
+            # 배포 파일 정리
+            rm -f frontend-dist.tar.gz
+            # serve 패키지 전역 설치 (없는 경우)
+            if ! command -v serve &> /dev/null; then
+              npm install -g serve
+            fi
+            # pm2로 프론트엔드 서버 실행/재시작
+            pm2 delete "$PM2_NAME" 2>/dev/null || true
+            pm2 start serve --name "$PM2_NAME" -- -s -l "$DEPLOY_PORT" dist
+            pm2 save
+            echo "Frontend deployed and running on port: $DEPLOY_PORT"
+        env:
+          DEPLOY_PORT: ${{ steps.envfile.outputs.port }}
+          PM2_NAME: ${{ steps.envfile.outputs.pm2_name }}
+          TARGET_DIR: ${{ steps.envfile.outputs.target }}
