@@ -277,7 +277,8 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .btn:active {
@@ -338,4 +339,13 @@
   .workspace-header__select {
     width: 100%;
   }
+}
+.problem-body-html-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.problem-body-html {
+  white-space: pre-wrap;
 }

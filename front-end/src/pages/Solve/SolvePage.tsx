@@ -5,6 +5,31 @@ import "./SolvePage.css";
 import apiClient from "../../api/client";
 import IDEEditor from "../../components/IDEEditer/IDEEditer";
 
+function htmlToPrettyText(html: string): string {
+  let text = html;
+
+  // 1) 줄바꿈 태그를 개행으로
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+
+  // 2) 문단/블록 태그 뒤에는 줄바꿈
+  text = text.replace(/<\/(p|div|h[1-6]|section|article)>/gi, "\n");
+
+  // 3) 리스트 항목은 • 로 표시
+  text = text.replace(/<li[^>]*>/gi, "• ");
+
+  // 4) 나머지 모든 태그 제거
+  text = text.replace(/<[^>]+>/g, "");
+
+  // 5) 너무 많은 연속 개행 정리 (3줄 이상 → 2줄)
+  text = text.replace(/\n\s*\n\s*\n+/g, "\n\n");
+
+  // 6) 줄 끝 공백 정리
+  text = text.replace(/[ \t]+\n/g, "\n");
+
+  // 7) 앞뒤 공백 제거
+  return text.trim();
+}
+
 export default function SolvePage() {
   const [searchParams] = useSearchParams();
   const rawProblemId = searchParams.get("problemId");
@@ -24,7 +49,7 @@ export default function SolvePage() {
 
   const problemId = rawProblemId ?? "";
 
-  /** 🔥 문제 상세 API 호출 */
+  /** 문제 상세 API 호출 */
   useEffect(() => {
     if (!problemId) return;
 
@@ -35,15 +60,25 @@ export default function SolvePage() {
 
         const p = res.data;
 
+        // test_cases 파싱
+        const parsedTestCases =
+          p.test_cases
+            ?.map((tc: string) => {
+              try {
+                return JSON.parse(tc);
+              } catch {
+                return null;
+              }
+            })
+            .filter(Boolean) ?? [];
+
         const mapped = {
           id: p.id,
-          title: `${p.sub_category} 문제`,
-          description: p.body,
-          inputSpec: p.input_spec ?? "",
-          outputSpec: p.output_spec ?? "",
-          hints: p.hints ?? [],
+          title: p.title,
+          description: htmlToPrettyText(p.body),
           difficulty: p.difficulty,
           languages: p.language ?? ["python"],
+          testCases: parsedTestCases,
         };
 
         setProblem(mapped);
@@ -160,34 +195,28 @@ export default function SolvePage() {
               <p>문제를 불러오는 중...</p>
             ) : (
               <>
-                <p>{problem?.description}</p>
+                <pre className="problem-text">{problem?.description}</pre>
 
                 <section className="card__subsection">
-                  <h3>입력 형식</h3>
-                  <p>{problem?.inputSpec}</p>
-                </section>
+                  <h3>입출력 예제</h3>
+                  {problem?.testCases?.map((tc: any, i: number) => (
+                    <div key={i} style={{ marginBottom: "1rem" }}>
+                      <div>
+                        <strong>입력 #{i + 1}</strong>
+                      </div>
+                      <pre>{tc.input}</pre>
 
-                <section className="card__subsection">
-                  <h3>출력 형식</h3>
-                  <p>{problem?.outputSpec}</p>
+                      <div>
+                        <strong>출력 #{i + 1}</strong>
+                      </div>
+                      <pre>{tc.output}</pre>
+                    </div>
+                  ))}
                 </section>
               </>
             )}
           </div>
         </article>
-
-        {/* 힌트 영역 */}
-        <section className="hint-card card">
-          <header className="card__head">
-            <h2>힌트</h2>
-          </header>
-
-          <div className="hint-card__body">
-            {problem?.hints?.map((hint: string, i: number) => (
-              <p key={i}>{hint}</p>
-            ))}
-          </div>
-        </section>
 
         {detailError && <p className="solve-page__error">{detailError}</p>}
       </section>
@@ -253,7 +282,7 @@ export default function SolvePage() {
               </button>
             </div>
 
-            {/* 테스트 실행 결과 → 아래 A 영역 */}
+            {/* 실행 결과 */}
             {result && (
               <div className="workspace-footer__result">
                 <h3>실행 결과</h3>
