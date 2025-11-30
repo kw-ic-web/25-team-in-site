@@ -11,6 +11,47 @@ import "./RegisterPage.css";
 
 type IdCheckStatus = "idle" | "available" | "duplicate" | "empty";
 
+const START_SURVEY_STORAGE_KEY = "startSurvey";
+
+const levelMap: Record<string, number> = {
+  beginner: 1,
+  intermediate: 2,
+  advanced: 3,
+  expert: 4,
+};
+
+const languageCodeMap: Record<string, string> = {
+  python: "py",
+  javascript: "js",
+  java: "java",
+  cpp: "cpp",
+  ex: "etc",
+};
+
+const purposeCodeMap: Record<string, string> = {
+  // 백엔드가 현재 허용하는 코드가 "prob"뿐인 것으로 보여, 모두 prob으로 전송
+  test: "prob",
+  project: "prob",
+  hobby: "prob",
+  competition: "prob",
+};
+
+function readStartSurvey():
+  | {
+      language?: string;
+      level?: string;
+      purpose?: string;
+    }
+  | null {
+  try {
+    const raw = localStorage.getItem(START_SURVEY_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
 
@@ -90,13 +131,21 @@ export default function RegisterPage() {
     }
 
     try {
+      const survey = readStartSurvey();
+      const language =
+        (survey?.language && languageCodeMap[survey.language]) || "py";
+      const level =
+        survey?.level && levelMap[survey.level] ? levelMap[survey.level] : 1;
+      const purpose =
+        (survey?.purpose && purposeCodeMap[survey.purpose]) || "prob";
+
       const res = await authAPI.register({
         user_id: trimmedId,
         email: form.email.trim(),
         password: form.password,
-        language: "py",
-        level: 4,
-        purpose: "prob",
+        language,
+        level,
+        purpose,
       });
 
       if (res.status === 200 || res.status === 201) {

@@ -111,6 +111,13 @@
   box-shadow:
     inset 0 -6px 14px rgba(90, 110, 255, 0.18),
     0 18px 38px rgba(123, 134, 255, 0.22);
+  overflow: hidden;
+}
+
+.profile-card__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profile-card__meta {
@@ -202,6 +209,47 @@
   transform: translateY(-1px);
 }
 
+.profile-card__about {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f7f8ff;
+  border: 1px solid rgba(225, 228, 238, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-card__primary-language {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-card__label {
+  font-size: 13px;
+  color: var(--mypage-text-secondary);
+  font-weight: 600;
+}
+
+.profile-card__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e6f0ff;
+  color: #3a62ff;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.profile-card__bio {
+  margin: 0;
+  color: var(--mypage-text-secondary);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
 .profile-card__languages {
   width: 100%;
   display: flex;
@@ -256,6 +304,15 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #9aa7ff 0%, #6f6cfb 100%);
   box-shadow: 0 4px 10px rgba(111, 108, 251, 0.2);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.friends-list__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .friends-list__meta {
