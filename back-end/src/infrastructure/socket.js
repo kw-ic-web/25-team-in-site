@@ -8,9 +8,12 @@ const parseCookies = (req) => {
 
   if (cookieHeader) {
     cookieHeader.split(";").forEach((cookie) => {
-      const parts = cookie.trim().split("=");
-      if (parts.length === 2) {
-        cookies[parts[0]] = decodeURIComponent(parts[1]);
+      const trimmed = cookie.trim();
+      const eqIndex = trimmed.indexOf("=");
+      if (eqIndex > 0) {
+        const name = trimmed.substring(0, eqIndex);
+        const value = trimmed.substring(eqIndex + 1);
+        cookies[name] = decodeURIComponent(value);
       }
     });
   }
