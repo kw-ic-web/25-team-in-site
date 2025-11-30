@@ -153,6 +153,7 @@ export default function HomePage() {
       const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
       const rawNoSpace = raw.replace(/\s+/g, "");
       const queryChoseong = getChoseong(raw).replace(/\s+/g, "");
+      const hasChoseong = queryChoseong.length > 0;
 
       list = list.filter((p) => {
         const title = p.title;
@@ -166,7 +167,7 @@ export default function HomePage() {
           // 2) 초성 직접 입력: "ㅊㄷㄱ" 입력 시
           titleChoseong.includes(rawNoSpace) ||
           // 3) 입력을 초성으로 바꿔서 비교: "최단경로" -> "ㅊㄷㄱㄹ"
-          titleChoseong.includes(queryChoseong)
+          (hasChoseong && titleChoseong.includes(queryChoseong))
         );
       });
     }
