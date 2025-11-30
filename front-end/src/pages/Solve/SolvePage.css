@@ -57,12 +57,14 @@
   grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* 코드 영역 내부에서 스크롤 되는 곳 */
 .solve-page__workspace .panel-content {
   flex: 1;
   overflow-y: auto;
+  padding: 0;
 }
 
 /* 코드 상단 컨트롤 */
@@ -208,4 +210,66 @@
   background: #ffffff;
   color: #5d69ff;
   border: 1px solid #5d69ff;
+}
+
+/* 코드 영역 헤더 스타일 */
+.code-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+/* 헤더 버튼 묶음 */
+.code-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 언어 선택 */
+.select-language {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d4ee;
+  background: #f5f7ff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 초기화 버튼 */
+.btn-reset {
+  background: #f8e1e9;
+  border: 1px solid #eebac8;
+  color: #955068;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* 실행 버튼 */
+.btn-run {
+  background: #ffffff;
+  border: 1px solid #5d69ff;
+  color: #5d69ff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* 제출 버튼 */
+.btn-submit {
+  background: #5d69ff;
+  border: 1px solid #aeb4ff;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* 코드 에디터 영역 */
+.code-editor-pane {
+  height: 100%;
+  background: #2d2d2d;
 }

@@ -165,24 +165,10 @@ export default function SolvePage() {
       {/* (1,2)(2,2) 코드 */}
       <section className="solve-page__workspace panel">
         <header className="panel-title code-title">
-          코드
-          <div className="code-buttons-header">
-            <button
-              className="run-button"
-              onClick={handleRun}
-              disabled={isRunning || isLoading}
-            >
-              {isRunning ? "실행 중..." : "실행하기"}
-            </button>
+          <span>코드</span>
 
-            <button onClick={handleSubmit} disabled={isSubmitting || isLoading}>
-              {isSubmitting ? "제출 중..." : "제출하기"}
-            </button>
-          </div>
-        </header>
-
-        <div className="panel-content scroll code-area">
-          <div className="workspace-controls">
+          <div className="code-header-buttons">
+            {/* 언어 선택 */}
             <select
               className="select-language"
               value={language}
@@ -195,11 +181,33 @@ export default function SolvePage() {
               ))}
             </select>
 
+            {/* 초기화 */}
             <button className="btn-reset" onClick={handleReset}>
               초기화
             </button>
-          </div>
 
+            {/* 실행 */}
+            <button
+              className="btn-run"
+              onClick={handleRun}
+              disabled={isRunning || isLoading}
+            >
+              {isRunning ? "실행 중..." : "실행"}
+            </button>
+
+            {/* 제출 */}
+            <button
+              className="btn-submit"
+              onClick={handleSubmit}
+              disabled={isSubmitting || isLoading}
+            >
+              {isSubmitting ? "제출 중..." : "제출"}
+            </button>
+          </div>
+        </header>
+
+        {/* code 영역 바디는 IDEEditor만 */}
+        <div className="panel-content code-editor-pane scroll">
           <IDEEditor value={code} onChange={setCode} language={language} />
         </div>
       </section>
