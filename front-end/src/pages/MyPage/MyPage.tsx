@@ -89,7 +89,15 @@ export default function MyPage() {
           <div className="profile-card">
             <div className="profile-card__header">
               <div className="profile-card__avatar" aria-hidden="true">
-                <span>{data.profile.avatarInitial}</span>
+                {data.profile.avatarImage ? (
+                  <img
+                    src={data.profile.avatarImage}
+                    alt={`${data.profile.nickname} 아바타`}
+                    className="profile-card__avatar-img"
+                  />
+                ) : (
+                  <span>{data.profile.avatarInitial}</span>
+                )}
               </div>
               <div className="profile-card__meta">
                 <h2>{data.profile.nickname}</h2>
@@ -121,6 +129,15 @@ export default function MyPage() {
               프로필 수정하기
             </button>
           </div>
+          <div className="profile-card__about">
+            <div className="profile-card__primary-language">
+              <span className="profile-card__label">주력 언어</span>
+              <span className="profile-card__pill">
+                {data.profile.preferLanguage}
+              </span>
+            </div>
+            <p className="profile-card__bio">{data.profile.bio}</p>
+          </div>
           <div className="profile-card__languages">
             <h3>사용 언어</h3>
             <div className="profile-card__chips">
@@ -143,7 +160,11 @@ export default function MyPage() {
           <ul className="friends-list">
             {data.friends.items.map((friend) => (
               <li key={friend.id} className="friends-list__item">
-                <div className="friends-list__avatar" aria-hidden="true" />
+                <div className="friends-list__avatar" aria-hidden="true">
+                  {friend.avatarImage ? (
+                    <img src={friend.avatarImage} alt="" />
+                  ) : null}
+                </div>
                 <div className="friends-list__meta">
                   <span className="friends-list__name">{friend.name}</span>
                   <span className="friends-list__xp">{friend.xp}xp</span>

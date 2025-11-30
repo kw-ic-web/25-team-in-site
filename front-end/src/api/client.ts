@@ -16,7 +16,10 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("accessToken");
-    if (token) {
+    const isAuthRequest =
+      config.url?.startsWith("/auth/login") || config.url?.startsWith("/auth/register");
+
+    if (token && !isAuthRequest) {
       // headers 객체가 존재하지 않으면 새로 생성
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;

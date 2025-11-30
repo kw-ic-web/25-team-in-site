@@ -128,6 +128,24 @@ const questions: Question[] = [
   },
 ];
 
+const START_SURVEY_STORAGE_KEY = "startSurvey";
+
+function saveSurveyResult(answers: Record<number, string>) {
+  const selectedLanguage = answers[1];
+  const selectedLevel = answers[2];
+  const selectedPurpose = answers[3];
+  const payload = {
+    language: selectedLanguage,
+    level: selectedLevel,
+    purpose: selectedPurpose,
+  };
+  try {
+    localStorage.setItem(START_SURVEY_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore write errors (e.g., storage blocked)
+  }
+}
+
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -155,6 +173,7 @@ const Index = () => {
       // 마지막 단계:
       // 나중에 이 answers 객체를 백엔드로 보내면 됩니다.
       console.log("최종 설문 답변:", answers);
+      saveSurveyResult(answers);
 
       // -- 백엔드 전송 로직 --
       // if (isLoading) return;
