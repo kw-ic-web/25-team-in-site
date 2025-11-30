@@ -187,25 +187,6 @@
 /* 초기화 버튼 */
 /* ---------------------- */
 
-.btn-reset {
-  background: #5d69ff;
-  color: #ffffff;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.btn-reset:hover {
-  background: #5d69ff;
-}
-
-.btn-reset:active {
-  transform: scale(0.97);
-}
-
 .code-buttons-header .run-button {
   background: #ffffff;
   color: #5d69ff;
