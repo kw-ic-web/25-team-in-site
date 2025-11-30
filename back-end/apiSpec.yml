@@ -242,7 +242,7 @@ paths:
       - url: ws://localhost:20991
     get:
       tags: [WebSocket, Hint]
-      summary: 힌트 웹소켓애 연결
+      summary: 힌트 웹소켓에 연결
       description: "웹소켓 연결을 통해 실시간 힌트 제공"
       x-status: "in-progress"
       x-websocket: true
@@ -559,7 +559,7 @@ components:
                 minimum: 0
               minItems: 2
               maxItems: 2
-              description: "커서 위치 [line, column] (0부터 시작)
+              description: "커서 위치 [line, column] (0부터 시작)"
 
     WebSocketHintResponse:
       type: object
