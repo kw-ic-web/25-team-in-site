@@ -171,8 +171,7 @@ describe("hintSocketHandler", () => {
 
       hintSocketHandler(mockWss, mockWs);
 
-      const errorWithoutMessage = new Error();
-      errorWithoutMessage.message = undefined;
+      const errorWithoutMessage = new Error('');
       parseAndValidateMessage.mockImplementation(() => {
         throw errorWithoutMessage;
       });
