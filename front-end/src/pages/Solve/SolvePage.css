@@ -1,361 +1,211 @@
 .solve-page {
   display: grid;
-  grid-template-columns: minmax(320px, 1.8fr) minmax(360px, 2fr);
-  gap: 24px;
-  min-height: calc(100vh - 160px);
-  margin-top: 20px;
-}
-
-.solve-page__problem,
-.solve-page__workspace {
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 1px solid #e2e5f4;
-  box-shadow: 0 12px 26px rgba(54, 65, 117, 0.08);
-}
-
-.solve-page__problem {
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.solve-page__workspace {
-  padding: 0;
+  height: calc(100vh - 90px);
+  grid-template-columns: 1.6fr 2.4fr; /* ← 문제/힌트 넓게 */
+  grid-template-rows: 2fr 1fr auto; /* ← 문제 크게 / 힌트 작게 */
+  gap: 16px;
+  padding: 10px;
   overflow: hidden;
 }
 
-@media (max-width: 1024px) {
-  .solve-page {
-    grid-template-columns: 1fr;
-  }
+/* 패널 공통 */
+.panel {
+  border: 1px solid #dadcec;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-/* 문제 상단 헤더 */
-.problem-header {
+/* 헤더 */
+.panel-title {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  align-items: center;
+  min-height: 48px; /* 헤더 높이 통일 */
+  padding: 0 16px; /* 동일한 좌우 여백 */
+  background: #f4f6fd;
+  border-bottom: 1px solid #dadcec;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* 내부 영역 */
+.panel-content {
+  padding: 12px;
+  flex: 1;
+}
+
+.scroll {
+  overflow-y: auto;
+}
+
+/* 위치 배치 */
+.solve-page__problem {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.solve-page__hint {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.solve-page__workspace {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 코드 영역 내부에서 스크롤 되는 곳 */
+.solve-page__workspace .panel-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 코드 상단 컨트롤 */
+.workspace-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
 }
 
-.problem-header__tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background-color: #ebeefe;
-  color: #5e60d9;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+/* IDE의 높이는 지정하지 않음 → 자동 확장 */
+.code-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.problem-header__title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2237;
-}
-
-/* 카드 공통 */
-.card {
-  border: 1px solid #dfe3f3;
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 6px 16px rgba(69, 83, 141, 0.08);
-  overflow: hidden;
-}
-
-.card + .card {
-  margin-top: 18px;
-}
-
-.card__head {
-  padding: 16px 20px 8px;
-  background: linear-gradient(
-    180deg,
-    rgba(245, 246, 250, 0.9) 0%,
-    rgba(238, 240, 248, 0.6) 100%
-  );
-  border-bottom: 1px solid rgba(222, 226, 247, 0.8);
-}
-
-.card__head h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #2e3250;
-}
-
-.card__body {
-  padding: 20px;
-  display: grid;
-  gap: 18px;
-  color: #3c4163;
-  line-height: 1.7;
-}
-
-/* 입출력 예제 */
-.card__subsection {
-  background: #f8f9ff;
-  border-radius: 14px;
-  padding: 16px 18px;
-  border: 1px solid rgba(212, 218, 243, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.card__subsection + .card__subsection {
-  margin-top: 8px;
-}
-
-.card__subsection h3 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #2f3350;
-}
-
-.card__subsection p {
-  margin: 0;
-}
-
-/* -----------------------
-   힌트 카드 (신규 추가)
------------------------- */
-.hint-section {
-  border-radius: 16px;
-  border: 1px solid #d5daf6;
-  box-shadow: 0 6px 16px rgba(69, 83, 141, 0.06);
-}
-
-.hint-text {
-  background: #f8faff;
-  color: #2f3359;
+/* 실행/제출 버튼을 코드 영역 바닥에 고정 */
+.workspace-buttons {
+  display: flex;
+  gap: 10px;
   padding: 12px;
-  border-radius: 8px;
-  line-height: 1.65;
-  font-size: 15px;
-  border: 1px solid rgba(203, 209, 235, 0.8);
+  border-top: 1px solid #dadcec;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
-.btn--hint {
-  padding: 10px 18px;
-  border-radius: 10px;
+/* 버튼 스타일 */
+.workspace-buttons button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #5d69ff;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
-  border: none;
-  transition: all 0.15s ease;
-  color: #ffffff;
-  background: linear-gradient(135deg, #3f45f8, #7a68ff);
-  box-shadow: 0 8px 14px rgba(85, 90, 255, 0.25);
 }
 
-.btn--hint:hover {
-  background: linear-gradient(135deg, #3238ea, #6d5eed);
+/* 실행 결과 */
+.solve-page__result {
+  grid-column: 1 / 3;
+  grid-row: 3;
 }
 
-.btn--hint:active {
-  transform: scale(0.96);
-}
-
-/* -----------------------
-      코드 영역
------------------------- */
-.workspace-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.workspace-card__head {
-  padding: 18px 24px;
-  background: #f3f4f8;
-  border-bottom: 1px solid #dee2f5;
-}
-
-.workspace-card__head h2 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #272a43;
-}
-
-.workspace-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 24px;
-  background: #ffffff;
-}
-
-.workspace-card__controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eceffa;
-}
-
-.workspace-header__label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6d7394;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
-}
-
-.workspace-header__select {
-  width: 200px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #d8dcf0;
-  font-weight: 600;
-  background-color: #f6f7fc;
-}
-
-.workspace-header__reset {
-  border: none;
-  background: transparent;
-  color: #5a63d1;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.workspace-header__reset:hover {
-  background-color: rgba(90, 99, 209, 0.08);
-}
-
-.workspace-editor {
-  border: 1px solid #d7dcf4;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
-}
-
-.workspace-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.workspace-footer__buttons {
-  display: flex;
-  gap: 12px;
-}
-
-.btn {
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-.btn--ghost {
-  background: #f3f5ff;
-  color: #424caa;
-}
-
-.btn--ghost:hover {
-  background: #e3e7ff;
-}
-
-.btn--primary {
-  background: linear-gradient(135deg, #5459ff, #8063ff);
-  box-shadow: 0 10px 18px rgba(90, 95, 255, 0.25);
-  color: #ffffff;
-}
-
-.btn--primary:hover {
-  background: linear-gradient(135deg, #4449f3, #6c54f7);
-}
-
-.workspace-footer__result {
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #f6f8ff;
-  color: #313552;
-  border: 1px solid #e0e5ff;
-  font-size: 14px;
+.problem-text {
   white-space: pre-wrap;
 }
 
-.solve-page__error {
-  margin-top: 16px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #fff0f2;
-  color: #d64555;
-  border: 1px solid rgba(214, 69, 85, 0.3);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-  .workspace-footer__buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .workspace-card__controls {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .workspace-header__select {
-    width: 100%;
-  }
-}
-
-/* 힌트 헤더 레이아웃 */
-.hint-header {
+.code-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* 힌트 생성 버튼 (헤더용 작은 스타일) */
-.btn--hint-small {
+.code-buttons-header {
+  display: flex;
+  gap: 8px;
+}
+
+.code-buttons-header button {
   padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  background: #5d69ff;
+  color: white;
   font-weight: 600;
   cursor: pointer;
-  border: none;
+}
+
+/* ---------------------- */
+/* 힌트 생성 버튼 */
+/* ---------------------- */
+
+.btn-hint-generate {
+  background: #5d69ff;
   color: #ffffff;
-  background: linear-gradient(135deg, #3f45f8, #7a68ff);
-  box-shadow: 0 4px 10px rgba(85, 90, 255, 0.25);
-  transition: all 0.15s ease;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn--hint-small:hover {
-  background: linear-gradient(135deg, #3238ea, #6d5eed);
+.btn-hint-generate:hover {
+  transform: translateY(-2px);
 }
 
-.btn--hint-small:active {
-  transform: scale(0.96);
+.btn-hint-generate:active {
+  transform: scale(0.98);
 }
 
-/* 힌트가 없을 때 안내 텍스트 */
-.hint-empty-text {
-  color: #7c81a4;
-  font-size: 14px;
-  padding: 4px 2px;
+/* ---------------------- */
+/* 언어 선택 드롭다운 */
+/* ---------------------- */
+
+.select-language {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cfd3e9;
+  font-weight: 600;
+  background: #f5f6ff;
+  color: #2a2f55;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.select-language:hover {
+  border-color: #7a81ff;
+}
+
+.select-language:focus {
+  outline: none;
+  border-color: #545bff;
+}
+
+/* ---------------------- */
+/* 초기화 버튼 */
+/* ---------------------- */
+
+.btn-reset {
+  background: #5d69ff;
+  color: #ffffff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-reset:hover {
+  background: #5d69ff;
+}
+
+.btn-reset:active {
+  transform: scale(0.97);
+}
+
+.code-buttons-header .run-button {
+  background: #ffffff;
+  color: #5d69ff;
+  border: 1px solid #5d69ff;
 }
