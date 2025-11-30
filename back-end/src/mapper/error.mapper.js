@@ -39,7 +39,7 @@ export const ERROR = {
   TOKEN_LIMIT_EXCEEDED: () =>
     new BadRequestError("허용된 토큰 수를 초과했습니다."),
   INVALID_MESSAGE_FORMAT: (message) =>
-    new BadRequestError(`[WebSocket] Invalid message format: ${message}`),
+    new BadRequestError(`[WebSocket] 잘못된 메세지 형식입니다: ${message}`),
   FAILED_TO_SEND_MESSAGE: (message) =>
-    new BadRequestError(`[WebSocket] Failed to send message: ${message}`),
+    new BadRequestError(`[WebSocket] 메세지 전송에 실패했습니다: ${message}`),
 };
