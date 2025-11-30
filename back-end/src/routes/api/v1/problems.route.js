@@ -16,5 +16,11 @@ router.get("/recent/solved", problemsController.getRecentSolvedProblems);
 router.get("/:id/similar", problemsController.getSimilarProblems);
 // GET /api/v1/problems/:id
 router.get("/:id", problemsController.getProblemDetail);
+// POST /api/v1/problems/:id/code
+// TODO: WebSocket 'user:code:save' 이벤트로 대체 예정 
+router.post("/:id/code", problemsController.saveUserCode);
+// POST /api/v1/problems/:id/hint
+// TODO: WebSocket 'user:hint:request' 이벤트로 대체 예정 
+router.post("/:id/hint", problemsController.getHint);
 
 export default router;

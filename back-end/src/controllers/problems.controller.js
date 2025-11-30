@@ -3,6 +3,8 @@ import { ProbListRequestDto } from "../dto/problems/problemList.request.dto.js";
 import { ProbRecommendRequestDto } from "../dto/problems/problemRecommend.request.dto.js";
 import { SimilarProblemRequestDto } from "../dto/problems/problemSimilar.request.dto.js";
 import { RecentSolvedListRequestDto } from "../dto/problems/problemRecentSolved.request.dto.js";
+import { SaveCodeRequestDto } from "../dto/userCode/userCode.request.dto.js";
+import { GetHintRequestDto } from "../dto/userCode/userCode.request.dto.js";
 
 const _transformProblemSummary = (problem) => ({
   id: problem.problem_id,
@@ -125,6 +127,43 @@ export const problemsController = {
           problem: _transformProblemSummary(item.problem),
         })),
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+  async saveUserCode(req, res, next) {
+    try {
+      const dto = SaveCodeRequestDto.parse(req.body);
+      const result = await req.services.userCode.saveCode(
+        req.user?.user_id,
+        req.params.id,
+        dto,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+  async getHint(req, res, next) {
+    try {
+      const dto = GetHintRequestDto.parse(req.body);
+      const result = await req.services.userCode.getHint(
+        req.user?.user_id,
+        req.params.id,
+        dto,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+  async getHistory(req, res, next) {
+    try {
+      const result = await req.services.userCode.getHistory(
+        req.user?.user_id,
+        req.params.id,
+      );
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
