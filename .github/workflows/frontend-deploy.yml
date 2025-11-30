@@ -82,14 +82,13 @@ jobs:
             tar -xzf frontend-dist.tar.gz
             # 배포 파일 정리
             rm -f frontend-dist.tar.gz
-            # http-server 패키지 전역 설치 (없는 경우, sudo 사용)
-            # http-server는 Node.js 12+ 지원
-            if ! command -v http-server &> /dev/null; then
-              sudo npm install -g http-server
+            # serve 패키지 전역 설치 (없는 경우, sudo 사용)
+            if ! command -v serve &> /dev/null; then
+              sudo npm install -g serve
             fi
             # pm2로 프론트엔드 서버 실행/재시작
             pm2 delete "$PM2_NAME" 2>/dev/null || true
-            pm2 start http-server --name "$PM2_NAME" -- -p "$DEPLOY_PORT" -a 0.0.0.0 dist
+            pm2 start serve --name "$PM2_NAME" -- -s -l "$DEPLOY_PORT" dist
             pm2 save
             echo "Frontend deployed and running on port: $DEPLOY_PORT"
         env:
