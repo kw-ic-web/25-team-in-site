@@ -2,14 +2,14 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 // vite proxy + babel-react-compiler 함께 동작 버전
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const proxyTarget =
     env.VITE_API_PROXY ||
     env.VITE_API_URL?.replace(/\/api\/?v1?\/?$/, "") ||
     "https://team09-api.kwweb.org/";
 
-  return {
+  const config: ReturnType<typeof defineConfig> = {
     plugins: [
       react({
         babel: {
@@ -17,7 +17,12 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    server: {
+  };
+
+  // 개발 서버에서만 proxy 설정 (빌드 시에는 proxy 불필요)
+  if (command === "serve") {
+    config.server = {
+      port: 5173, // 개발 서버 포트
       proxy: {
         "/api": {
           target: proxyTarget,
@@ -26,6 +31,8 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api/, "/api"),
         },
       },
-    },
-  };
+    };
+  }
+
+  return config;
 });
