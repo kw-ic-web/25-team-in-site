@@ -84,7 +84,7 @@ export default function HomePage() {
         // 백엔드 응답 → 프론트 구조로 변환
         const normalized = list.map((p: any, i: number) => ({
           id: p.id ?? `p${i + 1}`,
-          title: p.sub_category ? `${p.sub_category} 문제` : "문제 제목",
+          title: p.title,
           tags: [],
           difficulty: p.difficulty ?? 1,
           correctness: p.success_rate ?? 0,
