@@ -4,7 +4,7 @@ import {
   sendMessage,
   sendErrorMessage,
 } from "../../../src/utils/socket.utils.js";
-import { ERROR } from "../../../src/mapper/error.mapper.js";
+
 
 describe("parseAndValidateMessage", () => {
   it("유효한 JSON 메시지를 파싱하고 반환한다", () => {
