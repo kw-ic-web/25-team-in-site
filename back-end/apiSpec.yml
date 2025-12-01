@@ -92,6 +92,38 @@ paths:
         "500":
           description: "서버 내부 오류"
 
+  /code:
+    post:
+      tags: [Code]
+      summary: 코드 저장
+      description: "사용자의 현재 코드를 저장하고, 이전 코드와의 차이(diff)를 계산합니다. 인증이 필요합니다."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SaveCodeRequest" }
+      responses:
+        "200":
+          description: "코드 저장 성공"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SaveCodeResponse" }
+        "400":
+          description: "잘못된 요청 (코드 타입 오류, 언어 타입 오류 등)"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          description: "인증되지 않은 사용자"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "500":
+          description: "서버 내부 오류"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
   /code/tokenize:
     post:
       tags: [Code]
@@ -522,6 +554,26 @@ components:
           items: { $ref: "#/components/schemas/ProblemSummary" }
 
     # ==== CODE ====
+    SaveCodeRequest:
+      type: object
+      required: [code, language]
+      properties:
+        code:
+          type: string
+          description: "저장할 코드 문자열"
+        language:
+          type: string
+          enum: [js, py]
+          description: "프로그래밍 언어"
+
+    SaveCodeResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          description: "저장 성공 여부"
+
     CodeTokenizeRequest:
       type: object
       required: [code]
