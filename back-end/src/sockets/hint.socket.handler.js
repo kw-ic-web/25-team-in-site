@@ -1,8 +1,8 @@
 import {
   parseAndValidateMessage,
   sendErrorMessage,
-  sendMessage,
 } from "../utils/socket.utils.js";
+import { HintService } from "../service/hint.service.js";
 
 export const hintSocketHandler = (wss, ws) => {
   ws.on("message", async (data) => {
@@ -10,17 +10,7 @@ export const hintSocketHandler = (wss, ws) => {
       const { message } = parseAndValidateMessage(data);
 
       if (message.type === "hint:request") {
-        // TODO: 힌트 요청 처리 로직 구현
-
-        const response = {
-          type: "hint:response",
-          success: true,
-          data: {
-            level: 1,
-            hint: "hint ready",
-          },
-        };
-        sendMessage(ws, response);
+        await HintService.generateHint(ws, ws.userId);
       } else {
         sendErrorMessage(
           ws,
