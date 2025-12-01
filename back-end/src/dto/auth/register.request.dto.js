@@ -18,5 +18,5 @@ export const RegisterRequestDto = z.object({
     .int()
     .min(1, "INVALID_LEVEL_RANGE")
     .max(4, "INVALID_LEVEL_RANGE"),
-  purpose: z.enum(["prob", "proj", "learn"], "INVALID_PURPOSE"), //TODO: ENUM 커스텀 에러
+  purpose: z.enum(["prob", "proj", "learn"], "INVALID_PURPOSE"),
 });
