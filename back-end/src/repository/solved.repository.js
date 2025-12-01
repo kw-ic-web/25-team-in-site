@@ -105,4 +105,15 @@ export const SolvedRepository = {
       },
     ]);
   },
+
+  async findByUserIdAndProblemId(userObjectId, problemObjectId) {
+    return Solved.findOne({
+      user_id: userObjectId,
+      problem_id: problemObjectId,
+    });
+  },
+
+  async save(solved) {
+    return solved.save();
+  },
 };
