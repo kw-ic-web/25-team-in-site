@@ -1,8 +1,11 @@
 import { openaiClient } from "../infrastructure/openaiClient.infra.js";
+import { zodTextFormat } from "openai/helpers/zod";
 import {
   DEFAULT_PROMPT,
   VALIDATED_PROMPT,
 } from "../constants/openai.constants.js";
+import { sendMessage } from "../utils/socket.utils.js";
+import { HintSchema } from "../utils/validation/hint.schema.js";
 
 export const HintService = {
   _HINT_INTERVAL_MS: 1000 * 60 * 3,
@@ -17,11 +20,14 @@ export const HintService = {
     ];
   },
 
-  async _getChatCompletion(contexts, model = "gpt-5.1-codex") {
+  async _getChatCompletion(contexts, schema, schemaHint, model = "gpt-5.1-codex") {
     try {
-      const completion = await openaiClient.chat.completions.create({
-        contexts,
+      const completion = await openaiClient.responses.parse({
         model,
+        input: contexts,
+        text: {
+          format: zodTextFormat(schema, schemaHint),
+        },
       });
 
       return completion.choices[0].message.content;
@@ -31,21 +37,26 @@ export const HintService = {
     }
   },
 
-  async generateHint(userId) {
-    // TODO: commit 이벤트 보내기
+  async generateHint(ws, userId) {
+    sendMessage(ws, { type: "hint:committed", success: true });
     const context = await this._makeContext(userId);
-    const hint = await this._getChatCompletion(context);
+    const hint = await this._getChatCompletion(
+      context,
+      HintSchema,
+      "사용자에게 전달할 힌트",
+    );
 
-    // TODO: validate 이벤트 보내기
     const validatedContext = [
       { role: "system", content: VALIDATED_PROMPT },
       { role: "user", content: hint },
     ];
     const validatedHint = await this._getChatCompletion(
       validatedContext,
+      HintSchema,
+      "사용자에게 전달할 '정답 코드가 삭제된' 힌트(psudo code는 허용)",
       "gpt-5.1-mini",
     );
-    return validatedHint; // TODO: 이벤트로 변경
+    sendMessage(ws, { type: "hint:response", success: true, data: {level: validatedHint.level, hint: validatedHint.body } });
   },
 
   async newCodeCommitted(userId) {
