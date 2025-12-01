@@ -10,6 +10,7 @@ import { HintSchema } from "../utils/validation/hint.schema.js";
 export const HintService = {
   _HINT_INTERVAL_MS: 1000 * 60 * 3,
   _HINT_INTERVAL_MAP: new Map(), //userId -> interval(callback), 연결 해제시 해당 interval 정리하기!
+  _PROCESSING_USERS: new Map(), // userId -> true (진행 중인 힌트 생성 요청 추적)
 
 
   async _makeContext(userId) {
@@ -38,25 +39,43 @@ export const HintService = {
   },
 
   async generateHint(ws, userId) {
-    sendMessage(ws, { type: "hint:committed", success: true });
-    const context = await this._makeContext(userId);
-    const hint = await this._getChatCompletion(
-      context,
-      HintSchema,
-      "사용자에게 전달할 힌트",
-    );
+    // 이미 진행 중인 요청이 있으면 abort 이벤트 전송
+    if (this._PROCESSING_USERS.has(userId)) {
+      sendMessage(ws, { type: "hint:abort", success: false });
+      return;
+    }
 
-    const validatedContext = [
-      { role: "system", content: VALIDATED_PROMPT },
-      { role: "user", content: hint },
-    ];
-    const validatedHint = await this._getChatCompletion(
-      validatedContext,
-      HintSchema,
-      "사용자에게 전달할 '정답 코드가 삭제된' 힌트(psudo code는 허용)",
-      "gpt-5.1-mini",
-    );
-    sendMessage(ws, { type: "hint:response", success: true, data: {level: validatedHint.level, hint: validatedHint.body } });
+    try {
+      // 진행 중 상태로 표시
+      this._PROCESSING_USERS.set(userId, true);
+
+      sendMessage(ws, { type: "hint:committed", success: true });
+      const context = await this._makeContext(userId);
+      const hint = await this._getChatCompletion(
+        context,
+        HintSchema,
+        "사용자에게 전달할 힌트",
+      );
+
+      const validatedContext = [
+        { role: "system", content: VALIDATED_PROMPT },
+        { role: "user", content: hint },
+      ];
+      const validatedHint = await this._getChatCompletion(
+        validatedContext,
+        HintSchema,
+        "사용자에게 전달할 '정답 코드가 삭제된' 힌트(psudo code는 허용)",
+        "gpt-5.1-mini",
+      );
+      sendMessage(ws, {
+        type: "hint:response",
+        success: true,
+        data: { level: validatedHint.level, hint: validatedHint.body },
+      });
+    } finally {
+      // 완료 후 진행 중 상태 해제
+      this._PROCESSING_USERS.delete(userId);
+    }
   },
 
   async newCodeCommitted(userId) {
