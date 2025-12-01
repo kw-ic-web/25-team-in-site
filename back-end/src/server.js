@@ -2,6 +2,8 @@ import http from "http";
 import app from "./app.js";
 import config from "./config/env.config.js";
 import connectDB from "./infrastructure/mongoConnection.infra.js";
+import { initializeWebSocket } from "./infrastructure/socket.js";
+import { setupSocketHandlers } from "./sockets/index.js";
 
 const port = config.port;
 app.set("port", port);
@@ -14,6 +16,14 @@ app.set("port", port);
     process.exit(1);
   }
   const server = http.createServer(app);
+
+  try {
+    const wss = initializeWebSocket(server);
+    setupSocketHandlers(wss);
+  } catch (error) {
+    console.error("Failed to initialize WebSocket:", error);
+    process.exit(1);
+  }
 
   server.on("error", (error) => {
     if (error.syscall !== "listen") {

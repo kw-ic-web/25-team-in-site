@@ -5,12 +5,16 @@ info:
 
 servers:
   - url: http://localhost:20991/api/v1
+  - url: ws://localhost:20991
+    description: WebSocket 서버
 
 tags:
   - name: Auth
   - name: User
   - name: Problems
   - name: Code
+  - name: WebSocket
+  - name: Hint
 
 paths:
   /health:
@@ -265,6 +269,45 @@ paths:
         "500":
           description: "서버 내부 오류"
 
+  hint:
+    servers:
+      - url: ws://localhost:20991
+    get:
+      tags: [WebSocket, Hint]
+      summary: 힌트 웹소켓에 연결
+      description: "웹소켓 연결을 통해 실시간 힌트 제공"
+      x-status: "in-progress"
+      x-websocket: true
+      x-websocket-url: "ws://localhost:20991/hint"
+      x-websocket-protocol: "ws"
+      x-websocket:
+        url: "ws://localhost:20991/hint"
+        protocol: "ws"
+        authentication:
+          type: cookie
+          name: token
+        messages:
+          request:
+            - name: hint:request
+              schema:
+                $ref: "#/components/schemas/WebSocketHintRequest"
+          response:
+            - name: hint:response
+              schema:
+                $ref: "#/components/schemas/WebSocketHintResponse"
+            - name: error
+              schema:
+                $ref: "#/components/schemas/WebSocketError"
+      responses:
+        "101":
+          description: "WebSocket 연결 성공"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     # ==== AUTH ====
@@ -334,7 +377,7 @@ components:
           description: "사용자에게 전달되는 에러 메시지"
         stack:
           type: string
-          description: "개발 환경에서만 노출되는 stack trace"
+          description: "개발 환경에서만 노출되는 stack trace (REST API 요청에 한정)"
 
     # ==== USER ====
     UserCheckIdResponse:
@@ -547,3 +590,65 @@ components:
         token_count:
           type: integer
           description: "전체 토큰 수"
+
+    # ==== WebSocket ====
+    WebSocketHintRequest:
+      type: object
+      required: [type, data]
+      properties:
+        type:
+          type: string
+          enum: [hint:request]
+          description: "메시지 타입"
+        data:
+          type: object
+          required: [cursorPosition]
+          properties:
+            cursorPosition:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+              minItems: 2
+              maxItems: 2
+              description: "커서 위치 [line, column] (0부터 시작)"
+
+    WebSocketHintResponse:
+      type: object
+      required: [type, success, data]
+      properties:
+        type:
+          type: string
+          enum: [hint:response]
+          description: "메시지 타입"
+        success:
+          type: boolean
+          description: "요청 성공 여부"
+        data:
+          type: object
+          required: [hint]
+          properties:
+            level:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: "1~5 사이의 힌트 레벨"
+            hint:
+              type: string
+              description: "힌트 내용"
+
+    WebSocketError:
+      type: object
+      required: [type, success, message]
+      properties:
+        type:
+          type: string
+          enum: [error]
+          description: "에러 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+        message:
+          type: string
+          description: "에러 메시지"
