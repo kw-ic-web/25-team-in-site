@@ -8,5 +8,6 @@ export default {
   coverageDirectory: "coverage",
   verbose: true,
   setupFiles: ["<rootDir>/test/utils/setup-env.js"],
+  setupFilesAfterEnv: ["<rootDir>/test/utils/setup-redis.js"],
 };
 
