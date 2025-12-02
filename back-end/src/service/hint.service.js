@@ -23,24 +23,24 @@ export const HintService = {
   async _makeContext(userId, problemId) {
     // 문제 정보 가져오기
     const problem = await ProblemRepository.findProblemById(problemId);
-    
+
     // 저장된 hint session 불러오기
     const hintSession = await sessionStoreRepository.getHintSession(
       userId,
       problemId,
     );
-    
+
     // 시스템 프롬프트와 힌트 히스토리로 컨텍스트 구성
     const contexts = [{ role: "system", content: DEFAULT_PROMPT }];
 
     // 문제 정보 추가 (problem body와 testcase)
     if (problem) {
       let problemContent = `문제 설명:\n${problem.problem_body || ""}\n\n`;
-      
+
       if (problem.problem_test_cases && problem.problem_test_cases.length > 0) {
         problemContent += `테스트 케이스:\n${problem.problem_test_cases.join("\n")}\n\n`;
       }
-      
+
       contexts.push({
         role: "user",
         content: problemContent,
@@ -308,7 +308,8 @@ export const HintService = {
     this._WS_MAP.delete(userId);
   },
 
-  async newCodeCommitted(userId, problemId) {
+  async newCodeCommitted(dto) {
+    const { userId, problemId } = dto;
     // 코드 업데이트 시 diff 확인 및 인터벌 관리
     const key = this._makeKey(userId, problemId);
     const hintSession = await sessionStoreRepository.getHintSession(
