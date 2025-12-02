@@ -31,17 +31,11 @@ export const ERROR = {
     new InternalServerError("문제 세부사항을 찾을 수 없습니다."),
   INVALID_CODE_TYPE: () =>
     new BadRequestError("코드는 문자열 타입이어야 합니다."),
-  CODE_REQUIRED: () => new BadRequestError("코드를 입력해주세요."),
+  CODE_REQUIRED: () => new BadRequestError("토큰화할 코드를 입력해주세요."),
   CODE_TOO_LARGE: () =>
     new PayloadTooLargeError("허용된 코드 길이를 초과했습니다."),
   UNSUPPORTED_ENCODING: () =>
     new BadRequestError("지원하지 않는 인코딩입니다."),
   TOKEN_LIMIT_EXCEEDED: () =>
     new BadRequestError("허용된 토큰 수를 초과했습니다."),
-  INVALID_LANGUAGE_TYPE: () =>
-    new BadRequestError("프로그래밍 언어를 입력해주세요."),
-  INVALID_MESSAGE_FORMAT: (message) =>
-    new BadRequestError(`[WebSocket] 잘못된 메시지 형식입니다: ${message}`),
-  FAILED_TO_SEND_MESSAGE: (message) =>
-    new BadRequestError(`[WebSocket] 메시지 전송에 실패했습니다: ${message}`),
 };

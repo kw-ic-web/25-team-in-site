@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const CheckUserIdDto = z.object({
   user_id: z
-    .string("INVALID_ID_FORMAT")
+    .string()
     .trim()
     .min(3, "INVALID_ID_FORMAT")
     .max(50, "INVALID_ID_FORMAT")

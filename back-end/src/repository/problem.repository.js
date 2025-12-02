@@ -88,7 +88,9 @@ const _scoreSimilarity = (problem, target) => {
     }
   }
 
-  const targetSubCategories = normalizeStringArray(target.problem_sub_category);
+  const targetSubCategories = normalizeStringArray(
+    target.problem_sub_category,
+  );
   const problemSubCategories = normalizeStringArray(
     problem.problem_sub_category,
   );
@@ -115,7 +117,8 @@ const _scoreSimilarity = (problem, target) => {
   score -= difficultyGap * 8;
 
   const successRateGap = Math.abs(
-    (problem.problem_success_rate ?? 50) - (target.problem_success_rate ?? 50),
+    (problem.problem_success_rate ?? 50) -
+      (target.problem_success_rate ?? 50),
   );
   score -= successRateGap / 10;
 
@@ -229,11 +232,8 @@ export const ProblemRepository = {
 
     return items.map((item) => _normalizeProblemDoc(item));
   },
-  async findSimilarProblems(
-    targetProblem,
-    { limit = 5, excludeIds = [] } = {},
-  ) {
-    if (!targetProblem?.problem_id) {
+  async findSimilarProblems(targetProblem, { limit = 5, excludeIds = [] } = {}) {
+    if (!targetProblem?._id) {
       return [];
     }
 
@@ -263,20 +263,18 @@ export const ProblemRepository = {
       matchClauses.push({ problem_lang: { $in: normalizedLangs } });
     }
 
-    // 자기 자신을 제외하기 위해 problem_id 사용 (더 안전함)
-    const excludeTargetProblemId = targetProblem.problem_id;
     const filter = {
-      problem_id: { $ne: excludeTargetProblemId },
+      _id: {
+        $nin: [
+          targetProblem._id,
+          ...(excludeIds || []).filter(Boolean),
+        ],
+      },
       problem_difficulty: {
         $gte: Math.max(targetDifficulty - 1, 1),
         $lte: Math.min(targetDifficulty + 1, 5),
       },
     };
-
-    // 해결한 문제들도 제외
-    if (Array.isArray(excludeIds) && excludeIds.length > 0) {
-      filter._id = { $nin: excludeIds.filter(Boolean) };
-    }
 
     if (matchClauses.length > 0) {
       filter.$or = matchClauses;

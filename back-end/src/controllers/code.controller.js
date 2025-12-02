@@ -1,19 +1,12 @@
-import { SaveCodeRequestDto } from "../dto/code/saveCode.request.dto.js";
-import { ERROR } from "../mapper/error.mapper.js";
+import { CodeTokenizeRequestDto } from "../dto/code/tokenize.request.dto.js";
+import { CodeTokenizeResponseDto } from "../dto/code/tokenize.response.dto.js";
 
 export const CodeController = {
-  async saveCode(req, res, next) {
+  async tokenize(req, res, next) {
     try {
-      const dto = SaveCodeRequestDto.parse(req.body);
-      if (!req.user?.user_id) {
-        throw ERROR.INVALID_LOGIN_INFO();
-      }
-      const result = await req.services.code.saveCode(
-        req.user.user_id,
-        dto.problemId,
-        dto.code,
-        dto.language,
-      );
+      const dto = CodeTokenizeRequestDto.parse(req.body);
+      const result = await req.services.tokenizer.tokenize(dto);
+      // 서비스에서 이미 DTO로 변환되어 반환되므로 그대로 사용
       return res.status(200).json(result);
     } catch (err) {
       next(err);

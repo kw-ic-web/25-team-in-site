@@ -10,7 +10,7 @@ export const ProbListResponseDto = z.object({
   page: z
     .number("FAIL_TO_GET_PROB_DETAIL")
     .int("FAIL_TO_GET_PROB_DETAIL")
-    .min(1, "FAIL_TO_GET_PROB_DETAIL"),
+    .min(1),
   limit: z
     .number("FAIL_TO_GET_PROB_DETAIL")
     .int("FAIL_TO_GET_PROB_DETAIL")

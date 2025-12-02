@@ -33,7 +33,6 @@ export const SolvedRepository = {
         path: "problem_id",
         select: {
           problem_id: 1,
-          problem_title: 1,
           problem_difficulty: 1,
           problem_lang: 1,
           problem_main_category: 1,
@@ -104,16 +103,5 @@ export const SolvedRepository = {
         },
       },
     ]);
-  },
-
-  async findByUserIdAndProblemId(userObjectId, problemObjectId) {
-    return Solved.findOne({
-      user_id: userObjectId,
-      problem_id: problemObjectId,
-    });
-  },
-
-  async save(solved) {
-    return solved.save();
   },
 };
