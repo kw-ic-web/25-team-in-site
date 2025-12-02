@@ -20,11 +20,11 @@ jobs:
         id: envfile
         run: |
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "target=${{ secrets.FE_EC2_TARGET_DIR_PROD }}" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.FE_EC2_TARGET_DIR }}/production" >> "$GITHUB_OUTPUT"
             echo "port=20980" >> "$GITHUB_OUTPUT"
             echo "pm2_name=[FE] in-site" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF_NAME}" == "front-end_deploy" ]]; then
-            echo "target=${{ secrets.FE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.FE_EC2_TARGET_DIR }}/development" >> "$GITHUB_OUTPUT"
             echo "port=20981" >> "$GITHUB_OUTPUT"
             echo "pm2_name=[FE] in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
           else
@@ -57,7 +57,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           timeout: 60s
           command_timeout: 60s
@@ -69,7 +69,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          password: ${{ secrets.EC2_SSH_PASSWORD }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           timeout: 60s
           command_timeout: 300s
