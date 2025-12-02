@@ -78,6 +78,7 @@ export default function SolvePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
 
   const isSaving = useRef(false);
 
@@ -156,6 +157,7 @@ export default function SolvePage() {
   const handleGetHint = async () => {
     if (!problemId) return;
     setIsHintLoading(true);
+    setHint(null);
     try {
       const res = await apiClient.get(`/problems/${problemId}/hint`);
       setHint(res.data?.hint ?? "힌트를 불러올 수 없습니다.");
@@ -229,10 +231,11 @@ export default function SolvePage() {
     return () => clearInterval(interval);
   }, [problemId, language, code]);
 
-  function connectWS() {
+  function connectWS(cancelledRef: { current: boolean }) {
     const token = localStorage.getItem("accessToken");
     const wsUrl = buildHintWebSocketUrl(token);
     wsRef.current = new WebSocket(wsUrl);
+    console.info("[hint-ws] connecting", wsUrl);
 
     wsRef.current.onopen = () => {
       console.log("WS 연결 완료");
@@ -257,19 +260,38 @@ export default function SolvePage() {
     };
 
     wsRef.current.onerror = (err) => {
-      console.error("WS 오류:", err);
+      console.error("[hint-ws] 오류", err);
     };
 
-    wsRef.current.onclose = () => {
-      console.log("WS 연결 종료 — 3초 후 재연결");
-      setTimeout(connectWS, 3000);
+    wsRef.current.onclose = (event) => {
+      console.warn("[hint-ws] 연결 종료", {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+      });
+      setHint((prev) =>
+        prev ?? "힌트 실시간 연결에 실패했습니다. 버튼을 눌러 힌트를 불러오세요."
+      );
+      if (cancelledRef.current) return;
+      reconnectTimerRef.current = window.setTimeout(
+        () => connectWS(cancelledRef),
+        3000
+      );
     };
   }
 
   useEffect(() => {
     if (!problemId || !language) return;
-    connectWS();
-    return () => wsRef.current?.close();
+    const cancelledRef = { current: false };
+    connectWS(cancelledRef);
+    return () => {
+      cancelledRef.current = true;
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      wsRef.current?.close();
+    };
   }, [problemId, language]);
 
   return (
