@@ -5,14 +5,26 @@ import dotenv from "dotenv";
 const rootDir = process.cwd();
 const devEnvPath = path.resolve(rootDir, "development.env");
 const prodEnvPath = path.resolve(rootDir, "production.env");
+const hotfixEnvPath = path.resolve(rootDir, "hotfixTest.env");
 
-const envFilePath = fs.existsSync(devEnvPath) ? devEnvPath : prodEnvPath;
-const envLabel =
-  process.env.NODE_ENV === "test"
-    ? "test"
-    : envFilePath === devEnvPath
-      ? "development"
-      : "production";
+let envFilePath;
+if (fs.existsSync(devEnvPath)) {
+  envFilePath = devEnvPath;
+} else if (fs.existsSync(prodEnvPath)) {
+  envFilePath = prodEnvPath;
+} else if (fs.existsSync(hotfixEnvPath)) {
+  envFilePath = hotfixEnvPath;
+}
+
+if (process.env.NODE_ENV === "test") {
+  envLabel = "test";
+} else if (envFilePath === devEnvPath) {
+  envLabel = "development";
+} else if (envFilePath === prodEnvPath) {
+  envLabel = "production";
+} else if (envFilePath === hotfixEnvPath) {
+  envLabel = "hotfix";
+}
 
 dotenv.config({ path: envFilePath });
 
