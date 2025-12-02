@@ -7,37 +7,57 @@ import {
 import { sendErrorMessage, sendMessage } from "../utils/socket.utils.js";
 import { HintSchema } from "../utils/validation/hint.schema.js";
 import { sessionStoreRepository } from "../repository/sessionStore.repository.js";
+import { ProblemRepository } from "../repository/problem.repository.js";
 
 export const HintService = {
-  _HINT_INTERVAL_MS: 1000 * 60 * 3,
+  _HINT_INTERVAL_MS: 1000 * 20, // 3분
   _HINT_INTERVAL_MAP: new Map(), // userId:problemId -> interval(callback)
   _PROCESSING_USERS: new Map(), // userId:problemId -> true (진행 중인 힌트 생성 요청 추적)
   _WS_MAP: new Map(), // userId -> ws (WebSocket 연결 저장)
+  _DIFF_CACHED_MAP: new Map(), // userId:problemId -> 마지막 diff 값 (diff 변경 추적용)
 
   _makeKey(userId, problemId) {
     return `${userId}:${problemId}`;
   },
 
   async _makeContext(userId, problemId) {
+    // 문제 정보 가져오기
+    const problem = await ProblemRepository.findProblemById(problemId);
+    
     // 저장된 hint session 불러오기
     const hintSession = await sessionStoreRepository.getHintSession(
       userId,
       problemId,
     );
     
+    // 시스템 프롬프트와 힌트 히스토리로 컨텍스트 구성
+    const contexts = [{ role: "system", content: DEFAULT_PROMPT }];
+
+    // 문제 정보 추가 (problem body와 testcase)
+    if (problem) {
+      let problemContent = `문제 설명:\n${problem.problem_body || ""}\n\n`;
+      
+      if (problem.problem_test_cases && problem.problem_test_cases.length > 0) {
+        problemContent += `테스트 케이스:\n${problem.problem_test_cases.join("\n")}\n\n`;
+      }
+      
+      contexts.push({
+        role: "user",
+        content: problemContent,
+      });
+    }
+
     if (!hintSession) {
       // hint session이 없으면 기본 컨텍스트 반환
-      return [
-        { role: "system", content: DEFAULT_PROMPT },
-        { role: "user", content: "내 상황에 맞게 힌트를 제공해주세요." },
-      ];
+      contexts.push({
+        role: "user",
+        content: "내 상황에 맞게 힌트를 제공해주세요.",
+      });
+      return contexts;
     }
 
     const { language, code, context } = hintSession;
     const currentCode = code.current || "";
-
-    // 시스템 프롬프트와 힌트 히스토리로 컨텍스트 구성
-    const contexts = [{ role: "system", content: DEFAULT_PROMPT }];
 
     // 힌트 히스토리 추가
     for (const item of context) {
@@ -126,18 +146,18 @@ export const HintService = {
       const hint = await this._getChatCompletion(
         context,
         HintSchema,
-        "사용자에게 전달할 힌트",
+        "Hint_to_deliver_to_the_user",
       );
 
       const validatedContext = [
         { role: "system", content: VALIDATED_PROMPT },
-        { role: "user", content: hint },
+        { role: "user", content: hint.body || JSON.stringify(hint) },
       ];
       const validatedHint = await this._getChatCompletion(
         validatedContext,
         HintSchema,
-        "사용자에게 전달할 '정답 코드가 삭제된' 힌트(psudo code는 허용)",
-        "gpt-5.1-mini",
+        "A_hint_with_the_correct_code_removed",
+        "gpt-5-mini",
       );
 
       // 힌트 context 저장
@@ -160,12 +180,28 @@ export const HintService = {
         },
       );
 
+      // 힌트 생성 시점의 코드를 cached로 업데이트 (다음 코드 저장 시 diff 생성용)
+      await sessionStoreRepository.updateHintSessionCached(
+        userId,
+        problemId,
+        currentCode,
+      );
+
+      // 힌트 사용 시 인터벌 다시 시작 (diff 검증 계속)
+      // diff_cached_map 초기화 (새로운 diff 추적 시작)
+      this._DIFF_CACHED_MAP.delete(key);
+      // 인터벌이 없으면 시작
+      if (!this._HINT_INTERVAL_MAP.has(key)) {
+        this._startInterval(userId, problemId);
+      }
+
       sendMessage(ws, {
         type: "hint:response",
         success: true,
         data: { level: validatedHint.level, hint: validatedHint.body },
       });
     } catch (error) {
+      console.error("HintService Error:", error);
       sendErrorMessage(ws, "힌트 생성 중 오류가 발생했습니다.");
     } finally {
       // 완료 후 진행 중 상태 해제
@@ -180,6 +216,7 @@ export const HintService = {
       clearInterval(existingInterval);
       this._HINT_INTERVAL_MAP.delete(key);
     }
+    // diff_cached_map은 유지 (힌트 사용 시 다시 시작할 때 사용)
   },
 
   _startInterval(userId, problemId) {
@@ -187,20 +224,37 @@ export const HintService = {
     // 기존 인터벌이 있으면 제거
     this._clearInterval(userId, problemId);
 
-    // 새 인터벌 시작
-    const interval = setInterval(() => {
+    // 새 인터벌 시작 (3분마다 diff 확인)
+    const interval = setInterval(async () => {
       const ws = this._WS_MAP.get(userId);
-      if (ws && ws.readyState === 1) {
-        // WebSocket이 열려있으면 hint 필요한지 묻기
+      if (!ws || ws.readyState !== 1) {
+        // WebSocket이 없거나 닫혀있으면 인터벌 제거
+        this._clearInterval(userId, problemId);
+        return;
+      }
+
+      // 현재 diff 가져오기
+      const hintSession = await sessionStoreRepository.getHintSession(
+        userId,
+        problemId,
+      );
+      const currentDiff = hintSession?.code?.diff || "";
+      const cachedDiff = this._DIFF_CACHED_MAP.get(key) || "";
+
+      // diff가 변경되지 않았으면 (3분 동안 동일)
+      if (currentDiff === cachedDiff && currentDiff !== "") {
+        // hint:prompt 전송
         sendMessage(ws, {
           type: "hint:prompt",
           success: true,
           message: "힌트가 필요하신가요?",
           problemId,
         });
-      } else {
-        // WebSocket이 없거나 닫혀있으면 인터벌 제거
+        // 인터벌 삭제 (더 이상 보내지 않음)
         this._clearInterval(userId, problemId);
+      } else if (currentDiff !== cachedDiff) {
+        // diff가 변경되었으면 cached diff 업데이트하고 계속 모니터링
+        this._DIFF_CACHED_MAP.set(key, currentDiff);
       }
     }, this._HINT_INTERVAL_MS);
 
@@ -240,11 +294,38 @@ export const HintService = {
       this._PROCESSING_USERS.delete(key);
     }
 
+    // diff_cached_map도 정리
+    const diffKeysToDelete = [];
+    for (const key of this._DIFF_CACHED_MAP.keys()) {
+      if (key.startsWith(`${userId}:`)) {
+        diffKeysToDelete.push(key);
+      }
+    }
+    for (const key of diffKeysToDelete) {
+      this._DIFF_CACHED_MAP.delete(key);
+    }
+
     this._WS_MAP.delete(userId);
   },
 
   async newCodeCommitted(userId, problemId) {
-    // 코드 업데이트 시 해당 문제의 인터벌 초기화
-    this._startInterval(userId, problemId);
+    // 코드 업데이트 시 diff 확인 및 인터벌 관리
+    const key = this._makeKey(userId, problemId);
+    const hintSession = await sessionStoreRepository.getHintSession(
+      userId,
+      problemId,
+    );
+    const currentDiff = hintSession?.code?.diff || "";
+    const cachedDiff = this._DIFF_CACHED_MAP.get(key) || "";
+
+    // diff가 변경되었으면 cached diff 업데이트
+    if (currentDiff !== cachedDiff) {
+      this._DIFF_CACHED_MAP.set(key, currentDiff);
+    }
+
+    // 인터벌이 없으면 시작 (diff 검증 시작)
+    if (!this._HINT_INTERVAL_MAP.has(key)) {
+      this._startInterval(userId, problemId);
+    }
   },
 };
