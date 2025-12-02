@@ -27,8 +27,16 @@ export default defineConfig(({ mode, command }) => {
         "/api": {
           target: proxyTarget,
           changeOrigin: true,
-          secure: true,
-          rewrite: (path) => path.replace(/^\/api/, "/api"),
+          secure: false,
+          ws: true,
+          rewrite: (path) => path,
+        },
+        "/ws": {
+          target: "ws://team09-api.kwweb.org:20991",
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path, // 경로 그대로 유지
         },
       },
     };

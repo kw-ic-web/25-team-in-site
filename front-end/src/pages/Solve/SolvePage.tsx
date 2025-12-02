@@ -1,8 +1,9 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import "./SolvePage.css";
 import apiClient from "../../api/client";
 import IDEEditor from "../../components/IDEEditer/IDEEditer";
+import { useRef } from "react";
 
 function htmlToPrettyText(html: string): string {
   let text = html;
@@ -13,6 +14,49 @@ function htmlToPrettyText(html: string): string {
   text = text.replace(/\n\s*\n\s*\n+/g, "\n\n");
   text = text.replace(/[ \t]+\n/g, "\n");
   return text.trim();
+}
+
+const API_PATH_PREFIX_REGEX = /\/api\/?v1?\/?$/;
+const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "20991";
+const DEFAULT_HINT_WS_PATH = "/ws/hint";
+
+function buildHintWebSocketUrl(token: string | null): string {
+  const explicitWsEndpoint = import.meta.env.VITE_HINT_WS_URL;
+  const hostCandidate =
+    explicitWsEndpoint ||
+    import.meta.env.VITE_API_PROXY ||
+    import.meta.env.VITE_API_URL ||
+    window.location.origin;
+
+  const url = new URL(hostCandidate, window.location.origin);
+  const isSecurePage = window.location.protocol === "https:";
+  const isHttp = url.protocol === "http:" || url.protocol === "https:";
+  if (isHttp) {
+    url.protocol = url.protocol === "https:" || isSecurePage ? "wss:" : "ws:";
+  } else if (url.protocol === "ws:" && isSecurePage) {
+    // 명시적으로 ws가 주어져도 페이지가 https면 혼합 콘텐츠를 피하기 위해 wss로 업그레이드
+    url.protocol = "wss:";
+  }
+
+  if (!explicitWsEndpoint) {
+    const trimmedPath = url.pathname
+      .replace(API_PATH_PREFIX_REGEX, "")
+      .replace(/\/$/, "");
+    url.pathname = `${trimmedPath}${DEFAULT_HINT_WS_PATH}`.replace(
+      /^\/{2,}/,
+      "/"
+    );
+    url.port = DEFAULT_HINT_WS_PORT;
+    url.search = "";
+  }
+
+  url.hash = "";
+  url.searchParams.delete("token");
+  if (token) {
+    url.searchParams.set("token", token);
+  }
+
+  return url.toString();
 }
 
 export default function SolvePage() {
@@ -33,6 +77,7 @@ export default function SolvePage() {
   const [result, setResult] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     if (!problemId) return;
@@ -65,11 +110,19 @@ export default function SolvePage() {
 
         setProblem(mapped);
         setLanguagePresets(
-          mapped.languages.map((lang: string) => ({
-            label: lang.toUpperCase(),
-            value: lang,
-            starter: `// write your code here\n// language: ${lang}\n`,
-          }))
+          mapped.languages.map((lang: string) => {
+            const norm =
+              lang.toLowerCase() === "python"
+                ? "py"
+                : lang.toLowerCase() === "javascript"
+                ? "js"
+                : lang.toLowerCase();
+            return {
+              label: norm.toUpperCase(),
+              value: norm,
+              starter: `// write your code here\n// language: ${norm}\n`,
+            };
+          })
         );
       } catch {
         setDetailError("문제 정보를 불러오지 못했습니다.");
@@ -144,6 +197,65 @@ export default function SolvePage() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!problemId || !language) return;
+
+    const interval = setInterval(async () => {
+      try {
+        if (!code || !code.trim() || !language) return;
+        await apiClient.post("/code", {
+          code,
+          language,
+          problemId,
+        });
+      } catch (e) {
+        // fail silently
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [problemId, language, code]);
+
+  useEffect(() => {
+    if (!problemId) return;
+
+    const token = localStorage.getItem("accessToken");
+    const wsUrl = buildHintWebSocketUrl(token);
+    wsRef.current = new WebSocket(wsUrl);
+
+    wsRef.current.onopen = () => {
+      console.log("WS 연결 완료");
+      wsRef.current?.send(
+        JSON.stringify({
+          type: "hint:request",
+          problemId,
+          language,
+        })
+      );
+    };
+
+    wsRef.current.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        console.log("WS 메시지 수신:", data);
+      } catch {
+        console.warn("WS 메시지 JSON 파싱 오류");
+      }
+    };
+
+    wsRef.current.onerror = (err) => {
+      console.error("WS 오류:", err);
+    };
+
+    wsRef.current.onclose = () => {
+      console.log("WS 연결 종료");
+    };
+
+    return () => {
+      wsRef.current?.close();
+    };
+  }, [problemId, language]);
 
   return (
     <div className="solve-page">
