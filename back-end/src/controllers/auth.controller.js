@@ -9,8 +9,8 @@ export const AuthController = {
       res
         .cookie("token", responseDto.token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          secure: true,
+          sameSite: "none",
           maxAge: 30 * 24 * 60 * 60 * 1000,
         })
         .status(201)
@@ -30,8 +30,8 @@ export const AuthController = {
       res
         .cookie("token", responseDto.token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          secure: true,
+          sameSite: "none",
           maxAge: 30 * 24 * 60 * 60 * 1000,
         })
         .status(200)
