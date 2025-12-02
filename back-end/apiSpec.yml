@@ -15,6 +15,7 @@ tags:
   - name: Code
   - name: WebSocket
   - name: Hint
+  - name: Evaluation
 
 paths:
   /health:
@@ -124,6 +125,35 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
 
+  /evaluation:
+    post:
+      tags: [Evaluation]
+      summary: 코드 평가 (테스트/제출)
+      description: "제출된 코드를 실행하여 테스트 케이스와 비교 평가합니다."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EvaluateCodeRequest" }
+      responses:
+        "200":
+          description: "평가 완료"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EvaluateCodeResponse" }
+        "400":
+          description: "잘못된 요청"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          description: "인증되지 않은 사용자"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "500":
+          description: "서버 내부 오류"
+
   /problems:
     get:
       tags: [Problems]
@@ -202,7 +232,7 @@ paths:
           name: user_id
           required: true
           schema:
-            type: string
+            typex: string
             minLength: 3
             maxLength: 50
             pattern: "^[a-zA-Z0-9_-]+$"
@@ -541,6 +571,74 @@ components:
         success:
           type: boolean
           description: "저장 성공 여부"
+
+    EvaluateCodeRequest:
+      type: object
+      required: [problemId, code, language]
+      properties:
+        problemId:
+          type: string
+          description: "문제 ID"
+        code:
+          type: string
+          description: "평가할 코드"
+        language:
+          type: string
+          enum: [js, py]
+          description: "프로그래밍 언어"
+        mode:
+          type: string
+          enum: [test, submission]
+          default: submission
+          description: "평가 모드 (test: 테스트 케이스, submission: 채점)"
+
+    EvaluateCodeResponse:
+      type: object
+      required: [success, caseType, totalCases, passed, score, results]
+      properties:
+        success:
+          type: boolean
+        caseType:
+          type: string
+          enum: [test, submission]
+        totalCases:
+          type: integer
+        passed:
+          type: boolean
+          description: "모든 케이스 통과 여부"
+        score:
+          type: number
+          description: "점수 (0~100)"
+        timeLimitMs:
+          type: integer
+        memoryLimitBytes:
+          type: integer
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/EvaluationResult" }
+
+    EvaluationResult:
+      type: object
+      required: [caseId, isPassed, error]
+      properties:
+        caseId:
+          type: integer
+        input:
+          type: string
+        expectedOutput:
+          type: string
+        actualOutput:
+          type: string
+        isPassed:
+          type: boolean
+        executionTime:
+          type: integer
+          nullable: true
+        memoryUsage:
+          type: integer
+          nullable: true
+        error:
+          type: boolean
 
     # ==== WebSocket ====
     WebSocketHintRequest:
