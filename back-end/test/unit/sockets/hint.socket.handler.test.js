@@ -184,7 +184,7 @@ describe("hintSocketHandler", () => {
       });
 
       const sendError = new Error("Send failed");
-      sendMessage.mockImplementation(() => {
+      generateHint.mockImplementation(() => {
         throw sendError;
       });
 

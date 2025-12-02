@@ -207,7 +207,8 @@ describe("evaluateSocketHandler", () => {
       evaluateSocketHandler(mockWss, mockWs);
 
       const errorWithoutMessage = new Error();
-      errorWithoutMessage.message = undefined;
+      delete errorWithoutMessage.message;
+
       parseAndValidateMessage.mockImplementation(() => {
         throw errorWithoutMessage;
       });

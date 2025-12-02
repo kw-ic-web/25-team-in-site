@@ -41,7 +41,7 @@ describe("setupSocketHandlers", () => {
 
     mockReq = {
       userId: "test-user",
-      url: "/hint",
+      url: "/ws/hint",
       headers: {
         host: "localhost:3000",
       },
@@ -52,19 +52,30 @@ describe("setupSocketHandlers", () => {
       clients: new Set([mockWs]),
     };
 
-    setupSocketHandlers(mockWss);
+    intervalCleanup = null;
   });
 
   afterEach(() => {
+    // wss의 close 핸들러 호출하여 인터벌 정리
+    // setupSocketHandlers가 호출된 경우에만 close 핸들러가 등록됨
+    const closeHandler = mockWss.on.mock.calls.find(
+      (call) => call[0] === "close",
+    )?.[1];
+    if (closeHandler) {
+      closeHandler();
+    }
     jest.useRealTimers();
+    jest.clearAllTimers();
   });
 
   it("connection 이벤트 핸들러를 등록한다", () => {
+    setupSocketHandlers(mockWss);
     expect(mockWss.on).toHaveBeenCalledWith("connection", expect.any(Function));
   });
 
   describe("연결 처리", () => {
     it("유효한 /hint 경로로 연결 시 hintSocketHandler를 호출한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -76,11 +87,12 @@ describe("setupSocketHandlers", () => {
     });
 
     it("유효한 /evaluate 경로로 연결 시 evaluateSocketHandler를 호출한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
 
-      mockReq.url = "/evaluate";
+      mockReq.url = "/ws/evaluate";
       connectionHandler(mockWs, mockReq);
 
       expect(evaluateSocketHandler).toHaveBeenCalledWith(mockWss, mockWs);
@@ -88,11 +100,12 @@ describe("setupSocketHandlers", () => {
     });
 
     it("유효하지 않은 경로로 연결 시 WebSocket을 닫는다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
 
-      mockReq.url = "/invalid";
+      mockReq.url = "/ws/invalid";
       connectionHandler(mockWs, mockReq);
 
       expect(mockWs.close).toHaveBeenCalledWith(1008, "Invalid path");
@@ -101,6 +114,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("URL 파싱 실패 시 WebSocket을 닫는다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -128,6 +142,7 @@ describe("setupSocketHandlers", () => {
 
   describe("이벤트 핸들러 등록", () => {
     it("close 이벤트 핸들러를 등록한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -138,6 +153,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("error 이벤트 핸들러를 등록한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -148,6 +164,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("pong 이벤트 핸들러를 등록한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -158,6 +175,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("error 이벤트 발생 시 sendErrorMessage를 호출한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -178,6 +196,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("error 이벤트에서 메시지가 없으면 기본 메시지를 사용한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
@@ -199,6 +218,7 @@ describe("setupSocketHandlers", () => {
     });
 
     it("pong 이벤트 발생 시 isAlive를 true로 설정한다", () => {
+      setupSocketHandlers(mockWss);
       const connectionHandler = mockWss.on.mock.calls.find(
         (call) => call[0] === "connection",
       )[1];
