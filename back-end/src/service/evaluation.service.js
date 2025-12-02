@@ -19,12 +19,14 @@ const LANGUAGE_CONFIG = {
   js: {
     aliases: ["js", "javascript", "node"],
     image: "node:18-alpine",
-    cmd: (code) => ["node", "-e", code],
+    extension: "js",
+    cmd: ({ codeFile, inputFile }) => `node ${codeFile} < ${inputFile}`,
   },
   py: {
     aliases: ["py", "python"],
     image: "python:3.11-alpine",
-    cmd: (code) => ["python", "-c", code],
+    extension: "py",
+    cmd: ({ codeFile, inputFile }) => `python ${codeFile} < ${inputFile}`,
   },
 };
 
@@ -343,19 +345,33 @@ export const EvaluationService = {
       this._MAX_TIMEOUT_MS,
     );
 
+    const codeFile = `/tmp/run.${runtime.extension || runtime.key || "tmp"}`;
+    const inputFile = "/tmp/input.txt";
+
     // Encode Code and Input to Base64 to avoid shell escaping issues
     const codeB64 = Buffer.from(code).toString("base64");
     const inputB64 = Buffer.from(input || "").toString("base64");
 
+    const runtimeCmd =
+      typeof runtime.cmd === "function"
+        ? runtime.cmd({ codeFile, inputFile })
+        : null;
+    if (!runtimeCmd) {
+      throw ERROR.INVALID_LANGUAGE();
+    }
+
     // Construct shell command to decode and run
-    // 1. Decode code to /tmp/code.js
+    // 1. Decode code to /tmp/run.<ext>
     // 2. Decode input to /tmp/input.txt
-    // 3. Run node /tmp/code.js < /tmp/input.txt
-    const shellCmd = [
-      "sh",
-      "-c",
-      `echo "${codeB64}" | base64 -d > /tmp/run.js && echo "${inputB64}" | base64 -d > /tmp/input.txt && node /tmp/run.js < /tmp/input.txt`,
-    ];
+    // 3. Execute language-specific command (e.g., node /tmp/run.js < /tmp/input.txt)
+    const setupScript = [
+      "set -euo pipefail",
+      `echo "${codeB64}" | base64 -d > ${codeFile}`,
+      `echo "${inputB64}" | base64 -d > ${inputFile}`,
+      runtimeCmd,
+    ].join(" && ");
+
+    const shellCmd = ["sh", "-c", setupScript];
 
     const container = await this._docker.createContainer({
       Image: runtime.image,
@@ -366,48 +382,58 @@ export const EvaluationService = {
       HostConfig: {
         Memory: memoryLimit,
         NetworkMode: "none",
+        CpuShares: 256,
+        PidsLimit: 64,
+        NanoCpus: 1_000_000_000, // limit to ~1 CPU
       },
     });
 
     await container.start();
 
-    const waitPromise = container.wait();
+    let waitResult;
+    const waitPromise = container.wait().then((result) => {
+      waitResult = result;
+      return result;
+    });
     let timeoutHandle;
+    const timeoutError = new Error("Time Limit Exceeded");
     const timeoutPromise = new Promise((_, reject) => {
       timeoutHandle = setTimeout(() => {
-        reject(new Error("Time Limit Exceeded"));
+        container.kill().catch(() => {});
+        reject(timeoutError);
       }, timeLimit);
     });
 
     const startedAt = performance.now();
+    let parsedOutput = "";
+    let elapsed = 0;
+    let containerRemoved = false;
     try {
       await Promise.race([waitPromise, timeoutPromise]);
       clearTimeout(timeoutHandle);
 
-      const elapsed = performance.now() - startedAt;
+      elapsed = performance.now() - startedAt;
       const logsBuffer = await container.logs({
         stdout: true,
         stderr: true,
       });
-
-      await container.remove();
-
-      const parsedOutput = this._parseLogBuffer(logsBuffer);
-
-      return {
-        output: this._normalizeOutput(parsedOutput),
-        executionTime: Math.round(elapsed),
-        memoryUsage: null,
-      };
+      parsedOutput = this._parseLogBuffer(logsBuffer);
+      await container.remove({ force: true });
+      containerRemoved = true;
     } catch (error) {
       clearTimeout(timeoutHandle);
       let errorLogs = "";
 
-      try {
-        const logsBuffer = await container.logs({ stdout: true, stderr: true });
-        errorLogs = this._parseLogBuffer(logsBuffer);
-      } catch {
-        // ignore
+      if (!containerRemoved) {
+        try {
+          const logsBuffer = await container.logs({
+            stdout: true,
+            stderr: true,
+          });
+          errorLogs = this._parseLogBuffer(logsBuffer);
+        } catch {
+          // ignore
+        }
       }
 
       try {
@@ -418,6 +444,7 @@ export const EvaluationService = {
 
       try {
         await container.remove({ force: true });
+        containerRemoved = true;
       } catch {
         // ignore
       }
@@ -428,5 +455,23 @@ export const EvaluationService = {
 
       throw error;
     }
+
+    const normalizedOutput = this._normalizeOutput(parsedOutput);
+
+    if (waitResult && waitResult.StatusCode !== 0) {
+      const runtimeError = new Error(
+        `Runtime Error (exit code ${waitResult.StatusCode})`,
+      );
+      if (normalizedOutput) {
+        runtimeError.message = `${runtimeError.message}\nLogs: ${normalizedOutput}`;
+      }
+      throw runtimeError;
+    }
+
+    return {
+      output: normalizedOutput,
+      executionTime: Math.round(elapsed),
+      memoryUsage: null,
+    };
   },
 };
