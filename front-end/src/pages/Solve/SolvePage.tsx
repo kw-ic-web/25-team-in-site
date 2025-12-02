@@ -269,8 +269,10 @@ export default function SolvePage() {
         reason: event.reason,
         wasClean: event.wasClean,
       });
-      setHint((prev) =>
-        prev ?? "힌트 실시간 연결에 실패했습니다. 버튼을 눌러 힌트를 불러오세요."
+      setHint(
+        (prev) =>
+          prev ??
+          "힌트 실시간 연결에 실패했습니다. 버튼을 눌러 힌트를 불러오세요."
       );
       if (cancelledRef.current) return;
       reconnectTimerRef.current = window.setTimeout(

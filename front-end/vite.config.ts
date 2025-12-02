@@ -7,7 +7,7 @@ export default defineConfig(({ mode, command }) => {
   const proxyTarget =
     env.VITE_API_PROXY ||
     env.VITE_API_URL?.replace(/\/api\/?v1?\/?$/, "") ||
-    "https://team09-api.kwweb.org/";
+    "http://team09-api.kwweb.org/";
 
   const config: ReturnType<typeof defineConfig> = {
     plugins: [
