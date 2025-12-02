@@ -82,4 +82,44 @@ export const UserService = {
       heatmap,
     });
   },
+
+  async updateUserLevel(userId, xpToAdd) {
+    const user = await UserRepository.findOne({ user_id: userId });
+    if (!user) {
+      throw ERROR.USER_NOT_FOUND();
+    }
+
+    const currentXp = user.user_xp || 0;
+    const newXp = currentXp + xpToAdd;
+
+    // Level formula: 1 + floor(XP / 100)
+    const calculatedLevel = Math.floor(newXp / 100) + 1;
+
+    // Update metalevel if calculated level is higher (or if it's the first time)
+    const currentMetaLevel = user.metalevel || 1;
+    const newMetaLevel = Math.max(currentMetaLevel, calculatedLevel);
+
+    // Also update user_level to match metalevel for consistency, or keep it separate?
+    // The prompt specifically asked to update meta-level.
+    // We will update both to keep them in sync with the progress.
+    const updateData = {
+      user_xp: newXp,
+      metalevel: newMetaLevel,
+      user_level: newMetaLevel,
+    };
+
+    await UserRepository.update({ user_id: userId }, updateData);
+
+    // Calculate profile image (limit to level 1-4)
+    const safeLevel = Math.max(1, Math.min(newMetaLevel, 4));
+    const profileImage = `/images/level/${safeLevel}.png`;
+
+    return {
+      previousLevel: currentMetaLevel,
+      currentLevel: newMetaLevel,
+      gainedXp: xpToAdd,
+      totalXp: newXp,
+      profileImage,
+    };
+  },
 };
