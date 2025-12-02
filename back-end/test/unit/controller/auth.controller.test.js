@@ -54,7 +54,8 @@ describe("AuthController.register", () => {
       "token-xyz",
       expect.objectContaining({
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "none",
+        secure: true,
       }),
     );
     expect(res.status).toHaveBeenCalledWith(201);
@@ -95,7 +96,7 @@ describe("AuthController.register", () => {
       expect.objectContaining({
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000,
       }),
     );
@@ -114,8 +115,8 @@ describe("AuthController.register", () => {
       "token-xyz",
       expect.objectContaining({
         httpOnly: true,
-        secure: false,
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000,
       }),
     );
@@ -161,6 +162,8 @@ describe("AuthController.login", () => {
       "token-login",
       expect.objectContaining({
         httpOnly: true,
+        sameSite: "none",
+        secure: true,
       }),
     );
     expect(res.status).toHaveBeenCalledWith(200);
@@ -200,7 +203,7 @@ describe("AuthController.login", () => {
       expect.objectContaining({
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000,
       }),
     );
@@ -219,8 +222,8 @@ describe("AuthController.login", () => {
       "token-login",
       expect.objectContaining({
         httpOnly: true,
-        secure: false,
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
         maxAge: 30 * 24 * 60 * 60 * 1000,
       }),
     );
