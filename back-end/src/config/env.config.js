@@ -16,6 +16,7 @@ if (fs.existsSync(devEnvPath)) {
   envFilePath = hotfixEnvPath;
 }
 
+let envLabel;
 if (process.env.NODE_ENV === "test") {
   envLabel = "test";
 } else if (envFilePath === devEnvPath) {
