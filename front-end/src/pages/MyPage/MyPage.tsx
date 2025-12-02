@@ -1,9 +1,12 @@
 import { Fragment, useMemo } from "react";
 import "./MyPage.css";
 import { useMyPageSummary } from "./useMyPageSummary";
+import { useNavigate } from "react-router-dom";
 
 export default function MyPage() {
   const { data, isLoading, error } = useMyPageSummary();
+
+  const navigate = useNavigate();
 
   const donutStyle = useMemo(() => {
     if (!data) return undefined;
@@ -41,7 +44,9 @@ export default function MyPage() {
       return { x, y };
     });
 
-    const polylinePoints = points.map((point) => `${point.x},${point.y}`).join(" ");
+    const polylinePoints = points
+      .map((point) => `${point.x},${point.y}`)
+      .join(" ");
 
     const areaPath = [
       `M0 ${chartHeight}`,
@@ -82,6 +87,15 @@ export default function MyPage() {
         )
       : 0;
 
+  const handleLogout = () => {
+    // 예: 토큰 제거
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+
+    // 홈 또는 로그인 페이지로 이동
+    navigate("/login");
+  };
+
   return (
     <div className="mypage">
       <aside className="mypage__sidebar">
@@ -102,12 +116,17 @@ export default function MyPage() {
               <div className="profile-card__meta">
                 <h2>{data.profile.nickname}</h2>
                 <div className="profile-card__stats" aria-label="프로필 요약">
-                  <span className="profile-card__level">{data.profile.level}레벨</span>
+                  <span className="profile-card__level">
+                    {data.profile.level}레벨
+                  </span>
                   <span className="profile-card__divider" aria-hidden="true">
                     |
                   </span>
                   <span className="profile-card__rank">
-                    <span className="profile-card__rank-icon" aria-hidden="true">
+                    <span
+                      className="profile-card__rank-icon"
+                      aria-hidden="true"
+                    >
                       🏅
                     </span>
                     {data.profile.rank}위
@@ -121,12 +140,20 @@ export default function MyPage() {
                   {data.profile.streakDays}일 연속 학습중
                 </p>
                 <p className="profile-card__subtext">
-                  이번 주 학습 {data.profile.weeklySolved}회 · {data.profile.lastActive}
+                  이번 주 학습 {data.profile.weeklySolved}회 ·{" "}
+                  {data.profile.lastActive}
                 </p>
               </div>
             </div>
             <button type="button" className="profile-card__action">
               프로필 수정하기
+            </button>
+            <button
+              type="button"
+              className="profile-card__logout"
+              onClick={handleLogout}
+            >
+              로그아웃
             </button>
           </div>
           <div className="profile-card__about">
@@ -179,7 +206,11 @@ export default function MyPage() {
             <h3>친구 추가</h3>
           </header>
           <div className="friend-search">
-            <input type="search" placeholder="아이디 검색" aria-label="친구 아이디 검색" />
+            <input
+              type="search"
+              placeholder="아이디 검색"
+              aria-label="친구 아이디 검색"
+            />
           </div>
           <div className="friend-recommend">
             <h4>추천 아이디</h4>
@@ -261,11 +292,20 @@ export default function MyPage() {
                         x2="0"
                         y2="1"
                       >
-                        <stop offset="0%" stopColor="rgba(111, 108, 251, 0.4)" />
-                        <stop offset="100%" stopColor="rgba(111, 108, 251, 0)" />
+                        <stop
+                          offset="0%"
+                          stopColor="rgba(111, 108, 251, 0.4)"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="rgba(111, 108, 251, 0)"
+                        />
                       </linearGradient>
                     </defs>
-                    <path d={levelUsageChart.areaPath} className="chart__area" />
+                    <path
+                      d={levelUsageChart.areaPath}
+                      className="chart__area"
+                    />
                     <polyline
                       points={levelUsageChart.polylinePoints}
                       className="chart__line"
@@ -296,7 +336,11 @@ export default function MyPage() {
                 <div className="donut__hole">
                   <span>성공률</span>
                   <strong>
-                    {data.levelSuccess.reduce((acc, cur) => acc + cur.percent, 0)}%
+                    {data.levelSuccess.reduce(
+                      (acc, cur) => acc + cur.percent,
+                      0
+                    )}
+                    %
                   </strong>
                 </div>
               </div>
@@ -308,7 +352,9 @@ export default function MyPage() {
                       style={{ backgroundColor: segment.color }}
                     />
                     <span className="donut__legend-label">{segment.level}</span>
-                    <span className="donut__legend-value">{segment.percent}%</span>
+                    <span className="donut__legend-value">
+                      {segment.percent}%
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -318,7 +364,11 @@ export default function MyPage() {
           <article className="mypage-card mypage-card--wide">
             <header className="mypage-card__header">
               <h3>활동 히트맵</h3>
-              <button type="button" className="mypage-card__selector" aria-haspopup="listbox">
+              <button
+                type="button"
+                className="mypage-card__selector"
+                aria-haspopup="listbox"
+              >
                 전체
               </button>
             </header>
@@ -335,7 +385,9 @@ export default function MyPage() {
                         <span
                           key={`${month.month}-${rowIndex}-${columnIndex}`}
                           role="gridcell"
-                          aria-label={`${month.month} ${rowIndex + 1}주차 ${columnIndex + 1}일 활동도 ${value}`}
+                          aria-label={`${month.month} ${rowIndex + 1}주차 ${
+                            columnIndex + 1
+                          }일 활동도 ${value}`}
                           className={`heatmap__cell heatmap__cell--${value}`}
                         />
                       ))
