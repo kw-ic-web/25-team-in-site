@@ -36,7 +36,7 @@ export class HintSession {
       userId: record.userId,
       problemId: record.problemId ?? "",
       language: record.language ?? "",
-      code: record.code ?? { current: "", diff: "", cached: "" },
+      code: code,
       context: Array.isArray(record.context) ? record.context : [],
     });
   }
