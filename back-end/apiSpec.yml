@@ -15,6 +15,7 @@ tags:
   - name: Code
   - name: WebSocket
   - name: Hint
+  - name: Evaluation
 
 paths:
   /health:
@@ -202,7 +203,7 @@ paths:
           name: user_id
           required: true
           schema:
-            type: string
+            typex: string
             minLength: 3
             maxLength: 50
             pattern: "^[a-zA-Z0-9_-]+$"
@@ -275,6 +276,51 @@ paths:
             - name: hint:error
               schema:
                 $ref: "#/components/schemas/WebSocketHintError"
+            - name: error
+              schema:
+                $ref: "#/components/schemas/WebSocketError"
+      responses:
+        "101":
+          description: "WebSocket 연결 성공"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  evaluate:
+    servers:
+      - url: ws://localhost:20991
+    get:
+      tags: [WebSocket, Evaluation]
+      summary: 코드 평가 웹소켓에 연결
+      description: "웹소켓 연결을 통해 코드 평가(테스트/제출)를 수행합니다."
+      x-websocket:
+        url: "ws://localhost:20991/evaluate"
+        protocol: "ws"
+        authentication:
+          type: cookie
+          name: token
+        messages:
+          request:
+            - name: evaluate:test-request
+              schema:
+                $ref: "#/components/schemas/WebSocketEvaluateRequest"
+              description: "테스트 케이스 평가 요청"
+            - name: evaluate:submission-request
+              schema:
+                $ref: "#/components/schemas/WebSocketEvaluateRequest"
+              description: "제출 평가 요청"
+          response:
+            - name: evaluate:test-response
+              schema:
+                $ref: "#/components/schemas/WebSocketEvaluateResponse"
+              description: "테스트 케이스 평가 응답"
+            - name: evaluate:submission-response
+              schema:
+                $ref: "#/components/schemas/WebSocketEvaluateResponse"
+              description: "제출 평가 응답"
             - name: error
               schema:
                 $ref: "#/components/schemas/WebSocketError"
@@ -553,6 +599,88 @@ components:
         success:
           type: boolean
           description: "저장 성공 여부"
+
+    WebSocketEvaluateRequest:
+      type: object
+      required: [type, data]
+      properties:
+        type:
+          type: string
+          enum: [evaluate:test-request, evaluate:submission-request]
+          description: "메시지 타입"
+        data:
+          type: object
+          required: [problemId, code, language]
+          properties:
+            problemId:
+              type: string
+              description: "문제 ID"
+            code:
+              type: string
+              description: "평가할 코드"
+            language:
+              type: string
+              enum: [js, py]
+              description: "프로그래밍 언어"
+
+    WebSocketEvaluateResponse:
+      type: object
+      required: [type, success, data]
+      properties:
+        type:
+          type: string
+          enum: [evaluate:test-response, evaluate:submission-response]
+          description: "메시지 타입"
+        success:
+          type: boolean
+          description: "요청 성공 여부"
+        data:
+          type: object
+          required: [success, caseType, totalCases, passed, score, results]
+          properties:
+            success:
+              type: boolean
+            caseType:
+              type: string
+              enum: [test, submission]
+            totalCases:
+              type: integer
+            passed:
+              type: boolean
+              description: "모든 케이스 통과 여부"
+            score:
+              type: number
+              description: "점수 (0~100)"
+            timeLimitMs:
+              type: integer
+            memoryLimitBytes:
+              type: integer
+            results:
+              type: array
+              items: { $ref: "#/components/schemas/EvaluationResult" }
+
+    EvaluationResult:
+      type: object
+      required: [caseId, isPassed, error]
+      properties:
+        caseId:
+          type: integer
+        input:
+          type: string
+        expectedOutput:
+          type: string
+        actualOutput:
+          type: string
+        isPassed:
+          type: boolean
+        executionTime:
+          type: integer
+          nullable: true
+        memoryUsage:
+          type: integer
+          nullable: true
+        error:
+          type: boolean
 
     # ==== WebSocket ====
     WebSocketHintRequest:
