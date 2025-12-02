@@ -5,6 +5,34 @@ import { ERROR } from "../mapper/error.mapper.js";
 
 const docker = new Docker();
 
+const DOCKER_PURGE_LOG_PREFIX = "[EvaluationService] Docker purge";
+const DOCKER_PRUNE_TARGETS = [
+  {
+    label: "containers",
+    method: "pruneContainers",
+    deletedKey: "ContainersDeleted",
+    args: [{}],
+  },
+  {
+    label: "images",
+    method: "pruneImages",
+    deletedKey: "ImagesDeleted",
+    args: [{ dangling: true }],
+  },
+  {
+    label: "volumes",
+    method: "pruneVolumes",
+    deletedKey: "VolumesDeleted",
+    args: [{}],
+  },
+  {
+    label: "networks",
+    method: "pruneNetworks",
+    deletedKey: "NetworksDeleted",
+    args: [{}],
+  },
+];
+
 const CASE_TYPES = {
   TEST: "test",
   SUBMISSION: "submission",
@@ -41,6 +69,89 @@ const LANGUAGE_ALIAS = Object.entries(LANGUAGE_CONFIG).reduce(
 );
 
 const normalizeLineEndings = (value = "") => value.replace(/\r\n/g, "\n");
+
+const getDelayUntilNextNoon = () => {
+  const now = new Date();
+  const nextNoon = new Date(now);
+  nextNoon.setHours(12, 0, 0, 0);
+  if (nextNoon <= now) {
+    nextNoon.setDate(nextNoon.getDate() + 1);
+  }
+  return nextNoon.getTime() - now.getTime();
+};
+
+const runDockerPurge = async () => {
+  const details = [];
+
+  await Promise.all(
+    DOCKER_PRUNE_TARGETS.map(async ({ label, method, deletedKey, args = [] }) => {
+      const dockerMethod = docker[method];
+      if (typeof dockerMethod !== "function") {
+        return;
+      }
+
+      try {
+        const result = await dockerMethod.apply(docker, args);
+        const reclaimedBytes =
+          typeof result?.SpaceReclaimed === "number" ? result.SpaceReclaimed : 0;
+        const deletedCount = Array.isArray(result?.[deletedKey])
+          ? result[deletedKey].length
+          : 0;
+
+        details.push({
+          label,
+          deletedCount,
+          reclaimedBytes,
+        });
+      } catch (error) {
+        console.error(
+          `${DOCKER_PURGE_LOG_PREFIX} ${label} prune failed`,
+          error,
+        );
+        details.push({
+          label,
+          error: error.message,
+          reclaimedBytes: 0,
+          deletedCount: 0,
+        });
+      }
+    }),
+  );
+
+  const reclaimedBytes = details.reduce(
+    (acc, { reclaimedBytes: bytes = 0 }) => acc + bytes,
+    0,
+  );
+
+  console.info(`${DOCKER_PURGE_LOG_PREFIX} completed`, {
+    timestamp: new Date().toISOString(),
+    reclaimedBytes,
+    details,
+  });
+};
+
+const scheduleDailyDockerPurge = () => {
+  const scheduleNext = () => {
+    const delay = getDelayUntilNextNoon();
+    const timer = setTimeout(() => {
+      runDockerPurge()
+        .catch((error) => {
+          console.error(`${DOCKER_PURGE_LOG_PREFIX} run failed`, error);
+        })
+        .finally(scheduleNext);
+    }, delay);
+    if (typeof timer.unref === "function") {
+      timer.unref();
+    }
+    console.info(`${DOCKER_PURGE_LOG_PREFIX} scheduled`, {
+      nextRunInMs: delay,
+    });
+  };
+
+  scheduleNext();
+};
+
+scheduleDailyDockerPurge();
 
 export const EvaluationService = {
   _docker: docker,
@@ -365,7 +476,7 @@ export const EvaluationService = {
     // 2. Decode input to /tmp/input.txt
     // 3. Execute language-specific command (e.g., node /tmp/run.js < /tmp/input.txt)
     const setupScript = [
-      "set -euo pipefail",
+      "set -eu",
       `echo "${codeB64}" | base64 -d > ${codeFile}`,
       `echo "${inputB64}" | base64 -d > ${inputFile}`,
       runtimeCmd,
