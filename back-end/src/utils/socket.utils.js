@@ -23,25 +23,27 @@ export const parseAndValidateMessage = (data) => {
 
 export const sendMessage = (ws, response) => {
   if (ws.readyState !== 1) {
-    throw ERROR.FAILED_TO_SEND_MESSAGE(`WebSocket is not open (state: ${ws.readyState})`);
+    // WebSocket이 닫혀있으면 조용히 실패 (에러를 던지지 않음)
+    return false;
   }
 
   try {
     ws.send(JSON.stringify(response));
     return true;
   } catch (error) {
-    throw ERROR.FAILED_TO_SEND_MESSAGE(error.message);
+    return false;
   }
 };
 
 export const sendErrorMessage = (ws, message) => {
-  try {
-    sendMessage(ws, {
-      type: "error",
-      success: false,
-      message,
-    });
-  } catch (error) {
-    throw ERROR.FAILED_TO_SEND_MESSAGE(error.message);
+  // WebSocket이 닫혀있으면 에러 메시지를 보낼 수 없으므로 조용히 실패
+  if (ws.readyState !== 1) {
+    return false;
   }
+
+  return sendMessage(ws, {
+    type: "error",
+    success: false,
+    message,
+  });
 };
