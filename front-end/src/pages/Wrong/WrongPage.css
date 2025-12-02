@@ -210,7 +210,7 @@
   background: #fff;
   border-radius: var(--home-card-radius);
   border: 1px solid var(--home-border);
-  padding: 24px 28px 24px;
+  padding: 18px 18px 0px 18px;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 24px;
