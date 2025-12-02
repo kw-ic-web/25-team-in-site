@@ -10,6 +10,10 @@ export const setupSocketHandlers = (wss) => {
     try {
       const host = req.headers.host;
       path = new URL(req.url, `http://${host}`).pathname;
+      // /ws 접두사 제거
+      if (path.startsWith("/ws")) {
+        path = path.substring(3) || "/";
+      }
     } catch (error) {
       console.error(`[WebSocket] Failed to parse URL: ${req.url}`, error);
       ws.close(1008, "Invalid URL");
@@ -27,6 +31,7 @@ export const setupSocketHandlers = (wss) => {
         break;
       default:
         ws.close(1008, "Invalid path");
+        return;
         break;
     }
 

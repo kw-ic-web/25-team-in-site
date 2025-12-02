@@ -42,8 +42,14 @@ const verifyToken = (req) => {
 export const initializeWebSocket = (httpServer) => {
   const wss = new WebSocketServer({
     server: httpServer,
-    path: "/",
     verifyClient: (info, callback) => {
+      // /ws로 시작하는 경로만 허용
+      const url = new URL(info.req.url, `http://${info.req.headers.host}`);
+      if (!url.pathname.startsWith("/ws")) {
+        callback(false, 404, "Not Found: WebSocket path must start with /ws");
+        return;
+      }
+
       const userInfo = verifyToken(info.req);
       if (!userInfo) {
         callback(false, 401, "Unauthorized: Invalid or missing token");
