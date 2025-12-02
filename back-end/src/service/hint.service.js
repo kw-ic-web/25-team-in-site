@@ -4,16 +4,19 @@ import {
   DEFAULT_PROMPT,
   VALIDATED_PROMPT,
 } from "../constants/openai.constants.js";
-import { sendMessage } from "../utils/socket.utils.js";
+import { sendErrorMessage, sendMessage } from "../utils/socket.utils.js";
 import { HintSchema } from "../utils/validation/hint.schema.js";
 import { sessionStoreRepository } from "../repository/sessionStore.repository.js";
 
 export const HintService = {
   _HINT_INTERVAL_MS: 1000 * 60 * 3,
-  _HINT_INTERVAL_MAP: new Map(), //userId -> interval(callback), 연결 해제시 해당 interval 정리하기!
-  _PROCESSING_USERS: new Map(), // userId -> true (진행 중인 힌트 생성 요청 추적)
+  _HINT_INTERVAL_MAP: new Map(), // userId:problemId -> interval(callback)
+  _PROCESSING_USERS: new Map(), // userId:problemId -> true (진행 중인 힌트 생성 요청 추적)
   _WS_MAP: new Map(), // userId -> ws (WebSocket 연결 저장)
 
+  _makeKey(userId, problemId) {
+    return `${userId}:${problemId}`;
+  },
 
   async _makeContext(userId, problemId) {
     // 저장된 hint session 불러오기
@@ -63,7 +66,7 @@ export const HintService = {
         },
       });
 
-      return completion.choices[0].message.content;
+      return completion.output_parsed;
     } catch (error) {
       console.error("OpenAI API Error:", error);
       throw error;
@@ -79,15 +82,16 @@ export const HintService = {
       });
       return;
     }
+    const key = this._makeKey(userId, problemId);
     // 이미 진행 중인 요청이 있으면 abort 이벤트 전송
-    if (this._PROCESSING_USERS.has(userId)) {
+    if (this._PROCESSING_USERS.has(key)) {
       sendMessage(ws, { type: "hint:abort", success: false });
       return;
     }
 
     try {
       // 진행 중 상태로 표시
-      this._PROCESSING_USERS.set(userId, true);
+      this._PROCESSING_USERS.set(key, true);
 
       // problemId가 다르면 hintSession 초기화
       const existingSession = await sessionStoreRepository.getHintSession(
@@ -161,23 +165,27 @@ export const HintService = {
         success: true,
         data: { level: validatedHint.level, hint: validatedHint.body },
       });
+    } catch (error) {
+      sendErrorMessage(ws, "힌트 생성 중 오류가 발생했습니다.");
     } finally {
       // 완료 후 진행 중 상태 해제
-      this._PROCESSING_USERS.delete(userId);
+      this._PROCESSING_USERS.delete(key);
     }
   },
 
-  _clearInterval(userId) {
-    const existingInterval = this._HINT_INTERVAL_MAP.get(userId);
+  _clearInterval(userId, problemId) {
+    const key = this._makeKey(userId, problemId);
+    const existingInterval = this._HINT_INTERVAL_MAP.get(key);
     if (existingInterval) {
       clearInterval(existingInterval);
-      this._HINT_INTERVAL_MAP.delete(userId);
+      this._HINT_INTERVAL_MAP.delete(key);
     }
   },
 
-  _startInterval(userId) {
+  _startInterval(userId, problemId) {
+    const key = this._makeKey(userId, problemId);
     // 기존 인터벌이 있으면 제거
-    this._clearInterval(userId);
+    this._clearInterval(userId, problemId);
 
     // 새 인터벌 시작
     const interval = setInterval(() => {
@@ -188,30 +196,55 @@ export const HintService = {
           type: "hint:prompt",
           success: true,
           message: "힌트가 필요하신가요?",
+          problemId,
         });
       } else {
         // WebSocket이 없거나 닫혀있으면 인터벌 제거
-        this._clearInterval(userId);
+        this._clearInterval(userId, problemId);
       }
     }, this._HINT_INTERVAL_MS);
 
-    this._HINT_INTERVAL_MAP.set(userId, interval);
+    this._HINT_INTERVAL_MAP.set(key, interval);
   },
 
   registerWebSocket(ws, userId) {
     this._WS_MAP.set(userId, ws);
-    // WebSocket 등록 시 인터벌 시작
-    this._startInterval(userId);
+    // WebSocket 등록 시에는 인터벌을 시작하지 않음
+    // 코드 커밋 시에만 인터벌이 시작됨
   },
 
   unregisterWebSocket(userId) {
-    this._clearInterval(userId);
+    // 해당 유저의 모든 문제에 대한 인터벌과 진행 상태 정리
+    const keysToDelete = [];
+    for (const key of this._HINT_INTERVAL_MAP.keys()) {
+      if (key.startsWith(`${userId}:`)) {
+        keysToDelete.push(key);
+      }
+    }
+    for (const key of keysToDelete) {
+      const interval = this._HINT_INTERVAL_MAP.get(key);
+      if (interval) {
+        clearInterval(interval);
+      }
+      this._HINT_INTERVAL_MAP.delete(key);
+    }
+
+    // 진행 중 상태도 정리
+    const processingKeysToDelete = [];
+    for (const key of this._PROCESSING_USERS.keys()) {
+      if (key.startsWith(`${userId}:`)) {
+        processingKeysToDelete.push(key);
+      }
+    }
+    for (const key of processingKeysToDelete) {
+      this._PROCESSING_USERS.delete(key);
+    }
+
     this._WS_MAP.delete(userId);
-    this._PROCESSING_USERS.delete(userId);
   },
 
-  async newCodeCommitted(userId) {
-    // 코드 업데이트 시 인터벌 초기화
-    this._startInterval(userId);
+  async newCodeCommitted(userId, problemId) {
+    // 코드 업데이트 시 해당 문제의 인터벌 초기화
+    this._startInterval(userId, problemId);
   },
 };
