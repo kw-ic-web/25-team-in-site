@@ -148,7 +148,7 @@ describe("SessionStoreRepository", () => {
       JSON.stringify(session.toRecord()),
       SESSION_TTL_MS,
     );
-    const savedRecord = store.set.mock.calls[0][1];
+    const savedRecord = JSON.parse(store.set.mock.calls[0][1]);
     expect(savedRecord.data.code.diff).toBe(mockDiff);
   });
 
@@ -163,12 +163,13 @@ describe("SessionStoreRepository", () => {
         },
       },
     });
+    const newDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 2;\n+const x = 3;";
     store.update.mockImplementation(async (key, handler) => {
-      expect(key).toBe("user-9");
-      return handler(existing.toRecord());
+      expect(key).toBe("session:user-9");
+      const result = handler(JSON.stringify(existing.toRecord()));
+      return result; // JSON 문자열 반환
     });
 
-    const newDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 2;\n+const x = 3;";
     const updated = await repository.updateSession("user-9", (session) =>
       session.withData({
         code: {
@@ -179,7 +180,7 @@ describe("SessionStoreRepository", () => {
     );
 
     expect(store.update).toHaveBeenCalledWith(
-      "user-9",
+      "session:user-9",
       expect.any(Function),
       SESSION_TTL_MS,
     );
