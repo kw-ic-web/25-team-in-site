@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { getChoseong } from "es-hangul"; // ✅ 초성 추출
+import { getChoseong } from "es-hangul"; // 초성 추출
 import "./WrongPage.css";
 
 type Solved = {
@@ -108,10 +108,12 @@ export default function WrongPage() {
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
-  const [selectedType, setSelectedType] =
-    useState<(typeof TYPES)[number] | null>(null);
-  const [selectedKind, setSelectedKind] =
-    useState<(typeof KINDS)[number] | null>(null);
+  const [selectedType, setSelectedType] = useState<
+    (typeof TYPES)[number] | null
+  >(null);
+  const [selectedKind, setSelectedKind] = useState<
+    (typeof KINDS)[number] | null
+  >(null);
   const [solvedOnly, setSolvedOnly] = useState(false);
 
   const [typeOpen, setTypeOpen] = useState(false);
@@ -144,7 +146,7 @@ export default function WrongPage() {
   const filtered = useMemo(() => {
     let list = [...solved];
 
-    // 🔍 검색 (공백 무시 + 초성 검색)
+    // 검색 (공백 무시 + 초성 검색)
     if (query.trim()) {
       const raw = query.trim();
       const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
@@ -155,6 +157,7 @@ export default function WrongPage() {
         const title = p.title;
         const normalizedTitle = normalize(title);
         const titleChoseong = getChoseong(title).replace(/\s+/g, "");
+        const hasChoseong = queryChoseong.length > 0;
 
         return (
           // 1) 공백 무시 일반 검색
@@ -162,7 +165,7 @@ export default function WrongPage() {
           // 2) 초성 직접 입력 ("ㅊㄷㄱ" 등)
           titleChoseong.includes(rawNoSpace) ||
           // 3) 입력값을 초성으로 변환 후 비교
-          titleChoseong.includes(queryChoseong)
+          (hasChoseong && titleChoseong.includes(queryChoseong))
         );
       });
     }
@@ -474,7 +477,9 @@ export default function WrongPage() {
             </span>
             <div className="recommend__tags-row">
               <div className="recommend__info">
-                <p className="recommend__time">예상 시간: {expectedSolveTime}</p>
+                <p className="recommend__time">
+                  예상 시간: {expectedSolveTime}
+                </p>
                 <div className="recommend__tags" aria-label="추천 문제 유형">
                   {recommendedProblem ? (
                     <>
