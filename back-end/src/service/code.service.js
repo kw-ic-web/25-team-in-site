@@ -15,7 +15,7 @@ export const CodeService = {
     );
 
     // 코드 업데이트 시 힌트 인터벌 초기화
-    await HintService.newCodeCommitted(userId);
+    await HintService.newCodeCommitted(userId, problemId);
     return SaveCodeResponseDto.parse({ success: true });
   }
 }
