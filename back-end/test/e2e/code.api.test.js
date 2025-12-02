@@ -17,6 +17,7 @@ describe("Code Save API", () => {
       .post("/api/v1/code/")
       .set("Cookie", cookie)
       .send({
+        problemId: "e2e-problem-1",
         code: "console.log('save test');",
         language: "js",
       });
@@ -34,6 +35,7 @@ describe("Code Save API", () => {
       .post("/api/v1/code/")
       .set("Cookie", cookie)
       .send({
+        problemId: "e2e-problem-invalid-lang",
         code: "console.log('test');",
         language: "javascript",
       });
@@ -51,6 +53,7 @@ describe("Code Save API", () => {
       .post("/api/v1/code/")
       .set("Cookie", cookie)
       .send({
+        problemId: "e2e-problem-no-lang",
         code: "console.log('test');",
       });
 
@@ -63,6 +66,7 @@ describe("Code Save API", () => {
       const res = await appRequest()
         .post("/api/v1/code/")
         .send({
+          problemId: "e2e-problem-unauth",
           code: "console.log('test');",
           language: "js",
         });
@@ -76,6 +80,7 @@ describe("Code Save API", () => {
         .post("/api/v1/code/")
         .set("Cookie", "token=invalid-token")
         .send({
+          problemId: "e2e-problem-invalid-token",
           code: "console.log('test');",
           language: "js",
         });

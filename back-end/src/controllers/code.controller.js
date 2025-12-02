@@ -4,7 +4,15 @@ export const CodeController = {
   async saveCode(req, res, next) {
     try {
       const dto = SaveCodeRequestDto.parse(req.body);
-      const result = await req.services.code.saveCode(req.user.user_id, dto.code, dto.language);
+      if (!req.user?.user_id) {
+        throw new Error("Unauthorized user");
+      }
+      const result = await req.services.code.saveCode(
+        req.user.user_id,
+        dto.problemId,
+        dto.code,
+        dto.language,
+      );
       return res.status(200).json(result);
     } catch (err) {
       next(err);

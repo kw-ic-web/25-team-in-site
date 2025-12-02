@@ -5,7 +5,6 @@ import {
   createAuthenticatedUser,
 } from "../utils/test-helpers.js";
 import { sessionStoreRepository } from "../../src/repository/sessionStore.repository.js";
-import { Code } from "../../src/entity/code.entity.js";
 
 setupTestDBHooks();
 
@@ -24,34 +23,39 @@ describe("Code API Integration", () => {
   it("POST /api/v1/code/ → 코드를 저장하고 이후 조회 가능하다", async () => {
     const code = "console.log('integration test');";
     const language = "js";
+    const problemId = "integration-problem-1";
 
     // 코드 저장
     const saveRes = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code, language });
+      .send({ problemId, code, language });
 
     expect(saveRes.status).toBe(200);
     expect(saveRes.body.success).toBe(true);
 
     // 저장된 코드 조회
-    const savedCode = await sessionStoreRepository.getCode(user.user_id);
-    expect(savedCode).toBeInstanceOf(Code);
-    expect(savedCode.currentCode).toBe(code);
-    expect(savedCode.language).toBe(language);
-    expect(savedCode.userId).toBe(user.user_id);
+    const savedSession = await sessionStoreRepository.getHintSession(
+      user.user_id,
+      problemId,
+    );
+    expect(savedSession).not.toBeNull();
+    expect(savedSession.code.current).toBe(code);
+    expect(savedSession.language).toBe(language);
+    expect(savedSession.userId).toBe(user.user_id);
   });
 
   it("POST /api/v1/code/ → 코드를 여러 번 저장하면 diff가 계산된다", async () => {
     const firstCode = "console.log('first');";
     const secondCode = "console.log('second');";
     const language = "js";
+    const problemId = "integration-problem-2";
 
     // 첫 번째 코드 저장
     const firstRes = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code: firstCode, language });
+      .send({ problemId, code: firstCode, language });
 
     expect(firstRes.status).toBe(200);
 
@@ -59,47 +63,59 @@ describe("Code API Integration", () => {
     const secondRes = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code: secondCode, language });
+      .send({ problemId, code: secondCode, language });
 
     expect(secondRes.status).toBe(200);
 
     // 저장된 코드 확인
-    const savedCode = await sessionStoreRepository.getCode(user.user_id);
-    expect(savedCode.currentCode).toBe(secondCode);
-    expect(savedCode.language).toBe(language);
+    const savedSession = await sessionStoreRepository.getHintSession(
+      user.user_id,
+      problemId,
+    );
+    expect(savedSession.code.current).toBe(secondCode);
+    expect(savedSession.language).toBe(language);
   });
 
   it("POST /api/v1/code/ → js와 py 언어를 저장할 수 있다", async () => {
     const languages = ["js", "py"];
+    const baseProblemId = "integration-problem-lang";
 
     for (const lang of languages) {
       const code = `// ${lang} code`;
+      const problemId = `${baseProblemId}-${lang}`;
       const res = await appRequest()
         .post("/api/v1/code/")
         .set("Cookie", cookie)
-        .send({ code, language: lang });
+        .send({ problemId, code, language: lang });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      const savedCode = await sessionStoreRepository.getCode(user.user_id);
-      expect(savedCode.language).toBe(lang);
-      expect(savedCode.currentCode).toBe(code);
+      const savedSession = await sessionStoreRepository.getHintSession(
+        user.user_id,
+        problemId,
+      );
+      expect(savedSession.language).toBe(lang);
+      expect(savedSession.code.current).toBe(code);
     }
   });
 
   it("POST /api/v1/code/ → 빈 코드도 저장할 수 있다", async () => {
+    const problemId = "integration-problem-empty";
     const res = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code: "", language: "js" });
+      .send({ problemId, code: "", language: "js" });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
 
-    const savedCode = await sessionStoreRepository.getCode(user.user_id);
-    expect(savedCode.currentCode).toBe("");
-    expect(savedCode.language).toBe("js");
+    const savedSession = await sessionStoreRepository.getHintSession(
+      user.user_id,
+      problemId,
+    );
+    expect(savedSession.code.current).toBe("");
+    expect(savedSession.language).toBe("js");
   });
 
   it("POST /api/v1/code/ → 여러 사용자가 각각 코드를 저장할 수 있다", async () => {
@@ -117,7 +133,7 @@ describe("Code API Integration", () => {
     const res1 = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", user1.cookie)
-      .send({ code: code1, language: "js" });
+      .send({ problemId: "problem-user1", code: code1, language: "js" });
 
     expect(res1.status).toBe(200);
 
@@ -125,17 +141,23 @@ describe("Code API Integration", () => {
     const res2 = await appRequest()
       .post("/api/v1/code/")
       .set("Cookie", user2.cookie)
-      .send({ code: code2, language: "py" });
+      .send({ problemId: "problem-user2", code: code2, language: "py" });
 
     expect(res2.status).toBe(200);
 
     // 각 사용자의 코드가 독립적으로 저장되었는지 확인
-    const savedCode1 = await sessionStoreRepository.getCode(user1.user.user_id);
-    const savedCode2 = await sessionStoreRepository.getCode(user2.user.user_id);
+    const savedCode1 = await sessionStoreRepository.getHintSession(
+      user1.user.user_id,
+      "problem-user1",
+    );
+    const savedCode2 = await sessionStoreRepository.getHintSession(
+      user2.user.user_id,
+      "problem-user2",
+    );
 
-    expect(savedCode1.currentCode).toBe(code1);
+    expect(savedCode1.code.current).toBe(code1);
     expect(savedCode1.language).toBe("js");
-    expect(savedCode2.currentCode).toBe(code2);
+    expect(savedCode2.code.current).toBe(code2);
     expect(savedCode2.language).toBe("py");
   });
 });
