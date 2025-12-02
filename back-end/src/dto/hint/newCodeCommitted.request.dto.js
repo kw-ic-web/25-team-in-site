@@ -1,4 +1,3 @@
-```typescript
 import { z } from "zod";
 
 export const NewCodeCommittedRequestDto = z.object({
@@ -11,4 +10,3 @@ export const NewCodeCommittedRequestDto = z.object({
     invalid_type_error: "problemId는 문자열이어야 합니다.",
   }),
 });
-```
