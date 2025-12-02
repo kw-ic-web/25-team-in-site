@@ -8,6 +8,7 @@ import {
 
 describe("SaveCodeRequestDto", () => {
   const basePayload = {
+    problemId: "problem-1",
     code: "console.log('hello');",
     language: "js",
   };
@@ -23,7 +24,7 @@ describe("SaveCodeRequestDto", () => {
   it("code가 빈 문자열이어도 허용한다", () => {
     const result = expectDtoPass(
       SaveCodeRequestDto,
-      buildBody({ code: "", language: "js" }),
+      buildBody({ problemId: "problem-1", code: "", language: "js" }),
     );
     expect(result.code).toBe("");
     expect(result.language).toBe("js");
@@ -82,7 +83,7 @@ describe("SaveCodeRequestDto", () => {
     languages.forEach((lang) => {
       const result = expectDtoPass(
         SaveCodeRequestDto,
-        buildBody({ code: "test", language: lang }),
+        buildBody({ problemId: "problem-1", code: "test", language: lang }),
       );
       expect(result.language).toBe(lang);
     });
