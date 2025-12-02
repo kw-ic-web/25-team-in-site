@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import { ProblemRepository } from "../repository/problem.repository.js";
 import { SolvedRepository } from "../repository/solved.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
+import { UserService } from "./user.service.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
 const docker = new Docker();
@@ -242,13 +243,17 @@ export const EvaluationService = {
     };
 
     try {
-      await this._recordSolvedIfNeeded({
+      const userUpdate = await this._recordSolvedIfNeeded({
         userId,
         problem,
         evaluationSummary,
         runtimeKey: runtime.key,
         sourceCode: code,
       });
+
+      if (userUpdate) {
+        evaluationSummary.userUpdate = userUpdate;
+      }
     } catch (error) {
       console.error(`${SOLVED_LOG_PREFIX} failed`, error);
     }
@@ -527,7 +532,7 @@ export const EvaluationService = {
     const timeoutError = new Error("Time Limit Exceeded");
     const timeoutPromise = new Promise((_, reject) => {
       timeoutHandle = setTimeout(() => {
-        container.kill().catch(() => {});
+        container.kill().catch(() => { });
         reject(timeoutError);
       }, timeLimit);
     });
@@ -673,5 +678,16 @@ export const EvaluationService = {
       userId: user.user_id,
       problemId: problem.problem_id || problem._id?.toString(),
     });
+
+    // Update User XP and Level
+    // XP Formula: difficulty * 10
+    const difficulty = problem.problem_difficulty || 1;
+    const xpToAdd = difficulty * 10;
+
+    try {
+      return await UserService.updateUserLevel(userId, xpToAdd);
+    } catch (error) {
+      console.error(`${SOLVED_LOG_PREFIX} failed to update user stats`, error);
+    }
   },
 };
