@@ -2,7 +2,7 @@ name: Deploy Backend
 
 on:
   push:
-    branches: [main, back-end]
+    branches: [main, back-end, BE-hotfix_release]
     paths:
       - "back-end/**"
       - ".github/workflows/backend-deploy.yml"
@@ -29,6 +29,11 @@ jobs:
             echo "output=back-end/development.env" >> "$GITHUB_OUTPUT"
             echo "target=${{ secrets.BE_EC2_TARGET_DIR_DEV }}" >> "$GITHUB_OUTPUT"
             echo "pm2_name=in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF_NAME}" == "BE-hotfix_release" ]]; then
+            echo "encrypted=back-end/hotfixTest.env.encrypted" >> "$GITHUB_OUTPUT"
+            echo "output=back-end/hotfixTest.env" >> "$GITHUB_OUTPUT"
+            echo "target=${{ secrets.BE_EC2_TARGET_DIR_HOTFIX }}" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=in-site_HOTFIX" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
             exit 1
