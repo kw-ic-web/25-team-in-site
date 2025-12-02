@@ -44,7 +44,7 @@ export class Code {
       currentCode: newCode,
       cachedCode: this.cachedCode,
       language: newLanguage,
-      diff: this.diff,
+      diff: "",
     });
   }
 
@@ -54,7 +54,7 @@ export class Code {
       currentCode: this.currentCode,
       cachedCode: cachedCode,
       language: this.language,
-      diff: this.diff,
+      diff: "",
     });
   }
 

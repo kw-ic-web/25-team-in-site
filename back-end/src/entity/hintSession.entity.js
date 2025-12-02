@@ -25,6 +25,13 @@ export class HintSession {
 
   static fromRecord(record) {
     if (!record) return null;
+        const code = record.code && typeof record.code === 'object'
+      ? { 
+          current: record.code.current ?? "",
+          diff: record.code.diff ?? "",
+          cached: record.code.cached ?? ""
+        }
+      : { current: "", diff: "", cached: "" };
     return new HintSession({
       userId: record.userId,
       problemId: record.problemId ?? "",
