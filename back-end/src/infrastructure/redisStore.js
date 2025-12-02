@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import env from "../../config/env.config.js";
+import env from "../config/env.config.js";
 export class RedisStore {
   #client;
   #isConnected;
@@ -12,13 +12,23 @@ export class RedisStore {
       db: options.db ?? env.redis.db,
     };
 
-    this.#client = new Redis(redisOptions.url, {
-      username: redisOptions.username,
-      password: redisOptions.password,
+    const ioredisOptions = {
       db: redisOptions.db,
       lazyConnect: true,
       maxRetriesPerRequest: 3,
-    });
+    };
+
+    // username이 있으면만 추가
+    if (redisOptions.username) {
+      ioredisOptions.username = redisOptions.username;
+    }
+
+    // password가 있으면만 추가
+    if (redisOptions.password) {
+      ioredisOptions.password = redisOptions.password;
+    }
+
+    this.#client = new Redis(redisOptions.url, ioredisOptions);
     this.#client.on("error", (error) => {
       console.error("[RedisStore] Connection error:", error);
     });
@@ -96,10 +106,17 @@ export class RedisStore {
   }
 
   async quit() {
-    if (this.#client.status !== "end") {
+    if (this.#client && this.#client.status !== "end") {
       await this.#client.quit();
     }
     this.#isConnected = false;
+  }
+
+  async disconnect() {
+    if (this.#client) {
+      this.#client.disconnect();
+      this.#isConnected = false;
+    }
   }
 }
 
