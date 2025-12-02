@@ -1,5 +1,5 @@
 import * as Diff from "diff";
-import { RedisStore } from "../infrastructure/store/redisStore.js";
+import { RedisStore } from "../infrastructure/redisStore.js";
 import { SESSION_TTL_MS } from "../constants/session.constants.js";
 import { Session } from "../entity/session.entity.js";
 import { HintSession } from "../entity/hintSession.entity.js";
@@ -85,9 +85,21 @@ export class SessionStoreRepository {
   async updateHintSessionCode(userId, problemId, code, language) {
     const existing = await this.getHintSession(userId, problemId);
     const cachedCode = existing?.code?.cached || "";
-    const diff = cachedCode
-      ? Diff.createPatch("code", cachedCode, code, "", "")
-      : "";
+    
+    // cached가 비어있으면 현재 코드를 cached로 설정하고 diff는 빈 문자열
+    // cached가 있으면 cached와 새 코드를 비교해서 diff 생성
+    let newCached = cachedCode;
+    let diff = "";
+    
+    if (cachedCode) {
+      // cached 코드와 새 코드가 다르면 diff 생성
+      if (cachedCode !== code) {
+        diff = Diff.createPatch("code", cachedCode, code, "", "");
+      }
+    } else {
+      // cached가 비어있으면 현재 코드를 cached로 설정
+      newCached = code;
+    }
 
     const updated = new HintSession({
       userId,
@@ -96,7 +108,7 @@ export class SessionStoreRepository {
       code: {
         current: code,
         diff,
-        cached: cachedCode,
+        cached: newCached,
       },
       context: existing?.context || [],
     });
@@ -115,6 +127,15 @@ export class SessionStoreRepository {
       context: existing?.context || [],
     });
 
+    await this.#writeHintSession(userId, problemId, updated);
+    return updated;
+  }
+
+  async updateHintSessionCached(userId, problemId, cachedCode) {
+    const existing = await this.getHintSession(userId, problemId);
+    if (!existing) return null;
+    
+    const updated = existing.updateCachedCode(cachedCode);
     await this.#writeHintSession(userId, problemId, updated);
     return updated;
   }
@@ -152,7 +173,7 @@ export class SessionStoreRepository {
   }
 
   #deserializeHintSession(userId, problemId, hash) {
-    if (!hash) return null;
+    if (!hash || Object.keys(hash).length === 0) return null;
     let context = [];
     if (hash[CONTEXT_FIELD]) {
       try {
