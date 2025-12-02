@@ -74,6 +74,7 @@ describe("Code API Integration", () => {
     );
     expect(savedSession.code.current).toBe(secondCode);
     expect(savedSession.language).toBe(language);
+    expect(savedSession.code.diff).toBe("");
   });
 
   it("POST /api/v1/code/ → js와 py 언어를 저장할 수 있다", async () => {
