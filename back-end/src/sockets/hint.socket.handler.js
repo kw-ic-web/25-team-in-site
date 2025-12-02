@@ -13,7 +13,22 @@ export const hintSocketHandler = (wss, ws) => {
       const { message } = parseAndValidateMessage(data);
 
       if (message.type === "hint:request") {
-        await HintService.generateHint(ws, ws.userId);
+        if (
+          !message.problemId ||
+          typeof message.problemId !== "string" ||
+          message.problemId.trim().length === 0
+        ) {
+          sendErrorMessage(ws, "'problemId' is required for hint:request");
+          return;
+        }
+        const language =
+          typeof message.language === "string" ? message.language : "";
+        await HintService.generateHint(
+          ws,
+          ws.userId,
+          message.problemId,
+          language,
+        );
       } else {
         sendErrorMessage(
           ws,

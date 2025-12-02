@@ -1,13 +1,22 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 
 const parseAndValidateMessage = jest.fn();
-const sendMessage = jest.fn();
 const sendErrorMessage = jest.fn();
+const generateHint = jest.fn();
+const registerWebSocket = jest.fn();
+const unregisterWebSocket = jest.fn();
 
 jest.unstable_mockModule("../../../src/utils/socket.utils.js", () => ({
   parseAndValidateMessage,
-  sendMessage,
   sendErrorMessage,
+}));
+
+jest.unstable_mockModule("../../../src/service/hint.service.js", () => ({
+  HintService: {
+    generateHint,
+    registerWebSocket,
+    unregisterWebSocket,
+  },
 }));
 
 const { hintSocketHandler } = await import(
@@ -41,11 +50,12 @@ describe("hintSocketHandler", () => {
   it("message 이벤트 핸들러를 등록한다", () => {
     hintSocketHandler(mockWss, mockWs);
 
+    expect(registerWebSocket).toHaveBeenCalledWith(mockWs, "test-user");
     expect(mockWs.on).toHaveBeenCalledWith("message", expect.any(Function));
   });
 
   describe("hint:request 메시지 처리", () => {
-    it("hint:request 메시지를 받으면 hint:response를 전송한다", async () => {
+    it("hint:request 메시지를 처리해 HintService를 호출한다", async () => {
       let messageHandler;
       mockWs.on.mockImplementation((event, handler) => {
         if (event === "message") {
@@ -58,27 +68,52 @@ describe("hintSocketHandler", () => {
       const messageData = Buffer.from(
         JSON.stringify({
           type: "hint:request",
-          data: { cursorPosition: [1, 2] },
+          problemId: "prob-1",
+          language: "js",
         }),
       );
 
       parseAndValidateMessage.mockReturnValue({
         message: {
           type: "hint:request",
-          data: { cursorPosition: [1, 2] },
+          problemId: "prob-1",
+          language: "js",
         },
       });
 
       await messageHandler(messageData);
 
-      expect(sendMessage).toHaveBeenCalledWith(mockWs, {
-        type: "hint:response",
-        success: true,
-        data: {
-          level: 1,
-          hint: "hint ready",
+      expect(generateHint).toHaveBeenCalledWith(
+        mockWs,
+        "test-user",
+        "prob-1",
+        "js",
+      );
+    });
+
+    it("problemId가 없으면 에러 메시지를 전송한다", async () => {
+      let messageHandler;
+      mockWs.on.mockImplementation((event, handler) => {
+        if (event === "message") {
+          messageHandler = handler;
+        }
+      });
+
+      hintSocketHandler(mockWss, mockWs);
+
+      parseAndValidateMessage.mockReturnValue({
+        message: {
+          type: "hint:request",
         },
       });
+
+      await messageHandler(Buffer.from(JSON.stringify({ type: "hint:request" })));
+
+      expect(sendErrorMessage).toHaveBeenCalledWith(
+        mockWs,
+        "'problemId' is required for hint:request",
+      );
+      expect(generateHint).not.toHaveBeenCalled();
     });
   });
 
@@ -145,7 +180,7 @@ describe("hintSocketHandler", () => {
       hintSocketHandler(mockWss, mockWs);
 
       parseAndValidateMessage.mockReturnValue({
-        message: { type: "hint:request" },
+        message: { type: "hint:request", problemId: "prob-err" },
       });
 
       const sendError = new Error("Send failed");
@@ -155,10 +190,7 @@ describe("hintSocketHandler", () => {
 
       await messageHandler(Buffer.from(JSON.stringify({ type: "hint:request" })));
 
-      expect(sendErrorMessage).toHaveBeenCalledWith(
-        mockWs,
-        "Send failed",
-      );
+      expect(sendErrorMessage).toHaveBeenCalledWith(mockWs, "Send failed");
     });
 
     it("에러 메시지가 없으면 기본 메시지를 사용한다", async () => {
