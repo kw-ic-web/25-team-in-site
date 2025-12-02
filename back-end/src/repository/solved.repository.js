@@ -116,4 +116,9 @@ export const SolvedRepository = {
   async save(solved) {
     return solved.save();
   },
+
+  async createSolved(payload) {
+    const solved = new Solved(payload);
+    return this.save(solved);
+  },
 };

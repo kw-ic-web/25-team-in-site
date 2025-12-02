@@ -1,11 +1,14 @@
 import Docker from "dockerode";
 import { performance } from "node:perf_hooks";
 import { ProblemRepository } from "../repository/problem.repository.js";
+import { SolvedRepository } from "../repository/solved.repository.js";
+import { UserRepository } from "../repository/user.repository.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
 const docker = new Docker();
 
 const DOCKER_PURGE_LOG_PREFIX = "[EvaluationService] Docker purge";
+const SOLVED_LOG_PREFIX = "[EvaluationService] Solved record";
 const DOCKER_PRUNE_TARGETS = [
   {
     label: "containers",
@@ -227,7 +230,7 @@ export const EvaluationService = {
       }
     }
 
-    return {
+    const evaluationSummary = {
       success: true,
       caseType: normalizedCaseType,
       totalCases: cases.length,
@@ -237,6 +240,20 @@ export const EvaluationService = {
       memoryLimitBytes: limits.memoryLimitBytes,
       results,
     };
+
+    try {
+      await this._recordSolvedIfNeeded({
+        userId,
+        problem,
+        evaluationSummary,
+        runtimeKey: runtime.key,
+        sourceCode: code,
+      });
+    } catch (error) {
+      console.error(`${SOLVED_LOG_PREFIX} failed`, error);
+    }
+
+    return evaluationSummary;
   },
 
   _normalizeCaseType(caseType) {
@@ -584,5 +601,77 @@ export const EvaluationService = {
       executionTime: Math.round(elapsed),
       memoryUsage: null,
     };
+  },
+
+  _extractMetricFromResults(results = [], field) {
+    if (!Array.isArray(results) || !field) {
+      return null;
+    }
+
+    let metric = null;
+    for (const result of results) {
+      const value = result?.[field];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        metric = metric === null ? value : Math.max(metric, value);
+      }
+    }
+    return metric;
+  },
+
+  async _recordSolvedIfNeeded({
+    userId,
+    problem,
+    evaluationSummary,
+    runtimeKey,
+    sourceCode,
+  }) {
+    if (
+      !userId ||
+      !problem?._id ||
+      !evaluationSummary ||
+      evaluationSummary.caseType !== CASE_TYPES.SUBMISSION ||
+      !evaluationSummary.passed
+    ) {
+      return;
+    }
+
+    const user = await UserRepository.findOne({ user_id: userId });
+    if (!user?._id) {
+      return;
+    }
+
+    const alreadySolved = await SolvedRepository.hasUserSolvedProblem(
+      user._id,
+      problem._id,
+    );
+    if (alreadySolved) {
+      return;
+    }
+
+    const solved_runtime = this._extractMetricFromResults(
+      evaluationSummary.results,
+      "executionTime",
+    );
+    const solved_memory_usage = this._extractMetricFromResults(
+      evaluationSummary.results,
+      "memoryUsage",
+    );
+
+    const normalizedLanguage =
+      (runtimeKey || "").toString().toLowerCase() || "unknown";
+
+    await SolvedRepository.createSolved({
+      user_id: user._id,
+      problem_id: problem._id,
+      language: normalizedLanguage,
+      solved_code: sourceCode,
+      solved_runtime,
+      solved_memory_usage,
+    });
+
+    console.info(`${SOLVED_LOG_PREFIX} stored`, {
+      userId: user.user_id,
+      problemId: problem.problem_id || problem._id?.toString(),
+    });
   },
 };
