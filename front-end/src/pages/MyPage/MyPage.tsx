@@ -175,9 +175,6 @@ export default function MyPage() {
               ))}
             </div>
           </div>
-        </article>
-
-        <article className="mypage-card">
           <header className="mypage-card__header">
             <h3>9명의 친구</h3>
             <button type="button" className="mypage-card__link">
@@ -199,30 +196,6 @@ export default function MyPage() {
               </li>
             ))}
           </ul>
-        </article>
-
-        <article className="mypage-card">
-          <header className="mypage-card__header">
-            <h3>친구 추가</h3>
-          </header>
-          <div className="friend-search">
-            <input
-              type="search"
-              placeholder="아이디 검색"
-              aria-label="친구 아이디 검색"
-            />
-          </div>
-          <div className="friend-recommend">
-            <h4>추천 아이디</h4>
-            <ul>
-              {data.recommendedFriends.map((friend) => (
-                <li key={friend.id}>
-                  <span>{friend.name}</span>
-                  <span>{friend.xp}xp</span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </article>
       </aside>
 

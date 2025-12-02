@@ -31,7 +31,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: minmax(0, auto);
-  gap: 28px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -283,6 +283,8 @@
   gap: 14px;
   padding-top: 14px;
   border-top: 1px solid rgba(225, 228, 238, 0.8);
+  border-bottom: 1px solid rgba(225, 228, 238, 0.8);
+  padding-bottom: 14px;
 }
 
 .profile-card__languages h3 {
