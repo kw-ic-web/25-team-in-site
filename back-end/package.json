@@ -30,6 +30,7 @@
     "diff": "^8.0.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "openai": "^6.9.1",
