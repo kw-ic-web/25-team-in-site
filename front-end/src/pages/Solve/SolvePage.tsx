@@ -79,6 +79,8 @@ export default function SolvePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
+  const isSaving = useRef(false);
+
   useEffect(() => {
     if (!problemId) return;
 
@@ -202,37 +204,47 @@ export default function SolvePage() {
     if (!problemId || !language) return;
 
     const interval = setInterval(async () => {
+      if (isSaving.current) return;
+      if (!code || !code.trim() || !language) return;
+
+      isSaving.current = true;
       try {
-        if (!code || !code.trim() || !language) return;
         await apiClient.post("/code", {
           code,
           language,
           problemId,
         });
-      } catch (e) {
-        // fail silently
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.message || "";
+        if (msg.includes("Connection is closed")) {
+          console.warn("WS 종료로 인한 /code 무시");
+          return;
+        }
+        console.error("/code error:", msg);
+      } finally {
+        isSaving.current = false;
       }
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [problemId, language, code]);
 
-  useEffect(() => {
-    if (!problemId) return;
-
+  function connectWS() {
     const token = localStorage.getItem("accessToken");
     const wsUrl = buildHintWebSocketUrl(token);
     wsRef.current = new WebSocket(wsUrl);
 
     wsRef.current.onopen = () => {
       console.log("WS 연결 완료");
-      wsRef.current?.send(
-        JSON.stringify({
-          type: "hint:request",
-          problemId,
-          language,
-        })
-      );
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: "hint:request",
+            problemId,
+            language,
+          })
+        );
+      }
     };
 
     wsRef.current.onmessage = (msg) => {
@@ -249,12 +261,15 @@ export default function SolvePage() {
     };
 
     wsRef.current.onclose = () => {
-      console.log("WS 연결 종료");
+      console.log("WS 연결 종료 — 3초 후 재연결");
+      setTimeout(connectWS, 3000);
     };
+  }
 
-    return () => {
-      wsRef.current?.close();
-    };
+  useEffect(() => {
+    if (!problemId || !language) return;
+    connectWS();
+    return () => wsRef.current?.close();
   }, [problemId, language]);
 
   return (
