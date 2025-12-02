@@ -7,30 +7,55 @@ import {
 
 setupTestDBHooks();
 
-describe("Code API", () => {
-  it("POST /api/v1/code/tokenize", async () => {
+describe("Code Save API", () => {
+  it("POST /api/v1/code/ - 코드를 저장한다", async () => {
     const { cookie } = await createAuthenticatedUser({
-      user_id: `code_user_${Date.now()}`,
+      user_id: `code_save_user_${Date.now()}`,
     });
 
     const res = await appRequest()
-      .post("/api/v1/code/tokenize")
+      .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code: "console.log('token');" });
+      .send({
+        problemId: "e2e-problem-1",
+        code: "console.log('save test');",
+        language: "js",
+      });
 
     expect(res.status).toBe(200);
-    expect(res.body.token_count).toBeGreaterThan(0);
+    expect(res.body.success).toBe(true);
   });
 
-  it("유효하지 않은 요청은 400을 반환한다", async () => {
+  it("POST /api/v1/code/ - 유효하지 않은 language는 400을 반환한다", async () => {
     const { cookie } = await createAuthenticatedUser({
-      user_id: `code_user_invalid_${Date.now()}`,
+      user_id: `code_save_invalid_${Date.now()}`,
     });
 
     const res = await appRequest()
-      .post("/api/v1/code/tokenize")
+      .post("/api/v1/code/")
       .set("Cookie", cookie)
-      .send({ code: "" });
+      .send({
+        problemId: "e2e-problem-invalid-lang",
+        code: "console.log('test');",
+        language: "javascript",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBeDefined();
+  });
+
+  it("POST /api/v1/code/ - language가 없으면 400을 반환한다", async () => {
+    const { cookie } = await createAuthenticatedUser({
+      user_id: `code_save_no_lang_${Date.now()}`,
+    });
+
+    const res = await appRequest()
+      .post("/api/v1/code/")
+      .set("Cookie", cookie)
+      .send({
+        problemId: "e2e-problem-no-lang",
+        code: "console.log('test');",
+      });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBeDefined();
@@ -39,8 +64,12 @@ describe("Code API", () => {
   describe("인증 실패", () => {
     it("토큰 없이 접근 시 401을 반환한다", async () => {
       const res = await appRequest()
-        .post("/api/v1/code/tokenize")
-        .send({ code: "console.log('test');" });
+        .post("/api/v1/code/")
+        .send({
+          problemId: "e2e-problem-unauth",
+          code: "console.log('test');",
+          language: "js",
+        });
 
       expect(res.status).toBe(401);
       expect(res.body.message).toBe("인증 정보가 올바르지 않습니다.");
@@ -48,16 +77,16 @@ describe("Code API", () => {
 
     it("잘못된 토큰으로 접근 시 401을 반환한다", async () => {
       const res = await appRequest()
-        .post("/api/v1/code/tokenize")
+        .post("/api/v1/code/")
         .set("Cookie", "token=invalid-token")
-        .send({ code: "console.log('test');" });
+        .send({
+          problemId: "e2e-problem-invalid-token",
+          code: "console.log('test');",
+          language: "js",
+        });
 
       expect(res.status).toBe(401);
       expect(res.body.message).toBe("인증 정보가 올바르지 않습니다.");
     });
   });
-
-  // 토큰 수 초과 테스트는 단위 테스트에서 이미 커버됨
-  // E2E에서는 코드 길이 제한(MAX_CODE_CHAR_LENGTH)으로 인해
-  // 실제 토큰 수 초과를 테스트하기 어려움
 });

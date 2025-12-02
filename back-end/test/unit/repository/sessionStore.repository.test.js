@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { SessionStoreRepository } from "../../../src/repository/sessionStore.repository.js";
 import { Session } from "../../../src/entity/session.entity.js";
+import { HintSession } from "../../../src/entity/hintSession.entity.js";
 import { SESSION_TTL_MS } from "../../../src/constants/session.constants.js";
 
 const createStoreDouble = () => ({
@@ -8,6 +9,8 @@ const createStoreDouble = () => ({
   set: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  hgetall: jest.fn(),
+  hmset: jest.fn(),
 });
 
 describe("SessionStoreRepository", () => {
@@ -21,11 +24,11 @@ describe("SessionStoreRepository", () => {
 
   it("getSession은 저장된 레코드를 세션으로 반환한다", async () => {
     const record = Session.create({ userId: "user-1" }).toRecord();
-    store.get.mockResolvedValue(record);
+    store.get.mockResolvedValue(JSON.stringify(record));
 
     const session = await repository.getSession("user-1");
 
-    expect(store.get).toHaveBeenCalledWith("user-1");
+    expect(store.get).toHaveBeenCalledWith("session:user-1");
     expect(session).toBeInstanceOf(Session);
     expect(session.userId).toBe("user-1");
   });
@@ -47,8 +50,8 @@ describe("SessionStoreRepository", () => {
     await repository.saveSession(session);
 
     expect(store.set).toHaveBeenCalledWith(
-      "user-2",
-      session.toRecord(),
+      "session:user-2",
+      JSON.stringify(session.toRecord()),
       SESSION_TTL_MS,
     );
   });
@@ -59,8 +62,8 @@ describe("SessionStoreRepository", () => {
       data: { count: 1 },
     });
     store.update.mockImplementation(async (key, handler) => {
-      expect(key).toBe("user-3");
-      return handler(existing.toRecord());
+      expect(key).toBe("session:user-3");
+      return handler(JSON.stringify(existing.toRecord()));
     });
 
     const updated = await repository.updateSession("user-3", (session) =>
@@ -68,7 +71,7 @@ describe("SessionStoreRepository", () => {
     );
 
     expect(store.update).toHaveBeenCalledWith(
-      "user-3",
+      "session:user-3",
       expect.any(Function),
       SESSION_TTL_MS,
     );
@@ -89,7 +92,7 @@ describe("SessionStoreRepository", () => {
   it("updateSession에서 updater가 null을 반환하면 세션이 제거된다", async () => {
     const existing = Session.create({ userId: "user-5" });
     store.update.mockImplementation(async (key, handler) =>
-      handler(existing.toRecord()),
+      handler(JSON.stringify(existing.toRecord())),
     );
 
     const updated = await repository.updateSession("user-5", () => null);
@@ -100,7 +103,7 @@ describe("SessionStoreRepository", () => {
   it("deleteSession은 저장소에서 키를 삭제한다", async () => {
     await repository.deleteSession("user-6");
 
-    expect(store.delete).toHaveBeenCalledWith("user-6");
+    expect(store.delete).toHaveBeenCalledWith("session:user-6");
   });
 
   it("getSession은 code.diff를 포함한 세션을 반환한다", async () => {
@@ -115,11 +118,11 @@ describe("SessionStoreRepository", () => {
       },
     });
     const record = session.toRecord();
-    store.get.mockResolvedValue(record);
+    store.get.mockResolvedValue(JSON.stringify(record));
 
     const retrieved = await repository.getSession("user-7");
 
-    expect(store.get).toHaveBeenCalledWith("user-7");
+    expect(store.get).toHaveBeenCalledWith("session:user-7");
     expect(retrieved).toBeInstanceOf(Session);
     expect(retrieved.userId).toBe("user-7");
     expect(retrieved.data.code.full).toBe("const x = 2;");
@@ -141,11 +144,11 @@ describe("SessionStoreRepository", () => {
     await repository.saveSession(session);
 
     expect(store.set).toHaveBeenCalledWith(
-      "user-8",
-      session.toRecord(),
+      "session:user-8",
+      JSON.stringify(session.toRecord()),
       SESSION_TTL_MS,
     );
-    const savedRecord = store.set.mock.calls[0][1];
+    const savedRecord = JSON.parse(store.set.mock.calls[0][1]);
     expect(savedRecord.data.code.diff).toBe(mockDiff);
   });
 
@@ -160,12 +163,13 @@ describe("SessionStoreRepository", () => {
         },
       },
     });
+    const newDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 2;\n+const x = 3;";
     store.update.mockImplementation(async (key, handler) => {
-      expect(key).toBe("user-9");
-      return handler(existing.toRecord());
+      expect(key).toBe("session:user-9");
+      const result = handler(JSON.stringify(existing.toRecord()));
+      return result; // JSON 문자열 반환
     });
 
-    const newDiff = "--- code\n+++ code\n@@ -1 +1 @@\n-const x = 2;\n+const x = 3;";
     const updated = await repository.updateSession("user-9", (session) =>
       session.withData({
         code: {
@@ -176,13 +180,116 @@ describe("SessionStoreRepository", () => {
     );
 
     expect(store.update).toHaveBeenCalledWith(
-      "user-9",
+      "session:user-9",
       expect.any(Function),
       SESSION_TTL_MS,
     );
     expect(updated).toBeInstanceOf(Session);
     expect(updated.data.code.full).toBe("const x = 3;");
     expect(updated.data.code.diff).toBe(newDiff);
+  });
+
+  describe("Hint session methods", () => {
+    it("createOrResetHintSession은 Redis Hash에 세션을 저장한다", async () => {
+      store.hmset.mockResolvedValue(true);
+
+      const hintSession = await repository.createOrResetHintSession(
+        "user-10",
+        "problem-1",
+        "js",
+      );
+
+      expect(store.hmset).toHaveBeenCalledWith(
+        "user-10:problem-1",
+        expect.objectContaining({
+          problemId: "problem-1",
+          language: "js",
+        }),
+        SESSION_TTL_MS,
+      );
+      expect(hintSession).toBeInstanceOf(HintSession);
+      expect(hintSession.problemId).toBe("problem-1");
+    });
+
+    it("getHintSession은 Hash 데이터를 HintSession으로 반환한다", async () => {
+      store.hgetall.mockResolvedValue({
+        problemId: "problem-2",
+        language: "js",
+        "code.current": "console.log('test');",
+        "code.diff": "",
+        "code.cached": "",
+        context: JSON.stringify([{ hintCnt: 1, code: "c", hint: "h" }]),
+      });
+
+      const hintSession = await repository.getHintSession(
+        "user-11",
+        "problem-2",
+      );
+
+      expect(store.hgetall).toHaveBeenCalledWith("user-11:problem-2");
+      expect(hintSession).toBeInstanceOf(HintSession);
+      expect(hintSession.context).toHaveLength(1);
+    });
+
+    it("updateHintSessionCode는 저장소에 Hash를 기록한다", async () => {
+      const getSpy = jest
+        .spyOn(repository, "getHintSession")
+        .mockResolvedValue(
+          new HintSession({
+            userId: "user-12",
+            problemId: "problem-3",
+            language: "js",
+            code: { current: "old", diff: "", cached: "" },
+            context: [],
+          }),
+        );
+
+      store.hmset.mockResolvedValue(true);
+
+      await repository.updateHintSessionCode(
+        "user-12",
+        "problem-3",
+        "new",
+        "js",
+      );
+
+      expect(getSpy).toHaveBeenCalledWith("user-12", "problem-3");
+      expect(store.hmset).toHaveBeenCalledWith(
+        "user-12:problem-3",
+        expect.objectContaining({
+          "code.current": "new",
+        }),
+        SESSION_TTL_MS,
+      );
+    });
+
+    it("addHintContextItem은 컨텍스트를 추가한다", async () => {
+      jest.spyOn(repository, "getHintSession").mockResolvedValue(
+        new HintSession({
+          userId: "user-13",
+          problemId: "problem-4",
+          language: "js",
+          code: { current: "code", diff: "", cached: "" },
+          context: [],
+        }),
+      );
+      store.hmset.mockResolvedValue(true);
+
+      await repository.addHintContextItem("user-13", "problem-4", {
+        hintCnt: 1,
+        code: "code",
+        hint: "hint",
+        cursor: [0, 0],
+      });
+
+      expect(store.hmset).toHaveBeenCalledWith(
+        "user-13:problem-4",
+        expect.objectContaining({
+          context: expect.stringContaining('"hintCnt":1'),
+        }),
+        SESSION_TTL_MS,
+      );
+    });
   });
 });
 
