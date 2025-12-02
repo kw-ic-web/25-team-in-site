@@ -5,7 +5,7 @@ info:
 
 servers:
   - url: http://localhost:20991/api/v1
-  - url: ws://localhost:20991
+  - url: ws://localhost:20991/ws
     description: WebSocket 서버
 
 tags:
@@ -240,9 +240,9 @@ paths:
         "500":
           description: "서버 내부 오류"
 
-  hint:
+  /hint:
     servers:
-      - url: ws://localhost:20991
+      - url: ws://localhost:20991/ws
     get:
       tags: [WebSocket, Hint]
       summary: 힌트 웹소켓에 연결
@@ -260,9 +260,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/WebSocketHintRequest"
           response:
+            - name: hint:committed
+              schema:
+                $ref: "#/components/schemas/WebSocketHintCommitted"
             - name: hint:response
               schema:
                 $ref: "#/components/schemas/WebSocketHintResponse"
+            - name: hint:prompt
+              schema:
+                $ref: "#/components/schemas/WebSocketHintPrompt"
+            - name: hint:abort
+              schema:
+                $ref: "#/components/schemas/WebSocketHintAbort"
+            - name: hint:error
+              schema:
+                $ref: "#/components/schemas/WebSocketHintError"
             - name: error
               schema:
                 $ref: "#/components/schemas/WebSocketError"
@@ -545,24 +557,31 @@ components:
     # ==== WebSocket ====
     WebSocketHintRequest:
       type: object
-      required: [type, data]
+      required: [type, problemId]
       properties:
         type:
           type: string
           enum: [hint:request]
           description: "메시지 타입"
-        data:
-          type: object
-          required: [cursorPosition]
-          properties:
-            cursorPosition:
-              type: array
-              items:
-                type: integer
-                minimum: 0
-              minItems: 2
-              maxItems: 2
-              description: "커서 위치 [line, column] (0부터 시작)"
+        problemId:
+          type: string
+          description: "문제 ID (UUID v7)"
+        language:
+          type: string
+          description: "프로그래밍 언어 (선택사항, 예: 'js', 'py')"
+
+    WebSocketHintCommitted:
+      type: object
+      required: [type, success]
+      properties:
+        type:
+          type: string
+          enum: [hint:committed]
+          description: "힌트 요청이 커밋되었음을 알리는 메시지 타입"
+        success:
+          type: boolean
+          example: true
+          description: "항상 true"
 
     WebSocketHintResponse:
       type: object
@@ -574,10 +593,11 @@ components:
           description: "메시지 타입"
         success:
           type: boolean
+          example: true
           description: "요청 성공 여부"
         data:
           type: object
-          required: [hint]
+          required: [level, hint]
           properties:
             level:
               type: integer
@@ -587,6 +607,55 @@ components:
             hint:
               type: string
               description: "힌트 내용"
+
+    WebSocketHintPrompt:
+      type: object
+      required: [type, success, message, problemId]
+      properties:
+        type:
+          type: string
+          enum: [hint:prompt]
+          description: "힌트 프롬프트 메시지 타입"
+        success:
+          type: boolean
+          example: true
+          description: "항상 true"
+        message:
+          type: string
+          example: "힌트가 필요하신가요?"
+          description: "프롬프트 메시지"
+        problemId:
+          type: string
+          description: "문제 ID (UUID v7)"
+
+    WebSocketHintAbort:
+      type: object
+      required: [type, success]
+      properties:
+        type:
+          type: string
+          enum: [hint:abort]
+          description: "이미 진행 중인 힌트 요청이 있을 때 전송되는 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+
+    WebSocketHintError:
+      type: object
+      required: [type, success, message]
+      properties:
+        type:
+          type: string
+          enum: [hint:error]
+          description: "힌트 관련 에러 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+        message:
+          type: string
+          description: "에러 메시지"
 
     WebSocketError:
       type: object
