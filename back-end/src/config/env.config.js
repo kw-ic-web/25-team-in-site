@@ -7,11 +7,12 @@ const devEnvPath = path.resolve(rootDir, "development.env");
 const prodEnvPath = path.resolve(rootDir, "production.env");
 
 const envFilePath = fs.existsSync(devEnvPath) ? devEnvPath : prodEnvPath;
-const envLabel = process.env.NODE_ENV === "test"
-  ? "test"
-  : envFilePath === devEnvPath
-    ? "development"
-    : "production";
+const envLabel =
+  process.env.NODE_ENV === "test"
+    ? "test"
+    : envFilePath === devEnvPath
+      ? "development"
+      : "production";
 
 dotenv.config({ path: envFilePath });
 
@@ -33,7 +34,19 @@ const defaultRedisTestDb = Number(process.env.REDIS_DB_TEST ?? 1);
 const redisPassword = process.env.REDIS_PASSWORD || undefined;
 const redisUsername = process.env.REDIS_USERNAME || undefined;
 
-const resolvedRedisDb = envLabel === "test" ? defaultRedisTestDb : defaultRedisDb;
+const resolvedRedisDb =
+  envLabel === "test" ? defaultRedisTestDb : defaultRedisDb;
+
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",")
+  : envLabel === "development"
+    ? [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+      ]
+    : [];
 
 export default {
   env: envLabel,
@@ -41,6 +54,9 @@ export default {
   databaseUrl: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
   openaiApiKey: process.env.OPENAI_API_KEY,
+  cors: {
+    origin: corsOrigin,
+  },
   redis: {
     url: defaultRedisUrl,
     username: redisUsername,

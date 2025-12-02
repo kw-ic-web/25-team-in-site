@@ -10,7 +10,7 @@ import { sessionStoreRepository } from "../repository/sessionStore.repository.js
 import { ProblemRepository } from "../repository/problem.repository.js";
 
 export const HintService = {
-  _HINT_INTERVAL_MS: 1000 * 20, // 3분
+  _HINT_INTERVAL_MS: 1000 * 60 * 3, // 3분
   _HINT_INTERVAL_MAP: new Map(), // userId:problemId -> interval(callback)
   _PROCESSING_USERS: new Map(), // userId:problemId -> true (진행 중인 힌트 생성 요청 추적)
   _WS_MAP: new Map(), // userId -> ws (WebSocket 연결 저장)
