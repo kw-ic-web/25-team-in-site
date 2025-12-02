@@ -3,6 +3,6 @@ import { CodeController } from "../../../controllers/code.controller.js";
 
 const router = Router();
 
-router.post("/tokenize", CodeController.tokenize);
+router.post("/", CodeController.saveCode);
 
 export default router;

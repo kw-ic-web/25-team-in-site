@@ -1,0 +1,92 @@
+import { describe, it, expect } from "@jest/globals";
+import {
+  appRequest,
+  setupTestDBHooks,
+  createAuthenticatedUser,
+} from "../utils/test-helpers.js";
+
+setupTestDBHooks();
+
+describe("Code Save API", () => {
+  it("POST /api/v1/code/ - 코드를 저장한다", async () => {
+    const { cookie } = await createAuthenticatedUser({
+      user_id: `code_save_user_${Date.now()}`,
+    });
+
+    const res = await appRequest()
+      .post("/api/v1/code/")
+      .set("Cookie", cookie)
+      .send({
+        problemId: "e2e-problem-1",
+        code: "console.log('save test');",
+        language: "js",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("POST /api/v1/code/ - 유효하지 않은 language는 400을 반환한다", async () => {
+    const { cookie } = await createAuthenticatedUser({
+      user_id: `code_save_invalid_${Date.now()}`,
+    });
+
+    const res = await appRequest()
+      .post("/api/v1/code/")
+      .set("Cookie", cookie)
+      .send({
+        problemId: "e2e-problem-invalid-lang",
+        code: "console.log('test');",
+        language: "javascript",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBeDefined();
+  });
+
+  it("POST /api/v1/code/ - language가 없으면 400을 반환한다", async () => {
+    const { cookie } = await createAuthenticatedUser({
+      user_id: `code_save_no_lang_${Date.now()}`,
+    });
+
+    const res = await appRequest()
+      .post("/api/v1/code/")
+      .set("Cookie", cookie)
+      .send({
+        problemId: "e2e-problem-no-lang",
+        code: "console.log('test');",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBeDefined();
+  });
+
+  describe("인증 실패", () => {
+    it("토큰 없이 접근 시 401을 반환한다", async () => {
+      const res = await appRequest()
+        .post("/api/v1/code/")
+        .send({
+          problemId: "e2e-problem-unauth",
+          code: "console.log('test');",
+          language: "js",
+        });
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe("인증 정보가 올바르지 않습니다.");
+    });
+
+    it("잘못된 토큰으로 접근 시 401을 반환한다", async () => {
+      const res = await appRequest()
+        .post("/api/v1/code/")
+        .set("Cookie", "token=invalid-token")
+        .send({
+          problemId: "e2e-problem-invalid-token",
+          code: "console.log('test');",
+          language: "js",
+        });
+
+      expect(res.status).toBe(401);
+      expect(res.body.message).toBe("인증 정보가 올바르지 않습니다.");
+    });
+  });
+});

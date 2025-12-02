@@ -5,12 +5,16 @@ info:
 
 servers:
   - url: http://localhost:20991/api/v1
+  - url: ws://localhost:20991/ws
+    description: WebSocket 서버
 
 tags:
   - name: Auth
   - name: User
   - name: Problems
   - name: Code
+  - name: WebSocket
+  - name: Hint
 
 paths:
   /health:
@@ -88,34 +92,37 @@ paths:
         "500":
           description: "서버 내부 오류"
 
-  /code/tokenize:
+  /code:
     post:
       tags: [Code]
-      summary: 코드 토큰화
-      description: "tiktoken 기반으로 코드 문자열을 토큰화합니다."
+      summary: 코드 저장
+      description: "사용자의 현재 코드를 저장하고, 이전 코드와의 차이(diff)를 계산합니다. 인증이 필요합니다."
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CodeTokenizeRequest" }
+            schema: { $ref: "#/components/schemas/SaveCodeRequest" }
       responses:
         "200":
-          description: "토큰화 결과"
+          description: "코드 저장 성공"
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/CodeTokenizeResponse" }
+              schema: { $ref: "#/components/schemas/SaveCodeResponse" }
         "400":
-          description: "잘못된 요청 혹은 토큰 수 초과"
+          description: "잘못된 요청 (코드 타입 오류, 언어 타입 오류 등)"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "413":
-          description: "코드 길이가 허용 범위를 초과"
+        "401":
+          description: "인증되지 않은 사용자"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "500":
           description: "서버 내부 오류"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
   /problems:
     get:
@@ -233,6 +240,54 @@ paths:
         "500":
           description: "서버 내부 오류"
 
+  /hint:
+    servers:
+      - url: ws://localhost:20991/ws
+    get:
+      tags: [WebSocket, Hint]
+      summary: 힌트 웹소켓에 연결
+      description: "웹소켓 연결을 통해 실시간 힌트 제공"
+      x-status: "in-progress"
+      x-websocket:
+        url: "ws://localhost:20991/hint"
+        protocol: "ws"
+        authentication:
+          type: cookie
+          name: token
+        messages:
+          request:
+            - name: hint:request
+              schema:
+                $ref: "#/components/schemas/WebSocketHintRequest"
+          response:
+            - name: hint:committed
+              schema:
+                $ref: "#/components/schemas/WebSocketHintCommitted"
+            - name: hint:response
+              schema:
+                $ref: "#/components/schemas/WebSocketHintResponse"
+            - name: hint:prompt
+              schema:
+                $ref: "#/components/schemas/WebSocketHintPrompt"
+            - name: hint:abort
+              schema:
+                $ref: "#/components/schemas/WebSocketHintAbort"
+            - name: hint:error
+              schema:
+                $ref: "#/components/schemas/WebSocketHintError"
+            - name: error
+              schema:
+                $ref: "#/components/schemas/WebSocketError"
+      responses:
+        "101":
+          description: "WebSocket 연결 성공"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     # ==== AUTH ====
@@ -302,7 +357,7 @@ components:
           description: "사용자에게 전달되는 에러 메시지"
         stack:
           type: string
-          description: "개발 환경에서만 노출되는 stack trace"
+          description: "개발 환경에서만 노출되는 stack trace (REST API 요청에 한정)"
 
     # ==== USER ====
     UserCheckIdResponse:
@@ -479,19 +534,141 @@ components:
           items: { $ref: "#/components/schemas/ProblemSummary" }
 
     # ==== CODE ====
-    CodeTokenizeRequest:
+    SaveCodeRequest:
       type: object
-      required: [code]
+      required: [code, language]
       properties:
         code:
           type: string
-          description: "토큰화할 코드 문자열"
-          maxLength: 200000
+          description: "저장할 코드 문자열"
+        language:
+          type: string
+          enum: [js, py]
+          description: "프로그래밍 언어"
 
-    CodeTokenizeResponse:
+    SaveCodeResponse:
       type: object
-      required: [token_count]
+      required: [success]
       properties:
-        token_count:
-          type: integer
-          description: "전체 토큰 수"
+        success:
+          type: boolean
+          description: "저장 성공 여부"
+
+    # ==== WebSocket ====
+    WebSocketHintRequest:
+      type: object
+      required: [type, problemId]
+      properties:
+        type:
+          type: string
+          enum: [hint:request]
+          description: "메시지 타입"
+        problemId:
+          type: string
+          description: "문제 ID (UUID v7)"
+        language:
+          type: string
+          description: "프로그래밍 언어 (선택사항, 예: 'js', 'py')"
+
+    WebSocketHintCommitted:
+      type: object
+      required: [type, success]
+      properties:
+        type:
+          type: string
+          enum: [hint:committed]
+          description: "힌트 요청이 커밋되었음을 알리는 메시지 타입"
+        success:
+          type: boolean
+          example: true
+          description: "항상 true"
+
+    WebSocketHintResponse:
+      type: object
+      required: [type, success, data]
+      properties:
+        type:
+          type: string
+          enum: [hint:response]
+          description: "메시지 타입"
+        success:
+          type: boolean
+          example: true
+          description: "요청 성공 여부"
+        data:
+          type: object
+          required: [level, hint]
+          properties:
+            level:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: "1~5 사이의 힌트 레벨"
+            hint:
+              type: string
+              description: "힌트 내용"
+
+    WebSocketHintPrompt:
+      type: object
+      required: [type, success, message, problemId]
+      properties:
+        type:
+          type: string
+          enum: [hint:prompt]
+          description: "힌트 프롬프트 메시지 타입"
+        success:
+          type: boolean
+          example: true
+          description: "항상 true"
+        message:
+          type: string
+          example: "힌트가 필요하신가요?"
+          description: "프롬프트 메시지"
+        problemId:
+          type: string
+          description: "문제 ID (UUID v7)"
+
+    WebSocketHintAbort:
+      type: object
+      required: [type, success]
+      properties:
+        type:
+          type: string
+          enum: [hint:abort]
+          description: "이미 진행 중인 힌트 요청이 있을 때 전송되는 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+
+    WebSocketHintError:
+      type: object
+      required: [type, success, message]
+      properties:
+        type:
+          type: string
+          enum: [hint:error]
+          description: "힌트 관련 에러 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+        message:
+          type: string
+          description: "에러 메시지"
+
+    WebSocketError:
+      type: object
+      required: [type, success, message]
+      properties:
+        type:
+          type: string
+          enum: [error]
+          description: "에러 메시지 타입"
+        success:
+          type: boolean
+          example: false
+          description: "항상 false"
+        message:
+          type: string
+          description: "에러 메시지"
