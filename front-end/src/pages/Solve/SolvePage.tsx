@@ -286,6 +286,35 @@ export default function SolvePage() {
     };
   }
 
+  useEffect(() => {
+    if (!problemId || !language) return;
+
+    const interval = setInterval(async () => {
+      if (isSaving.current) return;
+      if (!code || !code.trim() || !language) return;
+
+      isSaving.current = true;
+      try {
+        await apiClient.post("/code", {
+          code,
+          language,
+          problemId,
+        });
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.message || "";
+        if (msg.includes("Connection is closed")) {
+          console.warn("WS 종료로 인한 /code 무시");
+          return;
+        }
+        console.error("/code error:", msg);
+      } finally {
+        isSaving.current = false;
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [problemId, language, code]);
+
   const handleReset = () => {
     const preset = languagePresets.find((l) => l.value === language);
     if (preset) setCode(preset.starter);
