@@ -122,6 +122,7 @@ export const problemsController = {
               : item.solved_at,
           runtime_ms: item.runtime_ms,
           memory_kb: item.memory_kb,
+          feedback: item.feedback,
           problem: _transformProblemSummary(item.problem),
         })),
       });

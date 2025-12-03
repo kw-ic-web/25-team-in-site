@@ -359,6 +359,7 @@ export const ProblemsService = {
           solved_at: item.createdAt,
           runtime_ms: item.solved_runtime ?? null,
           memory_kb: item.solved_memory_usage ?? null,
+          feedback: item.solved_feedback ?? null,
           problem: validatedProblem,
         };
       })

@@ -6,6 +6,7 @@ const RecentSolvedItemResponseDto = z.object({
   solved_at: z.date("FAIL_TO_GET_PROB_DETAIL"),
   runtime_ms: z.number("FAIL_TO_GET_PROB_DETAIL").nullable(),
   memory_kb: z.number("FAIL_TO_GET_PROB_DETAIL").nullable(),
+  feedback: z.string("FAIL_TO_GET_PROB_DETAIL").nullable(),
   problem: ProbSummaryWithStateResponseDto,
 });
 
