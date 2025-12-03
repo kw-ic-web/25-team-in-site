@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import "./SolvePage.css";
 import apiClient from "../../api/client";
 import IDEEditor from "../../components/IDEEditer/IDEEditer";
@@ -104,6 +104,8 @@ export default function SolvePage() {
   const [searchParams] = useSearchParams();
   const problemId = searchParams.get("problemId") ?? "";
 
+  const navigate = useNavigate();
+
   const [problem, setProblem] = useState<any>(null);
   const [detailError, setDetailError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -122,6 +124,8 @@ export default function SolvePage() {
   const wsRef = useRef<WebSocket | null>(null);
   const wsEvalRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
+
+  const [didSubmit, setDidSubmit] = useState(false);
 
   const isSaving = useRef(false);
 
@@ -254,6 +258,35 @@ export default function SolvePage() {
     );
   };
 
+  useEffect(() => {
+    if (!problemId || !language) return;
+
+    const interval = setInterval(async () => {
+      if (isSaving.current) return;
+      if (!code || !code.trim() || !language) return;
+
+      isSaving.current = true;
+      try {
+        await apiClient.post("/code", {
+          code,
+          language,
+          problemId,
+        });
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.message || "";
+        if (msg.includes("Connection is closed")) {
+          console.warn("WS 종료로 인한 /code 무시");
+          return;
+        }
+        console.error("/code error:", msg);
+      } finally {
+        isSaving.current = false;
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [problemId, language, code]);
+
   // 코드 저장 로직 그대로 유지
 
   function connectWS(cancelledRef: { current: boolean }) {
@@ -330,11 +363,45 @@ export default function SolvePage() {
 
         if (data.type === "evaluate:test-response") {
           setIsRunning(false);
-          setResult(JSON.stringify(data.data, null, 2));
+
+          if (data.data?.results?.length) {
+            const outputs = data.data.results.map((r) => r.actualOutput);
+            setResult(outputs.join("\n"));
+          } else {
+            setResult("⚠ 결과 없음");
+          }
         }
         if (data.type === "evaluate:submission-response") {
           setIsSubmitting(false);
-          setResult(JSON.stringify(data.data, null, 2));
+
+          const submission = data.data;
+          if (!submission) {
+            setResult("⚠ 제출 결과를 받지 못했습니다.");
+            return;
+          }
+
+          // 모든 테스트 케이스를 통과해야 제출 성공
+          if (submission.passed === true) {
+            setResult(`🎉 모든 ${submission.totalCases}개 테스트 케이스 통과!`);
+            setDidSubmit(true);
+          } else {
+            // 제출 실패 — 하나라도 틀림
+            const results = submission.results || [];
+            const failedCases = results.filter((r: any) => !r.isPassed);
+
+            let msg = `❌ 제출 실패: ${failedCases.length}개 테스트 실패\n\n`;
+
+            failedCases.slice(0, 5).forEach((r: any) => {
+              msg += `CASE #${r.caseId} → actualOutput: ${r.actualOutput}\n`;
+            });
+
+            if (failedCases.length > 5) {
+              msg += `... 그 외 ${failedCases.length - 5}개 케이스 실패`;
+            }
+
+            setResult(msg);
+            setDidSubmit(false); // 이게 중요!
+          }
         }
         if (data.type === "error") {
           setIsRunning(false);
@@ -375,6 +442,12 @@ export default function SolvePage() {
       wsEvalRef.current?.close();
     };
   }, [problemId, language]);
+
+  useEffect(() => {
+    if (didSubmit) {
+      navigate("/home");
+    }
+  }, [didSubmit]);
 
   return (
     <div className="solve-page">
