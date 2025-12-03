@@ -44,5 +44,16 @@ app.set("port", port);
     }
   });
 
-  server.listen(port);
+  server.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    // Docker purge 스케줄러를 서버 시작 후에 동적으로 초기화
+    try {
+      const { scheduleDailyDockerPurge } = await import(
+        "./service/evaluation.service.js"
+      );
+      scheduleDailyDockerPurge();
+    } catch (error) {
+      console.error("Failed to schedule Docker purge:", error);
+    }
+  });
 })();

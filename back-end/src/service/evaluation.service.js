@@ -5,7 +5,19 @@ import { SolvedRepository } from "../repository/solved.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
-const docker = new Docker();
+// Docker 인스턴스를 지연 초기화 (lazy initialization)
+let dockerInstance = null;
+const getDocker = () => {
+  if (!dockerInstance) {
+    try {
+      dockerInstance = new Docker();
+    } catch (error) {
+      console.error("[EvaluationService] Failed to initialize Docker:", error);
+      throw error;
+    }
+  }
+  return dockerInstance;
+};
 
 const DOCKER_PURGE_LOG_PREFIX = "[EvaluationService] Docker purge";
 const SOLVED_LOG_PREFIX = "[EvaluationService] Solved record";
@@ -85,6 +97,13 @@ const getDelayUntilNextNoon = () => {
 
 const runDockerPurge = async () => {
   const details = [];
+  let docker;
+  try {
+    docker = getDocker();
+  } catch (error) {
+    console.error(`${DOCKER_PURGE_LOG_PREFIX} failed to get Docker instance`, error);
+    return;
+  }
 
   await Promise.all(
     DOCKER_PRUNE_TARGETS.map(async ({ label, method, deletedKey, args = [] }) => {
@@ -133,31 +152,35 @@ const runDockerPurge = async () => {
   });
 };
 
-const scheduleDailyDockerPurge = () => {
-  const scheduleNext = () => {
-    const delay = getDelayUntilNextNoon();
-    const timer = setTimeout(() => {
-      runDockerPurge()
-        .catch((error) => {
-          console.error(`${DOCKER_PURGE_LOG_PREFIX} run failed`, error);
-        })
-        .finally(scheduleNext);
-    }, delay);
-    if (typeof timer.unref === "function") {
-      timer.unref();
-    }
-    console.info(`${DOCKER_PURGE_LOG_PREFIX} scheduled`, {
-      nextRunInMs: delay,
-    });
-  };
+export const scheduleDailyDockerPurge = () => {
+  try {
+    const scheduleNext = () => {
+      const delay = getDelayUntilNextNoon();
+      const timer = setTimeout(() => {
+        runDockerPurge()
+          .catch((error) => {
+            console.error(`${DOCKER_PURGE_LOG_PREFIX} run failed`, error);
+          })
+          .finally(scheduleNext);
+      }, delay);
+      if (typeof timer.unref === "function") {
+        timer.unref();
+      }
+      console.info(`${DOCKER_PURGE_LOG_PREFIX} scheduled`, {
+        nextRunInMs: delay,
+      });
+    };
 
-  scheduleNext();
+    scheduleNext();
+  } catch (error) {
+    console.error(`${DOCKER_PURGE_LOG_PREFIX} initialization failed`, error);
+  }
 };
 
-scheduleDailyDockerPurge();
-
 export const EvaluationService = {
-  _docker: docker,
+  get _docker() {
+    return getDocker();
+  },
   _DEFAULT_TIMEOUT_MS: 5000,
   _MAX_TIMEOUT_MS: 30_000,
   _DEFAULT_MEMORY_BYTES: 128 * 1024 * 1024,

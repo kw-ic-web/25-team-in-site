@@ -16,7 +16,7 @@ export const hintSocketHandler = (wss, ws) => {
         if (
           !message.problemId ||
           typeof message.problemId !== "string" ||
-          message.problemId.trim().length === 0
+        message.problemId.trim().length === 0
         ) {
           sendErrorMessage(ws, "'problemId' is required for hint:request");
           return;
