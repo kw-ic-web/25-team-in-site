@@ -329,18 +329,36 @@ export const EvaluationService = {
     }
 
     if (typeof rawCase === "object") {
-      const inputCandidate =
+      let inputCandidate =
         rawCase.input ??
         rawCase.in ??
         rawCase.sample_input ??
         rawCase.case_input ??
         "";
-      const outputCandidate =
+      let outputCandidate =
         rawCase.output ??
         rawCase.expected ??
         rawCase.sample_output ??
         rawCase.case_output ??
         "";
+
+      // inputCandidate가 JSON 문자열이고 그 안에 input과 output이 모두 있는 경우 처리
+      if (typeof inputCandidate === "string" && inputCandidate.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(inputCandidate);
+          if (typeof parsed === "object" && parsed !== null) {
+            if (
+              Object.prototype.hasOwnProperty.call(parsed, "input") &&
+              Object.prototype.hasOwnProperty.call(parsed, "output")
+            ) {
+              inputCandidate = parsed.input;
+              outputCandidate = parsed.output;
+            }
+          }
+        } catch {
+          // JSON 파싱 실패 시 기존 inputCandidate 사용
+        }
+      }
 
       return {
         id: rawCase.id ?? index + 1,
