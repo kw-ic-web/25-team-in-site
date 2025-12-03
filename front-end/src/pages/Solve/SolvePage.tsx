@@ -38,7 +38,6 @@ function buildHintWebSocketUrl(token: string | null): string {
   if (isHttp) {
     url.protocol = url.protocol === "https:" || isSecurePage ? "wss:" : "ws:";
   } else if (url.protocol === "ws:" && isSecurePage) {
-    // 명시적으로 ws가 주어져도 페이지가 https면 혼합 콘텐츠를 피하기 위해 wss로 업그레이드
     url.protocol = "wss:";
   }
 
@@ -77,7 +76,6 @@ function buildEvaluateWebSocketUrl(token: string | null): string {
   if (isHttp) {
     url.protocol = url.protocol === "https:" || isSecurePage ? "wss:" : "ws:";
   } else if (url.protocol === "ws:" && isSecurePage) {
-    // 명시적으로 ws가 주어져도 페이지가 https면 혼합 콘텐츠를 피하기 위해 wss로 업그레이드
     url.protocol = "wss:";
   }
 
@@ -116,6 +114,7 @@ export default function SolvePage() {
 
   const [hint, setHint] = useState<string | null>(null);
   const [isHintLoading, setIsHintLoading] = useState(false);
+  const [hintAvailable, setHintAvailable] = useState(false);
 
   const [result, setResult] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -204,6 +203,7 @@ export default function SolvePage() {
     }
     setIsHintLoading(true);
     setHint(null);
+    setHintAvailable(false);
 
     wsRef.current.send(
       JSON.stringify({
@@ -254,34 +254,7 @@ export default function SolvePage() {
     );
   };
 
-  useEffect(() => {
-    if (!problemId || !language) return;
-
-    const interval = setInterval(async () => {
-      if (isSaving.current) return;
-      if (!code || !code.trim() || !language) return;
-
-      isSaving.current = true;
-      try {
-        await apiClient.post("/code", {
-          code,
-          language,
-          problemId,
-        });
-      } catch (e: any) {
-        const msg = e?.response?.data?.message || e?.message || "";
-        if (msg.includes("Connection is closed")) {
-          console.warn("WS 종료로 인한 /code 무시");
-          return;
-        }
-        console.error("/code error:", msg);
-      } finally {
-        isSaving.current = false;
-      }
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [problemId, language, code]);
+  // 코드 저장 로직 그대로 유지
 
   function connectWS(cancelledRef: { current: boolean }) {
     const token = localStorage.getItem("accessToken");
@@ -291,21 +264,35 @@ export default function SolvePage() {
 
     wsRef.current.onopen = () => {
       console.log("WS 연결 완료");
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({
-            type: "hint:request",
-            problemId,
-            language,
-          })
-        );
-      }
     };
 
     wsRef.current.onmessage = (msg) => {
       try {
         const data = JSON.parse(msg.data);
         console.log("WS 메시지 수신:", data);
+
+        if (data.type === "hint:prompt") {
+          console.log("힌트 사용 가능");
+          setHintAvailable(true);
+          setIsHintLoading(false);
+        }
+
+        if (data.type === "hint:committed") {
+          console.log("힌트 처리 중...");
+          setHintAvailable(false);
+        }
+
+        if (data.type === "hint:response") {
+          console.log("힌트 도착");
+          setHintAvailable(false);
+          setIsHintLoading(false);
+          setHint(data.data.hint);
+        }
+
+        if (data.type === "hint:abort") {
+          console.log("힌트 ABORT");
+          setIsHintLoading(false);
+        }
       } catch {
         console.warn("WS 메시지 JSON 파싱 오류");
       }
@@ -316,16 +303,8 @@ export default function SolvePage() {
     };
 
     wsRef.current.onclose = (event) => {
-      console.warn("[hint-ws] 연결 종료", {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean,
-      });
-      setHint(
-        (prev) =>
-          prev ??
-          "힌트 실시간 연결에 실패했습니다. 버튼을 눌러 힌트를 불러오세요."
-      );
+      console.warn("[hint-ws] 연결 종료");
+      setHintAvailable(false);
       if (cancelledRef.current) return;
       reconnectTimerRef.current = window.setTimeout(
         () => connectWS(cancelledRef),
@@ -393,6 +372,7 @@ export default function SolvePage() {
         reconnectTimerRef.current = null;
       }
       wsRef.current?.close();
+      wsEvalRef.current?.close();
     };
   }, [problemId, language]);
 
@@ -471,9 +451,13 @@ export default function SolvePage() {
             <button
               className="btn-hint-generate"
               onClick={handleGetHint}
-              disabled={isHintLoading}
+              disabled={isHintLoading || !hintAvailable}
             >
-              {isHintLoading ? "생성 중..." : "힌트 생성하기"}
+              {isHintLoading
+                ? "생성 중..."
+                : hintAvailable
+                ? "힌트 생성하기"
+                : "힌트 대기중..."}
             </button>
           )}
         </header>
@@ -481,7 +465,7 @@ export default function SolvePage() {
           {hint ? (
             <pre className="hint-text">{hint}</pre>
           ) : (
-            <p>힌트를 불러오세요.</p>
+            <p>힌트가 아직 없습니다.</p>
           )}
         </div>
       </section>
