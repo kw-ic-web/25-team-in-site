@@ -4,6 +4,7 @@ import { ProblemRepository } from "../repository/problem.repository.js";
 import { SolvedRepository } from "../repository/solved.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { UserService } from "./user.service.js";
+import { HintService } from "./hint.service.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
 // Docker 인스턴스를 지연 초기화 (lazy initialization)
@@ -281,7 +282,7 @@ export const EvaluationService = {
     };
 
     try {
-      const userUpdate = await this._recordSolvedIfNeeded({
+      const solvedResult = await this._recordSolvedIfNeeded({
         userId,
         problem,
         evaluationSummary,
@@ -289,8 +290,11 @@ export const EvaluationService = {
         sourceCode: code,
       });
 
-      if (userUpdate) {
-        evaluationSummary.userUpdate = userUpdate;
+      if (solvedResult?.userUpdate) {
+        evaluationSummary.userUpdate = solvedResult.userUpdate;
+      }
+      if (solvedResult?.solvedFeedback) {
+        evaluationSummary.solvedFeedback = solvedResult.solvedFeedback;
       }
     } catch (error) {
       console.error(`${SOLVED_LOG_PREFIX} failed`, error);
@@ -721,6 +725,14 @@ export const EvaluationService = {
     const normalizedLanguage =
       (runtimeKey || "").toString().toLowerCase() || "unknown";
 
+    const solvedFeedback = await HintService.generateSolvedFeedback({
+      userId,
+      problem,
+      evaluationSummary,
+      language: normalizedLanguage,
+      sourceCode,
+    });
+
     await SolvedRepository.createSolved({
       user_id: user._id,
       problem_id: problem._id,
@@ -728,6 +740,7 @@ export const EvaluationService = {
       solved_code: sourceCode,
       solved_runtime,
       solved_memory_usage,
+      solved_feedback: solvedFeedback || undefined,
     });
 
     console.info(`${SOLVED_LOG_PREFIX} stored`, {
@@ -740,10 +753,16 @@ export const EvaluationService = {
     const difficulty = problem.problem_difficulty || 1;
     const xpToAdd = difficulty * 10;
 
+    let userUpdate = null;
     try {
-      return await UserService.updateUserLevel(userId, xpToAdd);
+      userUpdate = await UserService.updateUserLevel(userId, xpToAdd);
     } catch (error) {
       console.error(`${SOLVED_LOG_PREFIX} failed to update user stats`, error);
     }
+
+    return {
+      userUpdate,
+      solvedFeedback,
+    };
   },
 };
