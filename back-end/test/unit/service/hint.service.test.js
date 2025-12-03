@@ -255,16 +255,40 @@ describe("HintService", () => {
       expect(mockGetHintSession).not.toHaveBeenCalled();
     });
 
-    it("이미 진행 중인 요청이 있으면 abort 이벤트를 전송한다", async () => {
+    it("이미 진행 중인 요청이 있어도 새로운 요청을 처리한다", async () => {
       HintService._PROCESSING_USERS.set("user-1:problem-1", true);
-
-      await HintService.generateHint(mockWs, "user-1", "problem-1");
-
-      expect(mockSendMessage).toHaveBeenCalledWith(mockWs, {
-        type: "hint:abort",
-        success: false,
+      mockGetHintSession.mockResolvedValue(null);
+      mockCreateOrResetHintSession.mockResolvedValue({
+        userId: "user-1",
+        problemId: "problem-1",
+        language: "js",
+        code: { current: "", diff: "", cached: "" },
+        context: [],
       });
-      expect(mockGetHintSession).not.toHaveBeenCalled();
+
+      const mockHint = { level: 1, body: "힌트 내용" };
+      const mockValidatedHint = { level: 1, body: "검증된 힌트" };
+
+      mockOpenAIClient.responses.parse
+        .mockResolvedValueOnce({ output_parsed: mockHint })
+        .mockResolvedValueOnce({ output_parsed: mockValidatedHint });
+
+      mockGetHintSession.mockResolvedValueOnce(null).mockResolvedValueOnce({
+        userId: "user-1",
+        problemId: "problem-1",
+        language: "js",
+        code: { current: "", diff: "", cached: "" },
+        context: [],
+      });
+
+      await HintService.generateHint(mockWs, "user-1", "problem-1", "js");
+
+      // 진행 중인 요청이 있어도 정상적으로 처리됨
+      expect(mockGetHintSession).toHaveBeenCalled();
+      expect(mockSendMessage).toHaveBeenCalledWith(mockWs, {
+        type: "hint:committed",
+        success: true,
+      });
     });
 
     it("세션이 없으면 새로 생성하고 힌트를 생성한다", async () => {

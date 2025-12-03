@@ -188,11 +188,8 @@ ${codeSnippet || "/* 코드가 비어 있습니다. */"}
       return;
     }
     const key = this._makeKey(userId, problemId);
-    // 이미 진행 중인 요청이 있으면 abort 이벤트 전송
-    if (this._PROCESSING_USERS.has(key)) {
-      sendMessage(ws, { type: "hint:abort", success: false });
-      return;
-    }
+    // 힌트 버튼이 항상 활성화되도록 진행 중인 요청 체크 제거
+    // 기존 진행 중인 요청이 있어도 새로운 요청 허용
 
     try {
       // 진행 중 상태로 표시
