@@ -103,6 +103,27 @@ const LANGUAGE_ALIAS = Object.entries(LANGUAGE_CONFIG).reduce(
 
 const normalizeLineEndings = (value = "") => value.replace(/\r\n/g, "\n");
 
+/**
+ * 코드 문자열에서 이스케이프된 줄바꿈/탭을 실제 문자로 변환
+ * 클라이언트에서 이스케이프된 문자열로 보낸 경우를 처리
+ * @param {string} code - 정규화할 코드 문자열
+ * @returns {string} 정규화된 코드 문자열
+ */
+const normalizeCode = (code = "") => {
+  if (typeof code !== "string") {
+    return "";
+  }
+  // \\n을 \n으로, \\t를 \t로 변환
+  // 하지만 \\\\n은 \\n으로 유지 (이중 이스케이프 방지)
+  return code
+    .replace(/\\\\n/g, "\x00TEMP_NEWLINE\x00") // 임시 마커로 보호
+    .replace(/\\n/g, "\n")
+    .replace(/\x00TEMP_NEWLINE\x00/g, "\\n")
+    .replace(/\\\\t/g, "\x00TEMP_TAB\x00") // 임시 마커로 보호
+    .replace(/\\t/g, "\t")
+    .replace(/\x00TEMP_TAB\x00/g, "\\t");
+};
+
 const getDelayUntilNextNoon = () => {
   const now = new Date();
   const nextNoon = new Date(now);
@@ -234,13 +255,16 @@ export const EvaluationService = {
 
     const runtime = this._resolveLanguage(language);
 
+    // 코드 정규화: 이스케이프된 줄바꿈/탭을 실제 문자로 변환
+    const normalizedCode = normalizeCode(code);
+
     const results = [];
     let passedCount = 0;
 
     for (const testCase of cases) {
       try {
         const { output, executionTime, memoryUsage } =
-          await this._executeInDocker(code, runtime, testCase.input, limits);
+          await this._executeInDocker(normalizedCode, runtime, testCase.input, limits);
 
         const isPassed = this._compareOutput(output, testCase.expectedOutput);
         if (isPassed) {
