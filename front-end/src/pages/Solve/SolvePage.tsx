@@ -167,7 +167,6 @@ export default function SolvePage() {
             return {
               label: norm.toUpperCase(),
               value: norm,
-              starter: `// write your code here\n// language: ${norm}\n`,
             };
           })
         );
