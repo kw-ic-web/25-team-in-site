@@ -3,9 +3,10 @@ import { zodTextFormat } from "openai/helpers/zod";
 import {
   DEFAULT_PROMPT,
   VALIDATED_PROMPT,
+  L5_FEEDBACK_PROMPT,
 } from "../constants/openai.constants.js";
 import { sendErrorMessage, sendMessage } from "../utils/socket.utils.js";
-import { HintSchema } from "../utils/validation/hint.schema.js";
+import { HintSchema, L5FeedbackSchema } from "../utils/validation/hint.schema.js";
 import { sessionStoreRepository } from "../repository/sessionStore.repository.js";
 import { ProblemRepository } from "../repository/problem.repository.js";
 
@@ -18,6 +19,90 @@ export const HintService = {
 
   _makeKey(userId, problemId) {
     return `${userId}:${problemId}`;
+  },
+
+  _getResultMetric(results = [], field) {
+    if (!Array.isArray(results) || !field) {
+      return null;
+    }
+    let metric = null;
+    for (const result of results) {
+      const value = result?.[field];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        metric = metric === null ? value : Math.max(metric, value);
+      }
+    }
+    return metric;
+  },
+
+  _buildL5FeedbackContext({
+    problem,
+    evaluationSummary,
+    language,
+    sourceCode,
+  }) {
+    const totalCases = evaluationSummary?.totalCases ?? 0;
+    const results = Array.isArray(evaluationSummary?.results)
+      ? evaluationSummary.results
+      : [];
+    const passedCases = results.filter((result) => result?.isPassed).length;
+    const score = evaluationSummary?.score ?? 0;
+    const maxExecution = this._getResultMetric(
+      evaluationSummary?.results,
+      "executionTime",
+    );
+    const maxMemory = this._getResultMetric(
+      evaluationSummary?.results,
+      "memoryUsage",
+    );
+    const problemBody = problem?.problem_body ?? "";
+    const codeSnippet = sourceCode ?? "";
+    const categories = [
+      problem?.problem_main_category,
+      problem?.problem_sub_category,
+    ]
+      .filter(Boolean)
+      .join(" / ");
+
+    const formattedScore =
+      typeof score === "number" ? score.toFixed(1) : String(score);
+    const languageLabel = language || "unknown";
+
+    return `
+[문제 정보]
+- 문제 ID: ${problem?.problem_id || problem?._id || "알 수 없음"}
+- 제목: ${problem?.problem_title ?? "제목 정보 없음"}
+- 난이도: ${problem?.problem_difficulty ?? "미정"}
+- 카테고리: ${categories || "카테고리 정보 없음"}
+
+[문제 설명 요약]
+${problemBody || "문제 설명 데이터가 제공되지 않았습니다."}
+
+[평가 요약]
+- 테스트 케이스: 총 ${totalCases}개 / 통과 ${passedCases}개
+- 점수: ${formattedScore}
+- 실행 시간 제한: ${evaluationSummary?.timeLimitMs ?? "정보 없음"} ms
+- 최대 실행 시간: ${maxExecution ?? "정보 없음"} ms
+- 메모리 제한: ${evaluationSummary?.memoryLimitBytes ?? "정보 없음"} bytes
+- 측정된 최대 메모리: ${maxMemory ?? "정보 없음"} bytes
+- 사용 언어: ${languageLabel}
+
+[제출 코드]
+\`\`\`${languageLabel}
+${codeSnippet || "/* 코드가 비어 있습니다. */"}
+\`\`\`
+`;
+  },
+
+  _formatL5FeedbackResponse(feedback) {
+    if (!feedback) return null;
+
+    const summaryLines = (feedback.keyPoints || []).map(
+      (point, index) => `- 요약 ${index + 1}: ${point.trim()}`,
+    );
+    const trimmedReport = feedback.report?.trim() ?? "";
+
+    return [...summaryLines, "", trimmedReport].join("\n").trim();
   },
 
   async _makeContext(userId, problemId) {
@@ -215,6 +300,40 @@ export const HintService = {
     }
   },
 
+  async generateSolvedFeedback({
+    userId,
+    problem,
+    evaluationSummary,
+    language,
+    sourceCode,
+  }) {
+    try {
+      const context = this._buildL5FeedbackContext({
+        problem,
+        evaluationSummary,
+        language,
+        sourceCode,
+      });
+
+      const completion = await this._getChatCompletion(
+        [
+          { role: "system", content: L5_FEEDBACK_PROMPT },
+          { role: "user", content: context },
+        ],
+        L5FeedbackSchema,
+        "L5_feedback_report",
+      );
+
+      return this._formatL5FeedbackResponse(completion);
+    } catch (error) {
+      console.error("[HintService] Failed to generate L5 feedback", {
+        userId,
+        problemId: problem?._id || problem?.problem_id,
+      }, error);
+      return null;
+    }
+  },
+
   _clearInterval(userId, problemId) {
     const key = this._makeKey(userId, problemId);
     const existingInterval = this._HINT_INTERVAL_MAP.get(key);
@@ -242,7 +361,9 @@ export const HintService = {
     }
     
     const initialDiff = hintSession.code?.diff || "";
-    this._DIFF_CACHED_MAP.set(key, initialDiff);
+    if (!this._DIFF_CACHED_MAP.has(key)) {
+      this._DIFF_CACHED_MAP.set(key, initialDiff);
+    }
 
     // 새 인터벌 시작 (3분마다 diff 확인)
     const interval = setInterval(async () => {
