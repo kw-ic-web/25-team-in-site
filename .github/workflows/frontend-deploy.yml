@@ -88,7 +88,7 @@ jobs:
             fi
             # pm2로 프론트엔드 서버 실행/재시작
             pm2 delete "$PM2_NAME" 2>/dev/null || true
-            pm2 start serve --name "$PM2_NAME" -- -s -l "$DEPLOY_PORT" dist
+            pm2 serve dist "$DEPLOY_PORT" --name "$PM2_NAME" --spa
             pm2 save
             echo "Frontend deployed and running on port: $DEPLOY_PORT"
         env:
