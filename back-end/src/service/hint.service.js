@@ -188,11 +188,17 @@ export const HintService = {
       );
 
       // 힌트 사용 시 인터벌 다시 시작 (diff 검증 계속)
-      // diff_cached_map 초기화 (새로운 diff 추적 시작)
-      this._DIFF_CACHED_MAP.delete(key);
-      // 인터벌이 없으면 시작
+      // 인터벌이 없으면 시작 (_startInterval 내부에서 diff 초기화)
       if (!this._HINT_INTERVAL_MAP.has(key)) {
-        this._startInterval(userId, problemId);
+        await this._startInterval(userId, problemId);
+      } else {
+        // 인터벌이 이미 있으면 diff를 다시 초기화하여 새로운 추적 시작
+        const hintSessionAfterUpdate = await sessionStoreRepository.getHintSession(
+          userId,
+          problemId,
+        );
+        const updatedDiff = hintSessionAfterUpdate?.code?.diff || "";
+        this._DIFF_CACHED_MAP.set(key, updatedDiff);
       }
 
       sendMessage(ws, {
@@ -219,42 +225,65 @@ export const HintService = {
     // diff_cached_map은 유지 (힌트 사용 시 다시 시작할 때 사용)
   },
 
-  _startInterval(userId, problemId) {
+  async _startInterval(userId, problemId) {
     const key = this._makeKey(userId, problemId);
     // 기존 인터벌이 있으면 제거
     this._clearInterval(userId, problemId);
 
+    // 인터벌 시작 시점의 diff를 초기화 (3분 동안 변경되지 않았는지 확인하기 위해)
+    const hintSession = await sessionStoreRepository.getHintSession(
+      userId,
+      problemId,
+    );
+    
+    // hintSession이 없으면 인터벌을 시작하지 않음
+    if (!hintSession) {
+      return;
+    }
+    
+    const initialDiff = hintSession.code?.diff || "";
+    this._DIFF_CACHED_MAP.set(key, initialDiff);
+
     // 새 인터벌 시작 (3분마다 diff 확인)
     const interval = setInterval(async () => {
-      const ws = this._WS_MAP.get(userId);
-      if (!ws || ws.readyState !== 1) {
-        // WebSocket이 없거나 닫혀있으면 인터벌 제거
-        this._clearInterval(userId, problemId);
-        return;
-      }
+      try {
+        const ws = this._WS_MAP.get(userId);
+        if (!ws || ws.readyState !== 1) {
+          // WebSocket이 없거나 닫혀있으면 인터벌 제거
+          this._clearInterval(userId, problemId);
+          return;
+        }
 
-      // 현재 diff 가져오기
-      const hintSession = await sessionStoreRepository.getHintSession(
-        userId,
-        problemId,
-      );
-      const currentDiff = hintSession?.code?.diff || "";
-      const cachedDiff = this._DIFF_CACHED_MAP.get(key) || "";
-
-      // diff가 변경되지 않았으면 (3분 동안 동일)
-      if (currentDiff === cachedDiff && currentDiff !== "") {
-        // hint:prompt 전송
-        sendMessage(ws, {
-          type: "hint:prompt",
-          success: true,
-          message: "힌트가 필요하신가요?",
+        // 현재 diff 가져오기
+        const currentHintSession = await sessionStoreRepository.getHintSession(
+          userId,
           problemId,
-        });
-        // 인터벌 삭제 (더 이상 보내지 않음)
+        );
+        const currentDiff = currentHintSession?.code?.diff || "";
+        const cachedDiff = this._DIFF_CACHED_MAP.get(key) || "";
+
+        // diff가 변경되지 않았으면 (3분 동안 동일)
+        if (currentDiff === cachedDiff && currentDiff !== "") {
+          // hint:prompt 전송
+          sendMessage(ws, {
+            type: "hint:prompt",
+            success: true,
+            message: "힌트가 필요하신가요?",
+            problemId,
+          });
+          // 인터벌 삭제 (더 이상 보내지 않음)
+          this._clearInterval(userId, problemId);
+        } else if (currentDiff !== cachedDiff) {
+          // diff가 변경되었으면 cached diff 업데이트하고 계속 모니터링
+          this._DIFF_CACHED_MAP.set(key, currentDiff);
+        }
+      } catch (error) {
+        console.error(
+          `[HintService] Interval error for ${key}:`,
+          error,
+        );
+        // 에러 발생 시 인터벌 제거 (무한 루프 방지)
         this._clearInterval(userId, problemId);
-      } else if (currentDiff !== cachedDiff) {
-        // diff가 변경되었으면 cached diff 업데이트하고 계속 모니터링
-        this._DIFF_CACHED_MAP.set(key, currentDiff);
       }
     }, this._HINT_INTERVAL_MS);
 
@@ -312,21 +341,27 @@ export const HintService = {
     const { userId, problemId } = dto;
     // 코드 업데이트 시 diff 확인 및 인터벌 관리
     const key = this._makeKey(userId, problemId);
+
+    // 인터벌이 없으면 시작 (diff 검증 시작)
+    // _startInterval 내부에서 diff를 초기화하므로 여기서는 업데이트하지 않음
+    if (!this._HINT_INTERVAL_MAP.has(key)) {
+      await this._startInterval(userId, problemId);
+      return;
+    }
+
+    // 인터벌이 이미 있으면 diff가 변경되었는지 확인하고 업데이트
+    // 클라이언트가 10초마다 요청을 보내므로, 코드가 변경되지 않아도 호출될 수 있음
+    // diff가 변경되었으면 캐시를 업데이트하여 인터벌의 3분 카운트를 리셋
     const hintSession = await sessionStoreRepository.getHintSession(
       userId,
       problemId,
     );
     const currentDiff = hintSession?.code?.diff || "";
     const cachedDiff = this._DIFF_CACHED_MAP.get(key) || "";
-
-    // diff가 변경되었으면 cached diff 업데이트
+    
     if (currentDiff !== cachedDiff) {
+      // diff가 변경되었으면 cached diff 업데이트 (인터벌 내부에서 3분 카운트 리셋)
       this._DIFF_CACHED_MAP.set(key, currentDiff);
-    }
-
-    // 인터벌이 없으면 시작 (diff 검증 시작)
-    if (!this._HINT_INTERVAL_MAP.has(key)) {
-      this._startInterval(userId, problemId);
     }
   },
 };
