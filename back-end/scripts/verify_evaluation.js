@@ -6,13 +6,25 @@ ProblemRepository.findProblemById = async (id) => {
   if (id === "test-problem-hello") {
     return {
       problem_id: "test-problem-hello",
-      problem_evaluate_cases: [":::Hello"],
+      problem_evaluate_cases: ['{"input":"","output":"Hello"}'],
     };
   }
   if (id === "test-problem-add") {
     return {
       problem_id: "test-problem-add",
-      problem_evaluate_cases: ["1 2:::3", "5 5:::10"],
+      problem_evaluate_cases: [
+        '{"input":"1 2","output":"3"}',
+        '{"input":"5 5","output":"10"}',
+      ],
+    };
+  }
+  if (id === "test-problem-newline") {
+    return {
+      problem_id: "test-problem-newline",
+      problem_evaluate_cases: [
+        '{"input":"3\\n1\\n2\\n3","output":"6"}',
+        '{"input":"4\\n10\\n20\\n30\\n40","output":"100"}',
+      ],
     };
   }
   return null;
@@ -78,6 +90,44 @@ async function runVerification() {
     else console.error("❌ Test 2 Failed (Should have timed out)");
   } catch (e) {
     console.error("❌ Test 2 Error:", e);
+  }
+
+  // Test 3: Newline Input (3\n1\n2\n3 형식)
+  console.log("\n[Test 3] Newline Input (3\\n1\\n2\\n3 형식)");
+  const newlineCode = `
+    const fs = require('fs');
+    const input = fs.readFileSync(0).toString().trim().split('\\n');
+    const n = parseInt(input[0]);
+    let sum = 0;
+    for (let i = 1; i <= n; i++) {
+      sum += parseInt(input[i]);
+    }
+    console.log(sum);
+  `;
+  try {
+    const result3 = await EvaluationService.evaluateCode({
+      userId: "user1",
+      problemId: "test-problem-newline",
+      code: newlineCode,
+      language: "js",
+    });
+    console.log("Result 3:", JSON.stringify(result3, null, 2));
+    console.log("\n입력 값 확인:");
+    result3.results.forEach((r, idx) => {
+      console.log(`  케이스 ${idx + 1}:`);
+      console.log(`    입력: ${JSON.stringify(r.input)}`);
+      console.log(`    입력 (실제 내용):`);
+      r.input.split("\n").forEach((line, i) => {
+        console.log(`      줄 ${i + 1}: "${line}"`);
+      });
+      console.log(`    예상 출력: ${r.expectedOutput}`);
+      console.log(`    실제 출력: ${r.actualOutput}`);
+      console.log(`    통과: ${r.isPassed ? "✅" : "❌"}`);
+    });
+    if (result3.passed) console.log("✅ Test 3 Passed");
+    else console.error("❌ Test 3 Failed");
+  } catch (e) {
+    console.error("❌ Test 3 Error:", e);
   }
 }
 
