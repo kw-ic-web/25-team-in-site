@@ -473,15 +473,17 @@ export default function SolvePage() {
           <span>힌트</span>
 
           <div className="panel-title-right">
-            {!hint && (
-              <button
-                className="btn-hint-generate"
-                onClick={handleGetHint}
-                disabled={isHintLoading}
-              >
-                {isHintLoading ? "생성 중..." : "힌트 생성하기"}
-              </button>
-            )}
+            <button
+              className="btn-hint-generate"
+              onClick={handleGetHint}
+              disabled={isHintLoading}
+            >
+              {isHintLoading
+                ? "생성 중..."
+                : hint
+                ? "힌트 다시 생성하기"
+                : "힌트 생성하기"}
+            </button>
 
             <button className="fullscreen-btn" onClick={toggleFullHint}>
               {fullscreenPanel === "hint" ? "⛶" : "⛶"}
