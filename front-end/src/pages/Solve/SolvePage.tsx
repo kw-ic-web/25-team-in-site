@@ -477,13 +477,9 @@ export default function SolvePage() {
               <button
                 className="btn-hint-generate"
                 onClick={handleGetHint}
-                disabled={isHintLoading || !hintAvailable}
+                disabled={isHintLoading}
               >
-                {isHintLoading
-                  ? "생성 중..."
-                  : hintAvailable
-                  ? "힌트 생성하기"
-                  : "힌트 대기중..."}
+                {isHintLoading ? "생성 중..." : "힌트 생성하기"}
               </button>
             )}
 
