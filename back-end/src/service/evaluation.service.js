@@ -5,6 +5,7 @@ import { SolvedRepository } from "../repository/solved.repository.js";
 import { UserRepository } from "../repository/user.repository.js";
 import { UserService } from "./user.service.js";
 import { HintService } from "./hint.service.js";
+import { parseTestCase } from "../utils/input-output_parse.js";
 import { ERROR } from "../mapper/error.mapper.js";
 
 // Docker 인스턴스를 지연 초기화 (lazy initialization)
@@ -316,78 +317,8 @@ export const EvaluationService = {
     const rawCases = Array.isArray(problem[field]) ? problem[field] : [];
 
     return rawCases
-      .map((rawCase, index) => this._parseCase(rawCase, index))
+      .map((rawCase, index) => parseTestCase(rawCase, index))
       .filter(Boolean);
-  },
-
-  _parseCase(rawCase, index) {
-    if (rawCase === null || rawCase === undefined) {
-      return null;
-    }
-
-    if (typeof rawCase === "string") {
-      const parts = rawCase.split(":::");
-      const [inputPart = "", ...rest] = parts;
-      const expectedPart = rest.join(":::");
-
-      return {
-        id: index + 1,
-        input: this._normalizeCaseContent(inputPart),
-        expectedOutput: this._normalizeCaseContent(expectedPart),
-      };
-    }
-
-    if (typeof rawCase === "object") {
-      let inputCandidate =
-        rawCase.input ??
-        rawCase.in ??
-        rawCase.sample_input ??
-        rawCase.case_input ??
-        "";
-      let outputCandidate =
-        rawCase.output ??
-        rawCase.expected ??
-        rawCase.sample_output ??
-        rawCase.case_output ??
-        "";
-
-      // inputCandidate가 JSON 문자열이고 그 안에 input과 output이 모두 있는 경우 처리
-      if (typeof inputCandidate === "string" && inputCandidate.trim().startsWith("{")) {
-        try {
-          const parsed = JSON.parse(inputCandidate);
-          if (typeof parsed === "object" && parsed !== null) {
-            if (
-              Object.prototype.hasOwnProperty.call(parsed, "input") &&
-              Object.prototype.hasOwnProperty.call(parsed, "output")
-            ) {
-              inputCandidate = parsed.input;
-              outputCandidate = parsed.output;
-            }
-          }
-        } catch {
-          // JSON 파싱 실패 시 기존 inputCandidate 사용
-        }
-      }
-
-      return {
-        id: rawCase.id ?? index + 1,
-        input: this._normalizeCaseContent(inputCandidate),
-        expectedOutput: this._normalizeCaseContent(outputCandidate),
-      };
-    }
-
-    return {
-      id: index + 1,
-      input: this._normalizeCaseContent(String(rawCase)),
-      expectedOutput: "",
-    };
-  },
-
-  _normalizeCaseContent(value) {
-    if (typeof value !== "string") {
-      return value === undefined || value === null ? "" : String(value);
-    }
-    return normalizeLineEndings(value);
   },
 
   _resolveLanguage(language) {
