@@ -11,7 +11,22 @@ let dockerInstance = null;
 const getDocker = () => {
   if (!dockerInstance) {
     try {
-      dockerInstance = new Docker();
+      // macOS Docker Desktop: /var/run/docker.sock 또는 ~/.docker/run/docker.sock
+      // Linux: /var/run/docker.sock
+
+      const dockerOptions = {};
+
+      if (process.env.DOCKER_SOCKET_PATH) {
+        dockerOptions.socketPath = process.env.DOCKER_SOCKET_PATH;
+      } else if (process.env.DOCKER_HOST) {
+        // DOCKER_HOST가 unix:// 형식인 경우 socketPath로 변환
+        const dockerHost = process.env.DOCKER_HOST;
+        if (dockerHost.startsWith("unix://")) {
+          dockerOptions.socketPath = dockerHost.replace("unix://", "");
+        }
+      }
+
+      dockerInstance = new Docker(dockerOptions);
     } catch (error) {
       console.error("[EvaluationService] Failed to initialize Docker:", error);
       throw error;
@@ -319,18 +334,36 @@ export const EvaluationService = {
     }
 
     if (typeof rawCase === "object") {
-      const inputCandidate =
+      let inputCandidate =
         rawCase.input ??
         rawCase.in ??
         rawCase.sample_input ??
         rawCase.case_input ??
         "";
-      const outputCandidate =
+      let outputCandidate =
         rawCase.output ??
         rawCase.expected ??
         rawCase.sample_output ??
         rawCase.case_output ??
         "";
+
+      // inputCandidate가 JSON 문자열이고 그 안에 input과 output이 모두 있는 경우 처리
+      if (typeof inputCandidate === "string" && inputCandidate.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(inputCandidate);
+          if (typeof parsed === "object" && parsed !== null) {
+            if (
+              Object.prototype.hasOwnProperty.call(parsed, "input") &&
+              Object.prototype.hasOwnProperty.call(parsed, "output")
+            ) {
+              inputCandidate = parsed.input;
+              outputCandidate = parsed.output;
+            }
+          }
+        } catch {
+          // JSON 파싱 실패 시 기존 inputCandidate 사용
+        }
+      }
 
       return {
         id: rawCase.id ?? index + 1,
