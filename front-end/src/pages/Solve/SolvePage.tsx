@@ -17,11 +17,11 @@ function htmlToPrettyText(html: string): string {
 }
 
 const API_PATH_PREFIX_REGEX = /\/api\/?v1?\/?$/;
-const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "20991";
+const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "20992";
 const DEFAULT_HINT_WS_PATH = "/ws/hint";
 
 const DEFAULT_EVALUATE_WS_PORT =
-  import.meta.env.VITE_EVALUATE_WS_URL || "20991";
+  import.meta.env.VITE_EVALUATE_WS_URL || "20992";
 const DEFAULT_EVALUATE_WS_PATH = "/ws/evaluate";
 
 function buildHintWebSocketUrl(token: string | null): string {
@@ -198,52 +198,61 @@ export default function SolvePage() {
     if (preset) setCode(preset.starter);
   };
 
-  const handleGetHint = async () => {
-    if (!problemId) return;
+  const handleGetHint = () => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      alert("힌트 서버와 연결되지 않았습니다.");
+      return;
+    }
     setIsHintLoading(true);
     setHint(null);
-    try {
-      const res = await apiClient.get(`/problems/${problemId}/hint`);
-      setHint(res.data?.hint ?? "힌트를 불러올 수 없습니다.");
-    } catch {
-      setHint("힌트를 가져오는 데 실패했습니다.");
-    } finally {
-      setIsHintLoading(false);
-    }
+
+    wsRef.current.send(
+      JSON.stringify({
+        type: "hint:request",
+        problemId,
+        language,
+      })
+    );
   };
 
-  const handleRun = async () => {
-    if (!language) return;
+  const handleRun = () => {
+    if (!wsEvalRef.current || wsEvalRef.current.readyState !== WebSocket.OPEN) {
+      alert("실행 서버와 연결되지 않았습니다.");
+      return;
+    }
     setIsRunning(true);
     setResult(null);
-    try {
-      const res = await apiClient.post(`/problems/${problemId}/run`, {
-        language,
-        code,
-      });
-      setResult(res.data.output);
-    } catch (e: any) {
-      setResult(`⚠ 실행 오류\n${e.message}`);
-    } finally {
-      setIsRunning(false);
-    }
+
+    wsEvalRef.current.send(
+      JSON.stringify({
+        type: "evaluate:test-request",
+        data: {
+          problemId,
+          code,
+          language,
+        },
+      })
+    );
   };
 
-  const handleSubmit = async () => {
-    if (!language) return;
+  const handleSubmit = () => {
+    if (!wsEvalRef.current || wsEvalRef.current.readyState !== WebSocket.OPEN) {
+      alert("제출 서버와 연결되지 않았습니다.");
+      return;
+    }
     setIsSubmitting(true);
     setResult(null);
-    try {
-      const res = await apiClient.post(`/problems/${problemId}/submit`, {
-        language,
-        code,
-      });
-      setResult(res.data.output);
-    } catch (e: any) {
-      setResult(`⚠ 제출 오류\n${e.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+
+    wsEvalRef.current.send(
+      JSON.stringify({
+        type: "evaluate:submission-request",
+        data: {
+          problemId,
+          code,
+          language,
+        },
+      })
+    );
   };
 
   useEffect(() => {
