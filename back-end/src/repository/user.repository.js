@@ -26,4 +26,7 @@ export const UserRepository = {
     }
     return query.exec();
   },
+  async update(filter, updateData) {
+    return User.findOneAndUpdate(filter, updateData, { new: true });
+  },
 };
