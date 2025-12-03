@@ -87,22 +87,7 @@ const SolutionAssistant = () => {
 
 // --- (WrongPage 메인 컴포넌트) ---
 export default function WrongPage() {
-  const solved: Solved[] = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, i) => ({
-        id: `p${i + 1}`,
-        title: `최단 경로 찾기`,
-        tags: ["그래프", "그래프"],
-        difficulty: ((i % 5) + 1) as 1 | 2 | 3 | 4 | 5,
-        correctness: 67,
-        language: LANGUAGES[i % LANGUAGES.length],
-        type: TYPES[i % TYPES.length],
-        kind: KINDS[i % KINDS.length],
-        solved: i % 4 === 0,
-        points: "50pt",
-      })),
-    []
-  );
+  const [solved, setSolved] = useState<Solved[]>([]);
 
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
@@ -209,6 +194,20 @@ export default function WrongPage() {
   useEffect(() => {
     setPage(1);
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
+
+  useEffect(() => {
+    async function fetchSolved() {
+      try {
+        const res = await fetch("/recent/solved");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setSolved(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchSolved();
+  }, []);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = solved[0];
