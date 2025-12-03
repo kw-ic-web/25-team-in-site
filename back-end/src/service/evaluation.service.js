@@ -10,12 +10,11 @@ let dockerInstance = null;
 const getDocker = () => {
   if (!dockerInstance) {
     try {
-      // 환경 변수로 Docker 소켓 경로 설정 가능
       // macOS Docker Desktop: /var/run/docker.sock 또는 ~/.docker/run/docker.sock
       // Linux: /var/run/docker.sock
-      // DOCKER_HOST 환경 변수도 지원 (예: unix:///var/run/docker.sock)
+
       const dockerOptions = {};
-      
+
       if (process.env.DOCKER_SOCKET_PATH) {
         dockerOptions.socketPath = process.env.DOCKER_SOCKET_PATH;
       } else if (process.env.DOCKER_HOST) {
@@ -25,7 +24,7 @@ const getDocker = () => {
           dockerOptions.socketPath = dockerHost.replace("unix://", "");
         }
       }
-      
+
       dockerInstance = new Docker(dockerOptions);
     } catch (error) {
       console.error("[EvaluationService] Failed to initialize Docker:", error);
