@@ -245,7 +245,7 @@ export default function SolvePage() {
         if (data.type === "evaluate:test-response") {
           setIsRunning(false);
           if (data.data?.results?.length) {
-            const outputs = data.data.results.map((r) => r.actualOutput);
+            const outputs = data.data.results.map((r: any) => r.actualOutput);
             setResult(outputs.join("\n"));
           }
         }
