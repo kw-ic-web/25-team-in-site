@@ -47,7 +47,7 @@ jobs:
         working-directory: front-end
         run: npm run build
         env:
-          VITE_API_URL: "http://kwweb-team09.duckdns.org:20992/api/v1"
+          VITE_API_URL: "http://43.201.106.151:20992/api/v1"
 
       - name: Create deployment bundle
         run: tar -czf frontend-dist.tar.gz -C front-end dist
