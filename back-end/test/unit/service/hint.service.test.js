@@ -426,6 +426,84 @@ describe("HintService", () => {
     });
   });
 
+  describe("generateSolvedFeedback", () => {
+    const baseProblem = {
+      _id: "problem-object-id",
+      problem_id: "problem-1",
+      problem_title: "테스트 문제",
+      problem_body: "문제 설명입니다.",
+      problem_difficulty: 3,
+      problem_main_category: "DP",
+      problem_sub_category: "Knapsack",
+    };
+
+    const baseEvaluationSummary = {
+      totalCases: 3,
+      results: [
+        { isPassed: true, executionTime: 10, memoryUsage: 1024 },
+        { isPassed: true, executionTime: 12, memoryUsage: 2048 },
+        { isPassed: true, executionTime: 9, memoryUsage: 900 },
+      ],
+      timeLimitMs: 2000,
+      memoryLimitBytes: 1024 * 1024,
+      score: 100,
+      caseType: "submission",
+      passed: true,
+    };
+
+    it("L5 피드백 Markdown을 반환하고 요약 5줄을 포함한다", async () => {
+      const mockFeedback = {
+        keyPoints: [
+          "복잡도는 O(N log N) 수준입니다.",
+          "공간 사용을 절감할 수 있습니다.",
+          "루프 구조가 깊습니다.",
+          "함수 분리가 필요합니다.",
+          "주석과 명확한 네이밍을 고려하세요.",
+        ],
+        report: "## L5 Feedback\n### 복잡도\n내용",
+      };
+
+      mockOpenAIClient.responses.parse.mockResolvedValueOnce({
+        output_parsed: mockFeedback,
+      });
+
+      const markdown = await HintService.generateSolvedFeedback({
+        userId: "user-1",
+        problem: baseProblem,
+        evaluationSummary: baseEvaluationSummary,
+        language: "javascript",
+        sourceCode: "function solve() { return 1; }",
+      });
+
+      expect(markdown).toContain("- 요약 5:");
+      expect(markdown).toContain("## L5 Feedback");
+      expect(mockOpenAIClient.responses.parse).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: expect.arrayContaining([
+            expect.objectContaining({ role: "system" }),
+            expect.objectContaining({ role: "user" }),
+          ]),
+        }),
+      );
+    });
+
+    it("OpenAI 호출 실패 시 null을 반환한다", async () => {
+      mockOpenAIClient.responses.parse.mockRejectedValueOnce(
+        new Error("OpenAI error"),
+      );
+
+      const result = await HintService.generateSolvedFeedback({
+        userId: "user-1",
+        problem: baseProblem,
+        evaluationSummary: baseEvaluationSummary,
+        language: "javascript",
+        sourceCode: "function solve() { return 1; }",
+      });
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe("registerWebSocket", () => {
     it("WebSocket을 등록한다", () => {
       HintService.registerWebSocket(mockWs, "user-1");
@@ -466,7 +544,7 @@ describe("HintService", () => {
         code: { current: "code", diff: "diff1", cached: "cached" },
       });
 
-      await HintService.newCodeCommitted("user-1", "problem-1");
+      await HintService.newCodeCommitted({ userId: "user-1", problemId: "problem-1" });
 
       expect(HintService._HINT_INTERVAL_MAP.has("user-1:problem-1")).toBe(true);
       expect(HintService._DIFF_CACHED_MAP.get("user-1:problem-1")).toBe("diff1");
@@ -482,7 +560,7 @@ describe("HintService", () => {
         code: { current: "code", diff: "diff2", cached: "cached" },
       });
 
-      await HintService.newCodeCommitted("user-1", "problem-1");
+      await HintService.newCodeCommitted({ userId: "user-1", problemId: "problem-1" });
 
       // 인터벌은 유지되고 diff만 업데이트
       expect(HintService._HINT_INTERVAL_MAP.get("user-1:problem-1")).toBe(oldInterval);
@@ -506,12 +584,17 @@ describe("HintService", () => {
   });
 
   describe("_startInterval", () => {
-    it("기존 인터벌을 제거하고 새 인터벌을 시작한다", () => {
+    it("기존 인터벌을 제거하고 새 인터벌을 시작한다", async () => {
       HintService._WS_MAP.set("user-1", mockWs);
       const oldInterval = setInterval(() => {}, 1000);
       HintService._HINT_INTERVAL_MAP.set("user-1:problem-1", oldInterval);
+      mockGetHintSession.mockResolvedValue({
+        userId: "user-1",
+        problemId: "problem-1",
+        code: { current: "code", diff: "", cached: "cached" },
+      });
 
-      HintService._startInterval("user-1", "problem-1");
+      await HintService._startInterval("user-1", "problem-1");
 
       expect(HintService._HINT_INTERVAL_MAP.get("user-1:problem-1")).not.toBe(oldInterval);
       expect(HintService._HINT_INTERVAL_MAP.has("user-1:problem-1")).toBe(true);
@@ -527,7 +610,7 @@ describe("HintService", () => {
         code: { current: "code", diff: testDiff, cached: "cached" },
       });
 
-      HintService._startInterval("user-1", "problem-1");
+      await HintService._startInterval("user-1", "problem-1");
 
       // 3분 경과
       jest.advanceTimersByTime(HintService._HINT_INTERVAL_MS);
@@ -558,7 +641,7 @@ describe("HintService", () => {
         code: { current: "code", diff: "new diff", cached: "cached" },
       });
 
-      HintService._startInterval("user-1", "problem-1");
+      await HintService._startInterval("user-1", "problem-1");
 
       // 3분 경과
       jest.advanceTimersByTime(HintService._HINT_INTERVAL_MS);
