@@ -7,7 +7,7 @@ export default defineConfig(({ mode, command }) => {
   const proxyTarget =
     env.VITE_API_PROXY ||
     env.VITE_API_URL?.replace(/\/api\/?v1?\/?$/, "") ||
-    "http://team09-api.kwweb.org:20992";
+    "http://kwweb-team09.duckdns.org:20992/";
 
   const config: ReturnType<typeof defineConfig> = {
     plugins: [
@@ -32,7 +32,7 @@ export default defineConfig(({ mode, command }) => {
           rewrite: (path) => path,
         },
         "/ws": {
-          target: "ws://team09-api.kwweb.org:20991",
+          target: "ws://kwweb-team09.duckdns.org:20992/",
           ws: true,
           changeOrigin: true,
           secure: false,

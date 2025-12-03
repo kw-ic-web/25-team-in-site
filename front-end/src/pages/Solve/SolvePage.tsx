@@ -20,6 +20,10 @@ const API_PATH_PREFIX_REGEX = /\/api\/?v1?\/?$/;
 const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "20991";
 const DEFAULT_HINT_WS_PATH = "/ws/hint";
 
+const DEFAULT_EVALUATE_WS_PORT =
+  import.meta.env.VITE_EVALUATE_WS_URL || "20991";
+const DEFAULT_EVALUATE_WS_PATH = "/ws/evaluate";
+
 function buildHintWebSocketUrl(token: string | null): string {
   const explicitWsEndpoint = import.meta.env.VITE_HINT_WS_URL;
   const hostCandidate =
@@ -59,6 +63,45 @@ function buildHintWebSocketUrl(token: string | null): string {
   return url.toString();
 }
 
+function buildEvaluateWebSocketUrl(token: string | null): string {
+  const explicitWsEndpoint = import.meta.env.VITE_EVALUATE_WS_URL;
+  const hostCandidate =
+    explicitWsEndpoint ||
+    import.meta.env.VITE_API_PROXY ||
+    import.meta.env.VITE_API_URL ||
+    window.location.origin;
+
+  const url = new URL(hostCandidate, window.location.origin);
+  const isSecurePage = window.location.protocol === "https:";
+  const isHttp = url.protocol === "http:" || url.protocol === "https:";
+  if (isHttp) {
+    url.protocol = url.protocol === "https:" || isSecurePage ? "wss:" : "ws:";
+  } else if (url.protocol === "ws:" && isSecurePage) {
+    // 명시적으로 ws가 주어져도 페이지가 https면 혼합 콘텐츠를 피하기 위해 wss로 업그레이드
+    url.protocol = "wss:";
+  }
+
+  if (!explicitWsEndpoint) {
+    const trimmedPath = url.pathname
+      .replace(API_PATH_PREFIX_REGEX, "")
+      .replace(/\/$/, "");
+    url.pathname = `${trimmedPath}${DEFAULT_EVALUATE_WS_PATH}`.replace(
+      /^\/{2,}/,
+      "/"
+    );
+    url.port = DEFAULT_EVALUATE_WS_PORT;
+    url.search = "";
+  }
+
+  url.hash = "";
+  url.searchParams.delete("token");
+  if (token) {
+    url.searchParams.set("token", token);
+  }
+
+  return url.toString();
+}
+
 export default function SolvePage() {
   const [searchParams] = useSearchParams();
   const problemId = searchParams.get("problemId") ?? "";
@@ -78,6 +121,7 @@ export default function SolvePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const wsEvalRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
 
   const isSaving = useRef(false);
@@ -282,10 +326,58 @@ export default function SolvePage() {
     };
   }
 
+  function connectEvalWS(cancelledRef: { current: boolean }) {
+    const token = localStorage.getItem("accessToken");
+    const wsUrl = buildEvaluateWebSocketUrl(token);
+    wsEvalRef.current = new WebSocket(wsUrl);
+    console.info("[eval-ws] connecting", wsUrl);
+
+    wsEvalRef.current.onopen = () => {
+      console.log("evaluate WS 연결 완료");
+    };
+
+    wsEvalRef.current.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        console.log("WS 평가 수신:", data);
+
+        if (data.type === "evaluate:test-response") {
+          setIsRunning(false);
+          setResult(JSON.stringify(data.data, null, 2));
+        }
+        if (data.type === "evaluate:submission-response") {
+          setIsSubmitting(false);
+          setResult(JSON.stringify(data.data, null, 2));
+        }
+        if (data.type === "error") {
+          setIsRunning(false);
+          setIsSubmitting(false);
+          setResult(`❗ ${data.message}`);
+        }
+      } catch {
+        console.warn("평가 메시지 JSON 파싱 오류");
+      }
+    };
+
+    wsEvalRef.current.onerror = (err) => {
+      console.error("[eval-ws] 오류", err);
+    };
+
+    wsEvalRef.current.onclose = () => {
+      console.warn("[eval-ws] 연결 종료");
+      if (cancelledRef.current) return;
+      reconnectTimerRef.current = window.setTimeout(
+        () => connectEvalWS(cancelledRef),
+        3000
+      );
+    };
+  }
+
   useEffect(() => {
     if (!problemId || !language) return;
     const cancelledRef = { current: false };
     connectWS(cancelledRef);
+    connectEvalWS(cancelledRef);
     return () => {
       cancelledRef.current = true;
       if (reconnectTimerRef.current) {
