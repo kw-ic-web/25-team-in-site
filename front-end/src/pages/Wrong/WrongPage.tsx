@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getChoseong } from "es-hangul"; // 초성 추출
 import "./WrongPage.css";
+import apiClient from "../../api/client";
 
 type Solved = {
   id: string;
@@ -196,17 +197,16 @@ export default function WrongPage() {
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
 
   useEffect(() => {
-    async function fetchSolved() {
+    async function getSolved() {
       try {
-        const res = await fetch("/recent/solved");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setSolved(data);
+        const res = await apiClient.get("problems/recent/solved");
+
+        setSolved(res.data.items);
       } catch (err) {
         console.error(err);
       }
     }
-    fetchSolved();
+    getSolved();
   }, []);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
