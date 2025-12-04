@@ -26,7 +26,7 @@ export const SolvedRepository = {
       return [];
     }
 
-    return Solved.find({ user_id: userObjectId })
+    return await Solved.find({ user_id: userObjectId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate({
