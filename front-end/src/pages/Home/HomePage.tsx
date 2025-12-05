@@ -18,17 +18,6 @@ export type Problem = {
   solved: boolean;
 };
 
-// ESLint unused-vars 경고 해결 → export를 붙인다
-export const LANGUAGES = [
-  "HTML",
-  "JavaScript",
-  "CSS",
-  "Java",
-  "C",
-  "C++",
-  "Python",
-  "MySQL",
-] as const;
 
 
 export default function HomePage() {
@@ -38,9 +27,9 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
 
   // 필터 관련 상태
-  const [query, setQuery] = useState("");
+  const [inputQuery, setInputQuery] = useState(""); // 입력 중인 검색어
+  const [query, setQuery] = useState(""); // 실제 검색에 사용할 검색어
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
-  const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
   const [solvedOnly, setSolvedOnly] = useState(false);
 
@@ -113,13 +102,16 @@ export default function HomePage() {
     fetchProblems();
   }, [page, query, selectedLevels]);
 
-  const toggleLang = (l: string) =>
-    setSelectedLangs((prev) => {
-      const next = new Set(prev);
-      next.has(l) ? next.delete(l) : next.add(l);
-      setPage(1);
-      return next;
-    });
+  const handleSearch = () => {
+    setQuery(inputQuery);
+    setPage(1);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const toggleLevel = (n: number) =>
     setSelectedLevels((prev) => {
@@ -207,13 +199,23 @@ export default function HomePage() {
               <span>{totalCount}</span>
             </div>
 
-            <div className="searchbar">
+            <div className="searchbar" style={{ display: "flex", gap: "8px" }}>
               <input
                 type="search"
                 placeholder="문제 검색"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                value={inputQuery}
+                onChange={(e) => setInputQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                style={{ flex: 1 }}
               />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="btn-primary"
+                style={{ padding: "8px 16px", whiteSpace: "nowrap" }}
+              >
+                검색
+              </button>
             </div>
           </div>
 
