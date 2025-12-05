@@ -75,7 +75,10 @@ jobs:
           command_timeout: 300s
           envs: DEPLOY_PORT,PM2_NAME,TARGET_DIR
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
             set -euo pipefail
+            node -v
             cd "$TARGET_DIR"
             rm -rf dist
             # 압축 해제 (dist 폴더 생성)
