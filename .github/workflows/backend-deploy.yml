@@ -68,7 +68,10 @@ jobs:
           timeout: 60s
           command_timeout: 300s
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
             set -euo pipefail
+            node -v
             cd "${{ steps.envfile.outputs.target }}"
             rm -rf back-end
             tar -xzf backend.tar.gz
