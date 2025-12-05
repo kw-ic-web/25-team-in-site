@@ -151,26 +151,6 @@ export default function HomePage() {
 
         <section className="home-card">
           <header className="home-card__header">
-            <h3>프로그래밍 언어</h3>
-          </header>
-          <ul className="filter-list">
-            {LANGUAGES.map((l) => (
-              <li key={l} className="filter-list__item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selectedLangs.has(l)}
-                    onChange={() => toggleLang(l)}
-                  />
-                  <span>{l}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="home-card">
-          <header className="home-card__header">
             <h3>난이도</h3>
           </header>
           <ul className="filter-list">
