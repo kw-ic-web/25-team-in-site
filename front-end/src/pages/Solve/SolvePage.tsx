@@ -573,7 +573,13 @@ export default function SolvePage() {
       <section className="solve-page__result panel">
         <header className="panel-title">실행 결과</header>
         <div className="panel-content scroll">
-          {result ? <pre>{result}</pre> : <p>아직 실행 결과 없음</p>}
+          {isRunning || isSubmitting ? (
+            <p>결과 대기중...</p>
+          ) : result ? (
+            <pre>{result}</pre>
+          ) : (
+            <p>아직 실행 결과 없음</p>
+          )}
         </div>
       </section>
     </div>
