@@ -214,10 +214,41 @@ export default function WrongPage() {
           },
         });
 
-        setSolved(res.data.items ?? []);
+        const items = res.data.items ?? [];
+        
+        // API 응답을 Solved 타입으로 변환
+        const normalized = items.map((item: any) => {
+          const problem = item.problem || {};
+          return {
+            id: problem.id || item.solved_id || "",
+            title: problem.title || "",
+            tags: [],
+            difficulty: problem.difficulty || 1,
+            correctness: problem.success_rate || 0,
+            language: Array.isArray(problem.language) 
+              ? problem.language[0] || "기타"
+              : problem.language || "기타",
+            type: Array.isArray(problem.main_category)
+              ? (problem.main_category[0] as any) || "기본 문제"
+              : (problem.main_category as any) || "기본 문제",
+            kind: Array.isArray(problem.sub_category)
+              ? (problem.sub_category[0] as any) || "기타"
+              : (problem.sub_category as any) || "기타",
+            solved: problem.is_solved ?? true,
+            points: problem.expected_xp?.toString() || "0",
+          };
+        });
+
+        setSolved(normalized);
+        
+        // pagination이 있으면 사용하고, 없으면 count 기반으로 계산
         if (res.data.pagination) {
           setTotalPage(res.data.pagination.total_pages ?? 1);
-          setTotalSolvedCount(res.data.pagination.total_count ?? 0);
+          setTotalSolvedCount(res.data.pagination.total_count ?? res.data.count ?? 0);
+        } else {
+          const totalCount = res.data.count ?? 0;
+          setTotalPage(Math.ceil(totalCount / pageSize) || 1);
+          setTotalSolvedCount(totalCount);
         }
       } catch (err) {
         console.error(err);
