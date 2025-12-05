@@ -21,11 +21,11 @@ jobs:
         run: |
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "target=${{ secrets.FE_EC2_TARGET_DIR }}/production" >> "$GITHUB_OUTPUT"
-            echo "port=20980" >> "$GITHUB_OUTPUT"
+            echo "port=21180" >> "$GITHUB_OUTPUT"
             echo "pm2_name=[FE] in-site" >> "$GITHUB_OUTPUT"
           elif [[ "${GITHUB_REF_NAME}" == "front-end_deploy" ]]; then
             echo "target=${{ secrets.FE_EC2_TARGET_DIR }}/development" >> "$GITHUB_OUTPUT"
-            echo "port=20981" >> "$GITHUB_OUTPUT"
+            echo "port=21181" >> "$GITHUB_OUTPUT"
             echo "pm2_name=[FE] in-site_DEVELOPMENT" >> "$GITHUB_OUTPUT"
           else
             echo "Unsupported branch: ${GITHUB_REF_NAME}" >&2
@@ -47,7 +47,7 @@ jobs:
         working-directory: front-end
         run: npm run build
         env:
-          VITE_API_URL: "http://43.201.106.151:20992/api/v1"
+          VITE_API_URL: "http://team11.kwweb.org:21192/"
 
       - name: Create deployment bundle
         run: tar -czf frontend-dist.tar.gz -C front-end dist
@@ -75,7 +75,10 @@ jobs:
           command_timeout: 300s
           envs: DEPLOY_PORT,PM2_NAME,TARGET_DIR
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
             set -euo pipefail
+            node -v
             cd "$TARGET_DIR"
             rm -rf dist
             # 압축 해제 (dist 폴더 생성)

@@ -149,6 +149,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-left: auto;
 }
 
 .btn-hint-generate:hover {
@@ -277,4 +278,8 @@
   font-size: 18px;
   cursor: pointer;
   filter: brightness(2);
+}
+
+.btn-hint-fullscreen {
+  margin-left: 10px;
 }

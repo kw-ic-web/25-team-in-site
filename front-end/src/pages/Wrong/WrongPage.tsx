@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getChoseong } from "es-hangul"; // 초성 추출
 import "./WrongPage.css";
+import apiClient from "../../api/client";
 
 type Solved = {
   id: string;
@@ -107,6 +108,7 @@ export default function WrongPage() {
   const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
 
   const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
   const pageSize = 8;
 
   const toggleLang = (l: string) =>
@@ -188,26 +190,31 @@ export default function WrongPage() {
     sortKey,
   ]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const current = filtered.slice((page - 1) * pageSize, page * pageSize);
+    const pageCount = totalPage;
+    const current = filtered;
 
   useEffect(() => {
     setPage(1);
   }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
 
   useEffect(() => {
-    async function fetchSolved() {
+    async function getSolved() {
       try {
-        const res = await fetch("/recent/solved");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setSolved(data);
+        const res = await apiClient.get("problems/recent/solved", {
+          params: {
+            page,
+            limit: pageSize,
+          },
+        });
+
+        setSolved(res.data.items);
+        setTotalPage(res.data.pagination.total_pages);
       } catch (err) {
         console.error(err);
       }
     }
-    fetchSolved();
-  }, []);
+    getSolved();
+  }, [page]);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = solved[0];

@@ -71,7 +71,13 @@ export default function HomePage() {
       try {
         setLoading(true);
 
-        const res = await apiClient.get("/problems");
+        const res = await apiClient.get("/problems", {
+          params: {
+            page,
+            limit: pageSize,
+            // TODO: 필터 파라미터도 함께 전달 필요
+          },
+        });
 
         const list = res.data.problems;
 
@@ -97,6 +103,9 @@ export default function HomePage() {
         }));
 
         setProblems(normalized);
+        if (res.data.pagination) {
+          setTotalPage(res.data.pagination.total_pages);
+        }
       } catch (err) {
         console.error(err);
         setError("문제 목록을 불러오지 못했습니다.");
@@ -106,7 +115,7 @@ export default function HomePage() {
     }
 
     fetchProblems();
-  }, []);
+  }, [page]);
 
   // 필터 관련 상태
   const [query, setQuery] = useState("");
@@ -124,6 +133,7 @@ export default function HomePage() {
   const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
 
   const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
   const pageSize = 8;
 
   const navigate = useNavigate();
@@ -213,8 +223,8 @@ export default function HomePage() {
     sortKey,
   ]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const current = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const pageCount = totalPage;
+  const current = problems; // 서버에서 이미 페이징된 데이터를 받으므로 전체가 current
 
   useEffect(() => {
     setPage(1);
