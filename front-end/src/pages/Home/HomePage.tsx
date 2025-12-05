@@ -242,7 +242,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="problem-item__meta">
-                    {p.tags.map((t) => (
+                    {(p.tags || []).map((t) => (
                       <span key={t}>#{t}</span>
                     ))}
                     <span>#{p.kind}</span>

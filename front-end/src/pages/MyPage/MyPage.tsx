@@ -146,7 +146,7 @@ export default function MyPage() {
               </div>
             </div>
             <button type="button" className="profile-card__action">
-              프로필 수정하기
+              프로필 수정하기 <span style={{ color: "#999", fontSize: "0.9em", fontWeight: "normal" }}>준비중</span>
             </button>
             <button
               type="button"
@@ -176,7 +176,7 @@ export default function MyPage() {
             </div>
           </div>
           <header className="mypage-card__header">
-            <h3>9명의 친구</h3>
+            <h3>9명의 친구 <span style={{ color: "#999", fontSize: "0.9em", fontWeight: "normal" }}>준비중</span></h3>
             <button type="button" className="mypage-card__link">
               전체보기
             </button>
@@ -228,7 +228,7 @@ export default function MyPage() {
 
           <article className="mypage-card">
             <header className="mypage-card__header">
-              <h3>활동 뱃지</h3>
+              <h3>활동 뱃지 <span style={{ color: "#999", fontSize: "0.9em", fontWeight: "normal" }}>준비중</span></h3>
             </header>
             <div className="badge-list">
               {data.badges.map((badge) => (

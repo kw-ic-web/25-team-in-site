@@ -411,7 +411,7 @@ export default function WrongPage() {
                   <span className="pill pill--level">레벨 {p.difficulty}</span>
                 </div>
                 <div className="solved-item__meta">
-                  {p.tags.map((t: string, idx: number) => (
+                  {(p.tags || []).map((t: string, idx: number) => (
                     <span key={`${t}-${idx}`}>#{t}</span>
                   ))}
                 </div>
