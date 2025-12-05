@@ -1,0 +1,106 @@
+/* 상단 바 컨테이너 */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+/* 좌우 여백 + 가운데 정렬 (Figma 느낌) */
+.topnav__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+}
+
+/* 좌측 브랜드(파란 화살표) */
+.topnav__brand {
+  display: flex;
+  align-items: center;
+}
+.topnav__brand .brand__mark {
+  display: inline-block;
+  color: #6f6cfb;
+  font-weight: 700;
+  font-size: 22px;
+}
+.topnav__brand .brand__logo {
+  display: block;
+  width: 120px;
+  height: 42px;
+  object-fit: contain;
+}
+
+/* 중앙 탭 바 */
+.topnav__tabs {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* 탭 기본 스타일 */
+.topnav__tab {
+  position: relative;
+  display: inline-block;
+  padding: 12px 0 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #a3a3a3; /* 비활성: 연한 회색 */
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+/* 언더라인 베이스(비활성일 땐 투명) */
+.topnav__tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: transparent;
+  border-radius: 2px 2px 0 0;
+  transition: background 0.18s ease, transform 0.18s ease;
+  transform: scaleX(0.8);
+  transform-origin: center;
+}
+
+/* hover 시 텍스트만 살짝 진하게 */
+.topnav__tab:hover {
+  color: #6f6cfb;
+}
+
+/* 활성 탭 */
+.topnav__tab.is-active {
+  color: #6f6cfb;
+}
+
+/* 활성 언더라인 */
+.topnav__tab.is-active::after {
+  background: #6f6cfb;
+  transform: scaleX(1);
+}
+
+/* 우측 아바타 영역 */
+.topnav__right {
+   display: flex;
+   justify-content: flex-end;
+   align-items: center;
+   padding-bottom: 0;
+}
+
+/* 프로필 동그라미 (person.png) */
+.topnav__avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  object-fit: cover;
+}
