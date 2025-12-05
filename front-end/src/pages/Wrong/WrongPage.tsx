@@ -108,6 +108,7 @@ export default function WrongPage() {
   const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
 
   const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
   const pageSize = 8;
 
   const toggleLang = (l: string) =>
@@ -189,8 +190,8 @@ export default function WrongPage() {
     sortKey,
   ]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const current = filtered.slice((page - 1) * pageSize, page * pageSize);
+    const pageCount = totalPage;
+    const current = filtered;
 
   useEffect(() => {
     setPage(1);
@@ -199,15 +200,21 @@ export default function WrongPage() {
   useEffect(() => {
     async function getSolved() {
       try {
-        const res = await apiClient.get("problems/recent/solved");
+        const res = await apiClient.get("problems/recent/solved", {
+          params: {
+            page,
+            limit: pageSize,
+          },
+        });
 
         setSolved(res.data.items);
+        setTotalPage(res.data.pagination.total_pages);
       } catch (err) {
         console.error(err);
       }
     }
     getSolved();
-  }, []);
+  }, [page]);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = solved[0];
