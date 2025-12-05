@@ -141,7 +141,7 @@ export default function HomePage() {
       <aside className="home__sidebar">
         <section className="home-card home-card--emph">
           <header className="home-card__header">
-            <h3>출석 현황</h3>
+            <h3>출석 현황 <span style={{ color: "#999", fontSize: "0.9em", fontWeight: "normal" }}>준비중</span></h3>
           </header>
           <div className="attendance">
             <span className="attendance__label">현재 연속 출석</span>
@@ -377,7 +377,7 @@ export default function HomePage() {
 
         <section className="home-card">
           <header className="home-card__header">
-            <h3>랭킹</h3>
+            <h3>랭킹 <span style={{ color: "#999", fontSize: "0.9em", fontWeight: "normal" }}>준비중</span></h3>
           </header>
 
           <ol className="ranking">
