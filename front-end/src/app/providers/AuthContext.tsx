@@ -15,18 +15,21 @@ interface AuthContextType {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem("currentUser");
     if (stored) {
       setCurrentUser(JSON.parse(stored));
     }
+    setIsLoading(false);
   }, []);
 
   const logout = () => {
@@ -35,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, setCurrentUser, logout }}>
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
