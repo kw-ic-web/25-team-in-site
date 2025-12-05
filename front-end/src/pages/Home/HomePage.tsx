@@ -65,6 +65,27 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 필터 관련 상태
+  const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
+  const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
+  const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedKind, setSelectedKind] = useState<string | null>(null);
+  const [solvedOnly, setSolvedOnly] = useState(false);
+
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [kindOpen, setKindOpen] = useState(false);
+
+  const typeRef = useClickOutside<HTMLDivElement>(() => setTypeOpen(false));
+  const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
+
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const pageSize = 8;
+
+  const navigate = useNavigate();
+
   //  /api/v1/problems API 연동
   useEffect(() => {
     async function fetchProblems() {
@@ -116,27 +137,6 @@ export default function HomePage() {
 
     fetchProblems();
   }, [page]);
-
-  // 필터 관련 상태
-  const [query, setQuery] = useState("");
-  const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
-  const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
-  const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedKind, setSelectedKind] = useState<string | null>(null);
-  const [solvedOnly, setSolvedOnly] = useState(false);
-
-  const [typeOpen, setTypeOpen] = useState(false);
-  const [kindOpen, setKindOpen] = useState(false);
-
-  const typeRef = useClickOutside<HTMLDivElement>(() => setTypeOpen(false));
-  const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
-
-  const [page, setPage] = useState(1);
-  const [totalPage, setTotalPage] = useState(1);
-  const pageSize = 8;
-
-  const navigate = useNavigate();
 
   const toggleLang = (l: string) =>
     setSelectedLangs((prev) => {
