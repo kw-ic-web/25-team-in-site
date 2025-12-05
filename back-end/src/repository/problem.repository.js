@@ -151,6 +151,7 @@ export const ProblemRepository = {
   async findProblems({
     page,
     limit,
+    search,
     difficulties,
     languages,
     main_category,
@@ -160,6 +161,10 @@ export const ProblemRepository = {
     sort_order = "desc",
   }) {
     const filter = {};
+
+    if (search) {
+      filter.problem_title = { $regex: search, $options: "i" };
+    }
 
     if (Array.isArray(difficulties) && difficulties.length > 0) {
       filter.problem_difficulty = { $in: difficulties };

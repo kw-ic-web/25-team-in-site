@@ -200,6 +200,7 @@ export const ProblemsService = {
     const {
       page,
       limit,
+      search,
       difficulties,
       languages,
       main_category,
@@ -212,6 +213,7 @@ export const ProblemsService = {
     const { items, total } = await ProblemRepository.findProblems({
       page,
       limit,
+      search,
       difficulties,
       languages,
       main_category,

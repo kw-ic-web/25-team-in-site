@@ -69,6 +69,7 @@ const SORT_ORDER_VALUES = ["asc", "desc"];
 export const ProbListRequestDto = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
+  search: optionalQueryString,
   difficulties: z
     .preprocess(
       (value) => _toNumberArray(value),
