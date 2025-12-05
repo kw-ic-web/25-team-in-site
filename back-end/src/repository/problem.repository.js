@@ -31,6 +31,7 @@ const _mergeProblemDetail = (problem, problemDetail) => {
   }
 
   const {
+    _id: _detailId,
     problem_id: _detailProblemId,
     problem_body,
     problem_attachment_urls,
