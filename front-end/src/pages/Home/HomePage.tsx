@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import apiClient from "../../api/client";
-import { getChoseong } from "es-hangul";
 import "./HomePage.css";
 
 import { useNavigate } from "react-router-dom";
@@ -31,33 +30,6 @@ export const LANGUAGES = [
   "MySQL",
 ] as const;
 
-export const TYPES = ["기본 문제", "자료구조", "알고리즘"] as const;
-
-export const KINDS = [
-  "정렬",
-  "탐색",
-  "재귀",
-  "동적 계획법",
-  "그리디 알고리즘",
-  "백트래킹",
-] as const;
-
-// 공백 제거 + 소문자 변환용 유틸
-const normalize = (text: string) => text.replace(/\s+/g, "").toLowerCase();
-
-// 외부 클릭 감지
-function useClickOutside<T extends HTMLElement>(onClose: () => void) {
-  const ref = useRef<T | null>(null);
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose]);
-  return ref;
-}
 
 export default function HomePage() {
   // API 데이터
@@ -70,15 +42,7 @@ export default function HomePage() {
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
   const [selectedLangs, setSelectedLangs] = useState<Set<string>>(new Set());
   const [selectedLevels, setSelectedLevels] = useState<Set<number>>(new Set());
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedKind, setSelectedKind] = useState<string | null>(null);
   const [solvedOnly, setSolvedOnly] = useState(false);
-
-  const [typeOpen, setTypeOpen] = useState(false);
-  const [kindOpen, setKindOpen] = useState(false);
-
-  const typeRef = useClickOutside<HTMLDivElement>(() => setTypeOpen(false));
-  const kindRef = useClickOutside<HTMLDivElement>(() => setKindOpen(false));
 
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
@@ -93,13 +57,22 @@ export default function HomePage() {
       try {
         setLoading(true);
 
-        const res = await apiClient.get("/problems", {
-          params: {
-            page,
-            limit: pageSize,
-            // TODO: 필터 파라미터도 함께 전달 필요
-          },
-        });
+        const params: any = {
+          page,
+          limit: pageSize,
+        };
+
+        // 검색어가 있으면 서버로 전달
+        if (query.trim()) {
+          params.search = query.trim();
+        }
+
+        // 난이도 필터가 있으면 서버로 전달
+        if (selectedLevels.size > 0) {
+          params.difficulties = Array.from(selectedLevels).join(",");
+        }
+
+        const res = await apiClient.get("/problems", { params });
 
         const list = res.data.problems;
 
@@ -138,7 +111,7 @@ export default function HomePage() {
     }
 
     fetchProblems();
-  }, [page]);
+  }, [page, query, selectedLevels]);
 
   const toggleLang = (l: string) =>
     setSelectedLangs((prev) => {
@@ -156,86 +129,17 @@ export default function HomePage() {
       return next;
     });
 
-  // 필터 + 정렬
-  const filtered = useMemo(() => {
-    let list = [...problems];
-
-    if (query.trim()) {
-      const raw = query.trim();
-      const normalizedQuery = normalize(raw); // 공백 제거 + 소문자
-      const rawNoSpace = raw.replace(/\s+/g, "");
-      const queryChoseong = getChoseong(raw).replace(/\s+/g, "");
-      const hasChoseong = queryChoseong.length > 0;
-
-      list = list.filter((p) => {
-        const title = p.title;
-        const normalizedTitle = normalize(title);
-        const titleChoseong = getChoseong(title).replace(/\s+/g, "");
-
-        return (
-          // 1) 공백 무시한 일반 검색
-          //    "최단경로찾기1" -> "최단 경로 찾기 1" 매칭 가능
-          normalizedTitle.includes(normalizedQuery) ||
-          // 2) 초성 직접 입력: "ㅊㄷㄱ" 입력 시
-          titleChoseong.includes(rawNoSpace) ||
-          // 3) 입력을 초성으로 바꿔서 비교: "최단경로" -> "ㅊㄷㄱㄹ"
-          (hasChoseong && titleChoseong.includes(queryChoseong))
-        );
-      });
-    }
-
-    if (selectedLangs.size)
-      list = list.filter((p) => selectedLangs.has(p.language));
-
-    if (selectedLevels.size)
-      list = list.filter((p) => selectedLevels.has(p.difficulty));
-
-    if (selectedType) list = list.filter((p) => p.type === selectedType);
-
-    if (selectedKind) list = list.filter((p) => p.kind === selectedKind);
-
-    if (solvedOnly) list = list.filter((p) => p.solved);
-
-    switch (sortKey) {
-      case "acc":
-        list.sort((a, b) => b.correctness - a.correctness);
-        break;
-
-      case "diff":
-        list.sort((a, b) => a.difficulty - b.difficulty);
-        break;
-
-      default:
-        list.sort((a, b) => {
-          const aId = Number((a.id || "").toString().replace(/\D/g, "")) || 0;
-          const bId = Number((b.id || "").toString().replace(/\D/g, "")) || 0;
-          return bId - aId;
-        });
-    }
-
-    return list;
-  }, [
-    problems,
-    query,
-    selectedLangs,
-    selectedLevels,
-    selectedType,
-    selectedKind,
-    solvedOnly,
-    sortKey,
-  ]);
-
   const pageCount = totalPage;
   const current = problems; // 서버에서 이미 페이징된 데이터를 받으므로 전체가 current
 
+  // 검색어나 난이도 변경 시 페이지를 1로 리셋
   useEffect(() => {
     setPage(1);
-  }, [query, selectedType, selectedKind, solvedOnly, sortKey]);
+  }, [query, selectedLevels]);
 
   if (loading) return <div className="home">문제를 불러오는 중...</div>;
   if (error) return <div className="home">{error}</div>;
 
-  const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = problems[0];
   const expectedSolveTime = "30분";
 
@@ -314,88 +218,6 @@ export default function HomePage() {
           </div>
 
           <div className="filters-bar">
-            {/* 문제 유형 */}
-            <div className="chip dropdown" ref={typeRef}>
-              <button
-                type="button"
-                className="dropdown__trigger"
-                aria-expanded={typeOpen}
-                onClick={() => {
-                  setTypeOpen((v) => !v);
-                  setKindOpen(false);
-                }}
-              >
-                문제 유형 {selectedType ? `: ${selectedType}` : ""}
-                <img src={dropdownIcon} className="dropdown__icon" />
-              </button>
-
-              {typeOpen && (
-                <div className="dropdown__menu">
-                  <button
-                    className="dropdown__item dropdown__item--clear"
-                    onClick={() => setSelectedType(null)}
-                  >
-                    전체 해제
-                  </button>
-                  {TYPES.map((t) => (
-                    <button
-                      key={t}
-                      className={`dropdown__item ${
-                        selectedType === t ? "is-selected" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedType(t);
-                        setTypeOpen(false);
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 문제 세부 유형 */}
-            <div className="chip dropdown" ref={kindRef}>
-              <button
-                type="button"
-                className="dropdown__trigger"
-                aria-expanded={kindOpen}
-                onClick={() => {
-                  setKindOpen((v) => !v);
-                  setTypeOpen(false);
-                }}
-              >
-                유형별 분류 {selectedKind ? `: ${selectedKind}` : ""}
-                <img src={dropdownIcon} className="dropdown__icon" />
-              </button>
-
-              {kindOpen && (
-                <div className="dropdown__menu">
-                  <button
-                    className="dropdown__item dropdown__item--clear"
-                    onClick={() => setSelectedKind(null)}
-                  >
-                    전체 해제
-                  </button>
-                  {KINDS.map((k) => (
-                    <button
-                      key={k}
-                      className={`dropdown__item ${
-                        selectedKind === k ? "is-selected" : ""
-                      }`}
-                      onClick={() => {
-                        setSelectedKind(k);
-                        setKindOpen(false);
-                      }}
-                    >
-                      {k}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* 해결된 문제 필터 */}
             <label className="chip chip--checkbox">
               <input
