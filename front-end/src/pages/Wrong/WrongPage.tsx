@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { getChoseong } from "es-hangul"; // 초성 추출
+import { useNavigate } from "react-router-dom";
 import "./WrongPage.css";
 import apiClient from "../../api/client";
 
@@ -21,6 +22,7 @@ type Solved = {
     | "백트래킹";
   solved?: boolean;
   points: string;
+  feedback?: string | null;
 };
 
 const LANGUAGES = [
@@ -59,13 +61,13 @@ function useClickOutside<T extends HTMLElement>(onClose: () => void) {
   return ref;
 }
 
-const SolutionAssistant = () => {
+const SolutionAssistant = ({ feedback }: { feedback?: string | null }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="solution-assistant" data-open={isOpen}>
       <button onClick={() => setIsOpen(!isOpen)} className="assistant-toggle">
-        <span className="assistant-title">도우미 어시스턴트</span>
+        <span className="assistant-title">AI 피드백</span>
         <span className="assistant-toggle-text">
           {isOpen ? "닫기" : "펼쳐보기"}
           {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -73,13 +75,13 @@ const SolutionAssistant = () => {
       </button>
       {isOpen && (
         <div className="assistant-content">
-          <h4>평가 결과:</h4>
-          <p>코드가 깔끔하고 효율적입니다. ~~~</p>
-          <h4>개선 제안</h4>
-          <ul>
-            <li>이로 인해 ~~~ 변수 초기화가 누락되어 ~~~~</li>
-            <li>변수 초기화가 누락되어 ~~~ 이러</li>
-          </ul>
+          {feedback ? (
+            <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              {feedback}
+            </pre>
+          ) : (
+            <p>피드백이 없습니다.</p>
+          )}
         </div>
       )}
     </div>
@@ -88,6 +90,7 @@ const SolutionAssistant = () => {
 
 // --- (WrongPage 메인 컴포넌트) ---
 export default function WrongPage() {
+  const navigate = useNavigate();
   const [solved, setSolved] = useState<Solved[]>([]);
   const [stats, setStats] = useState({
     totalSolved: 0,
@@ -236,6 +239,7 @@ export default function WrongPage() {
               : (problem.sub_category as any) || "기타",
             solved: problem.is_solved ?? true,
             points: problem.expected_xp?.toString() || "0",
+            feedback: item.feedback || null,
           };
         });
 
@@ -483,12 +487,22 @@ export default function WrongPage() {
               </div>
 
               <div className="solved-item__right">
-                <button type="button" className="btn-primary">
+                <button 
+                  type="button" 
+                  className="btn-primary"
+                  onClick={() => {
+                    const params = new URLSearchParams({ problemId: p.id });
+                    if (p.feedback) {
+                      params.set("feedback", encodeURIComponent(p.feedback));
+                    }
+                    navigate(`/solve?${params.toString()}`);
+                  }}
+                >
                   풀이하기
                 </button>
               </div>
 
-              <SolutionAssistant />
+              <SolutionAssistant feedback={p.feedback} />
             </li>
           ))}
 

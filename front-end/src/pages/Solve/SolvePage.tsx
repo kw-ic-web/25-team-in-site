@@ -102,6 +102,7 @@ function buildEvaluateWebSocketUrl(token: string | null): string {
 export default function SolvePage() {
   const [searchParams] = useSearchParams();
   const problemId = searchParams.get("problemId") ?? "";
+  const feedbackFromUrl = searchParams.get("feedback");
 
   const [isHintFullscreen, setIsHintFullscreen] = useState(false);
   const [isSolvedFullscreen, setIsSolvedFullscreen] = useState(false);
@@ -118,7 +119,7 @@ export default function SolvePage() {
   const [language, setLanguage] = useState("");
   const [code, setCode] = useState("");
 
-  const [hint, setHint] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(feedbackFromUrl ? decodeURIComponent(feedbackFromUrl) : null);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [hintAvailable, setHintAvailable] = useState(false);
 
@@ -537,9 +538,9 @@ export default function SolvePage() {
         }`}
       >
         <header className="panel-title">
-          힌트
-          {/* 힌트 생성 버튼 */}
-          {!hint && (
+          {feedbackFromUrl ? "AI 피드백" : "힌트"}
+          {/* 힌트 생성 버튼 - feedback이 없을 때만 표시 */}
+          {!hint && !feedbackFromUrl && (
             <button
               className="btn-hint-generate"
               onClick={handleGetHint}
@@ -562,7 +563,9 @@ export default function SolvePage() {
         </header>
         <div className="panel-content scroll">
           {hint ? (
-            <pre className="hint-text">{hint}</pre>
+            <pre className="hint-text" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{hint}</pre>
+          ) : feedbackFromUrl ? (
+            <p>피드백이 없습니다.</p>
           ) : (
             <p>힌트가 아직 없습니다.</p>
           )}
