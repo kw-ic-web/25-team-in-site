@@ -119,7 +119,11 @@ export default function SolvePage() {
   const [language, setLanguage] = useState("");
   const [code, setCode] = useState("");
 
-  const [hint, setHint] = useState<string | null>(feedbackFromUrl ? decodeURIComponent(feedbackFromUrl) : null);
+  // base64 디코딩하여 feedback 추출
+  const decodedFeedback = feedbackFromUrl 
+    ? decodeURIComponent(atob(feedbackFromUrl))
+    : null;
+  const [hint, setHint] = useState<string | null>(decodedFeedback);
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [hintAvailable, setHintAvailable] = useState(false);
 

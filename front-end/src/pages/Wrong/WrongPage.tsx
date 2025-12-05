@@ -493,7 +493,9 @@ export default function WrongPage() {
                   onClick={() => {
                     const params = new URLSearchParams({ problemId: p.id });
                     if (p.feedback) {
-                      params.set("feedback", encodeURIComponent(p.feedback));
+                      // base64 인코딩하여 전달
+                      const encodedFeedback = btoa(encodeURIComponent(p.feedback));
+                      params.set("feedback", encodedFeedback);
                     }
                     navigate(`/solve?${params.toString()}`);
                   }}
