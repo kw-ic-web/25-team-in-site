@@ -89,6 +89,13 @@ const SolutionAssistant = () => {
 // --- (WrongPage 메인 컴포넌트) ---
 export default function WrongPage() {
   const [solved, setSolved] = useState<Solved[]>([]);
+  const [stats, setStats] = useState({
+    totalSolved: 0,
+    wrongProblems: 0,
+    retryProblems: 0,
+    retrySuccessRate: 0,
+  });
+  const [totalSolvedCount, setTotalSolvedCount] = useState(0);
 
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<"latest" | "acc" | "diff">("latest");
@@ -210,6 +217,7 @@ export default function WrongPage() {
         setSolved(res.data.items ?? []);
         if (res.data.pagination) {
           setTotalPage(res.data.pagination.total_pages ?? 1);
+          setTotalSolvedCount(res.data.pagination.total_count ?? 0);
         }
       } catch (err) {
         console.error(err);
@@ -217,6 +225,32 @@ export default function WrongPage() {
     }
     getSolved();
   }, [page]);
+
+  useEffect(() => {
+    async function getStats() {
+      try {
+        const res = await apiClient.get("/user/stats");
+        const data = res.data;
+        
+        setStats({
+          totalSolved: data.profile?.totalSolved ?? totalSolvedCount,
+          wrongProblems: 0, // 백엔드에서 제공하지 않으면 0
+          retryProblems: 0, // 백엔드에서 제공하지 않으면 0
+          retrySuccessRate: 0, // 백엔드에서 제공하지 않으면 0
+        });
+      } catch (err) {
+        console.error("통계 데이터를 불러오지 못했습니다:", err);
+        // 에러 발생 시 solved 데이터 기반으로 계산
+        setStats({
+          totalSolved: totalSolvedCount,
+          wrongProblems: 0,
+          retryProblems: 0,
+          retrySuccessRate: 0,
+        });
+      }
+    }
+    getStats();
+  }, [totalSolvedCount]);
 
   const dropdownIcon = "/assets/icons/dropdown-arrow.svg";
   const recommendedProblem = solved[0];
@@ -230,10 +264,10 @@ export default function WrongPage() {
   }));
 
   const statsData = [
-    { label: "총 학습 문제", value: "34", style: "" },
-    { label: "오답 문제", value: "10", style: "stat-box__value--accent" },
-    { label: "재도전 문제", value: "7", style: "" },
-    { label: "재도전 성공률", value: "82%", style: "stat-box__value--success" },
+    { label: "총 학습 문제", value: stats.totalSolved.toString(), style: "" },
+    { label: "오답 문제", value: stats.wrongProblems.toString(), style: "stat-box__value--accent" },
+    { label: "재도전 문제", value: stats.retryProblems.toString(), style: "" },
+    { label: "재도전 성공률", value: stats.retrySuccessRate > 0 ? `${stats.retrySuccessRate}%` : "-", style: "stat-box__value--success" },
   ];
 
   return (
