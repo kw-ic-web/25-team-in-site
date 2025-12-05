@@ -16,11 +16,11 @@ function htmlToPrettyText(html: string): string {
 }
 
 const API_PATH_PREFIX_REGEX = /\/api\/?v1?\/?$/;
-const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "20992";
+const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "21192";
 const DEFAULT_HINT_WS_PATH = "/ws/hint";
 
 const DEFAULT_EVALUATE_WS_PORT =
-  import.meta.env.VITE_EVALUATE_WS_URL || "20992";
+  import.meta.env.VITE_EVALUATE_WS_URL || "21192";
 const DEFAULT_EVALUATE_WS_PATH = "/ws/evaluate";
 
 function buildHintWebSocketUrl(token: string | null): string {
