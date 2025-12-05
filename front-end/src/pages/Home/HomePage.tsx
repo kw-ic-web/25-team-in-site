@@ -88,8 +88,8 @@ export default function HomePage() {
 
         setProblems(normalized);
         if (res.data.pagination) {
-          setTotalPage(res.data.pagination.total_pages);
-          setTotalCount(res.data.pagination.total_count);
+          setTotalPage(res.data.pagination?.total_pages ?? 1);
+          setTotalCount(res.data.pagination?.total_count ?? 0);
         }
       } catch (err) {
         console.error(err);

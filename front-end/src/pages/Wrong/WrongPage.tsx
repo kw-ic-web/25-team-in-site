@@ -207,8 +207,10 @@ export default function WrongPage() {
           },
         });
 
-        setSolved(res.data.items);
-        setTotalPage(res.data.pagination.total_pages);
+        setSolved(res.data.items ?? []);
+        if (res.data.pagination) {
+          setTotalPage(res.data.pagination.total_pages ?? 1);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -401,7 +403,7 @@ export default function WrongPage() {
               <div className="solved-item__left">
                 <div className="solved-item__header">
                   <h4 className="solved-item__title">
-                    {p.title.replace(/\s\d+$/, "")}
+                    {p.title?.replace(/\s\d+$/, "") ?? p.title ?? ""}
                   </h4>
                   <span className="badge badge--error">힌트 4회 사용</span>
                 </div>
