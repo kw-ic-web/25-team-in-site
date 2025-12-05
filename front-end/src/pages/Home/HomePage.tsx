@@ -82,7 +82,8 @@ export default function HomePage() {
 
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
-  const pageSize = 8;
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   const navigate = useNavigate();
 
@@ -126,6 +127,7 @@ export default function HomePage() {
         setProblems(normalized);
         if (res.data.pagination) {
           setTotalPage(res.data.pagination.total_pages);
+          setTotalCount(res.data.pagination.total_count);
         }
       } catch (err) {
         console.error(err);
@@ -298,7 +300,7 @@ export default function HomePage() {
           <div className="stat">
             <div className="stat__heading">
               <h2>전체 문제</h2>
-              <span>{filtered.length}</span>
+              <span>{totalCount}</span>
             </div>
 
             <div className="searchbar">
@@ -474,15 +476,21 @@ export default function HomePage() {
             ‹
           </button>
 
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              className={`page ${p === page ? "is-active" : ""}`}
-              onClick={() => setPage(p)}
-            >
-              {p}
-            </button>
-          ))}
+          {(() => {
+            const maxVisiblePages = 8;
+            const startPage = Math.max(1, Math.min(page - Math.floor(maxVisiblePages / 2), pageCount - maxVisiblePages + 1));
+            const endPage = Math.min(pageCount, startPage + maxVisiblePages - 1);
+            
+            return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map((p) => (
+              <button
+                key={p}
+                className={`page ${p === page ? "is-active" : ""}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ));
+          })()}
 
           <button
             className="page"
