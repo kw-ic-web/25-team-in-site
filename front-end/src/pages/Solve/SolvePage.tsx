@@ -15,12 +15,8 @@ function htmlToPrettyText(html: string): string {
   return text.trim();
 }
 
-const API_PATH_PREFIX_REGEX = /\/api\/?v1?\/?$/;
-const DEFAULT_HINT_WS_PORT = import.meta.env.VITE_HINT_WS_URL || "21192";
+const API_PATH_PREFIX_REGEX = /\/api\/v1\/?$/;
 const DEFAULT_HINT_WS_PATH = "/ws/hint";
-
-const DEFAULT_EVALUATE_WS_PORT =
-  import.meta.env.VITE_EVALUATE_WS_URL || "21192";
 const DEFAULT_EVALUATE_WS_PATH = "/ws/evaluate";
 
 function buildHintWebSocketUrl(token: string | null): string {
@@ -41,6 +37,7 @@ function buildHintWebSocketUrl(token: string | null): string {
   }
 
   if (!explicitWsEndpoint) {
+    // /api/v1/ 제거 후 /ws/hint 붙이기
     const trimmedPath = url.pathname
       .replace(API_PATH_PREFIX_REGEX, "")
       .replace(/\/$/, "");
@@ -48,7 +45,7 @@ function buildHintWebSocketUrl(token: string | null): string {
       /^\/{2,}/,
       "/"
     );
-    url.port = DEFAULT_HINT_WS_PORT;
+    url.port = ""; // 포트 제거 (기본 포트 사용)
     url.search = "";
   }
 
@@ -79,6 +76,7 @@ function buildEvaluateWebSocketUrl(token: string | null): string {
   }
 
   if (!explicitWsEndpoint) {
+    // /api/v1/ 제거 후 /ws/evaluate 붙이기
     const trimmedPath = url.pathname
       .replace(API_PATH_PREFIX_REGEX, "")
       .replace(/\/$/, "");
@@ -86,7 +84,7 @@ function buildEvaluateWebSocketUrl(token: string | null): string {
       /^\/{2,}/,
       "/"
     );
-    url.port = DEFAULT_EVALUATE_WS_PORT;
+    url.port = ""; // 포트 제거 (기본 포트 사용)
     url.search = "";
   }
 
